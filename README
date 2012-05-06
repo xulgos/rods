@@ -1,0 +1,664 @@
+ = RODS - Ruby Open Document Spreadsheet
+ This class provides a convenient interface for reading and writing 
+ spreadsheets conforming to Open Document Format v1.1.
+ Installiation of an office-application (LibreOffice, OpenOffice.org) is not required as the code directly 
+ manipulates the XML-files in the zipped *.ods-container. The mere prerequisites are 
+   gem install zip
+   gem install rods
+
+ On my website http://ruby.homelinux.com/ruby/rods/ you can see the output of the script below.
+ You can contact me at rods.ruby@online.de (and tell me about experiences, problems you encountered or drop me a line, if you like it ;-).
+
+ link:images/Rods.jpg
+ 
+ = Copyright
+ Copyright (c) <em>Dr. Heinz Breinlinger</em> (2011).
+ Licensed under the same terms as Ruby. No warranty is provided.
+
+ = Changelog
+ * 0.9.1
+   * bug fixes
+     * methods readCellFromRow and readCell did not return value, if this value was identical with previous cell's value and therefore repeated (in the XML-tree)
+ * 0.9.0 
+   * added new methods 
+     * insertRow, insertCell, insertCellFromRow, deleteCellBefore, deleteCellAfter, deleteCell, deleteCellFromRow,
+       deleteRowAbove, deleteRowBelow, deleteRow, deleteColumn, deleteRow2, deleteCell2
+   cf. Examples 0.9.0 a-e and read chapter "Caveat" below for performance-considerations !
+ * 0.8.1
+   * Bug-Fix: methods insertRowBelow and insertCellAfter did not consider repetitions of previous element
+ * 0.8.0
+   * new function
+     * insertColumn
+   cf. Example 0.8.0 below
+ * 0.7.5
+   * new functions
+     * insertRowAbove, insertRowBelow, insertCellBefore, insertCellAfter
+   cf. Example 0.7.5 below
+ * 0.7.0 
+   * added new function
+     * getCellsAndIndicesFor(expression)
+     This function returns all cells and their indices for which 
+     the external representation matches the given expression.
+   cf. Example 0.7.0 below
+ * 0.6.2
+   * added style-attributes
+     * text-underline-style
+     * text-underline-width
+     * text-underline-color
+   cf. Example 0.6.2 below
+ * 0.6.1
+   * added new functions
+     * insertTableBefore()
+     * insertTableAfter()
+   cf. Example 0.6.1 below
+ * 0.6.0
+   * changed interface from
+     * getNextRow, getPreviousRow, getNextCell, getPreviousCell to
+     * getNextExistentRow, getPreviousExistentRow, getNextExistentCell, getPreviousExistentCell
+   See explanation below
+ * 0.5.1 
+   * made readCellFromRow() more user-friendly by returning defaults for text and type where 
+     till recently error-messages were thrown due to missing values
+ * 0.5.0
+   * new performance-boosters for reading lots of rows (cf. chapter and second example-script below)
+     * getNextRow, getPreviousRow, getNextCell, getPreviousCell
+ * 0.1.1 
+   * Bug-Fix: readCellFromRow() did not return value in some cases
+ * 0.1.0 
+   * improved support for compound-formulas 
+       (=SUMME(WENN((A$12:A$985="x")*(I$12:I$983="Hauskonto");G$12:G$983)))
+   * logging set as default
+
+ = Disclaimer
+ 
+ The example code was tested on
+ * Linux
+   * Ubuntu 10.10 64-Bit (German)
+   * OpenOffice.org 3.2 (German)
+   * Ruby 1.9.1 and 1.8.7
+ * Mac
+   * OS X 10.6 (German)
+   * OpenOffice.org 3.2 (German)
+   * Ruby 1.8.7 (1.9.1 not tried)
+ * Windows 
+   * WinXP 32-Bit (German)
+   * OpenOffice.org 3.0 (German)
+   * Ruby 1.9.1 and 1.8.7
+ 
+ = What you must know
+ When you open a (new) spreadsheet in an application like OpenOffice.org, you'll see an infinity of empty cells and
+ might be tempted to assume that all these cells actually "exist" in the underlying file format/XML-structure.
+ This is not the case ! A "newly born" spreadsheet does not contain even a single cell ! They're created on demand.
+ That is: If you write a cell with coordinates (10,10) into a new sheet only 2 rows and 2 cells are created
+ * an empty row with a repetition-attribute of 9 ( -> visible as row 1 to 9)
+ * a second row (visible on line 10)
+ * a single cell in the second row with a repetition-attribute of 9 ( -> visible as cells 1 to 9 in line 10)
+ * a single cell after the previous cell ( -> visible as cell 10 in line 10)
+ Things get complicated when you insert one or more rows, but we won't delve into implementation details here.
+ Suffice it to say, that
+ * if a single cell in a row has a visible value, the row as well as the cell 'exist' in the former sense, i.e. 
+   they're definitely found by the routines get(Next|Previous)Existent(Row|Cell).
+ * the opposite does not apply: If a cell or row is visibly empty it COULD exist (and therefore be detectetd by 
+   the former routines) or not. That is: When using the 'fast routines' you will from time to time stumble over
+   cells and rows not bearing any value, but nevertheless existing and are well advised to verify the return-values !
+ 
+ This is very important for using the interface appropriately: All routines matching 'Existent' merely return "living"
+ cells, while all other routines bearing a "get|Get" create a row or cell if necessary.
+ In other words: Use
+ * getNextExistentRow, getPreviousExistentRow, getNextExistentCell, getPreviousExistentCell
+   whenever you just want to read values you already have (seemlessly skipping most but not all visibly emtpy lines and columns) and
+ * getCell, writeGetCell and writeGetCellFromRow whenever you want a cell to be created if it does not exist (which
+   is undoubtedly the case, when you want to write to it or assign it a style) !
+ The first return nil, if an element does not exist yet, the second always return the desired element.
+ 
+ = Howto
+   $ sudo gem install rods (root-privileges necessary)
+ 
+   # coding: UTF-8
+   #
+   # Author: Dr. Heinz Breinlinger
+   #
+   require 'rubygems'
+   require 'rods'
+   # 
+   #-----------------------------------------------------------------
+   # Open a spreadsheet in the working directory.
+   # If the file is elsewhere, prepend the path according to your 
+   # operating systems notation, e.g. "/home/heinz/myfile.ods".
+   #-----------------------------------------------------------------
+   mySheet=Rods.new("Template.ods") # empty or prefilled sheet
+   #-----------------------------------------------------------------
+   # Rename, insert and delete some tables
+   #-----------------------------------------------------------------
+   mySheet.renameTable("Tabelle1","not needed") 
+   mySheet.insertTable("example")  
+   #-----------------------------------------------------------------
+   # Very important: tell RODS, what table you want to work with subsequently, 
+   # if the table is not the first in the spreadsheet.
+   #-----------------------------------------------------------------
+   mySheet.setCurrentTable("example")
+   mySheet.deleteTable("Tabelle2")
+   mySheet.deleteTable("Tabelle3")
+   #-----------------------------------------------------------------
+   # Fill the sheet with values. All values are strings at the 
+   # user-level and are accompanied by a type-token.
+   # The type affects the internal representation and the style of
+   # the corresponding cell.
+   # When the type is a formula, the resulting type is appended.
+   # Valid types are
+   #  "string","time","date","float","percent","currency","formula",
+   #  "formula:float","formula:time","formula:date","formula:currency".
+   #-----------------------------------------------------------------
+   mySheet.writeCell(1,1,"date","31.12.2010") 
+   mySheet.writeCell(2,1,"formula:date","=A1+1") 
+   #-----------------------------------------------------------------
+   # Alter the data-style for the following 2 date-values.
+   #
+   # Data-styles affect, how values are displayed, i.e. their "meaning".
+   # Within that "meaning" styles (not data-styles !) affect the look
+   # (color, indentation, 'italic', etc.)
+   # Data-styles are predefined by RODS and (so far) unique for every type.
+   # Only date-values have 2 different data-styles implemented.
+   #-----------------------------------------------------------------
+   mySheet.setDateFormat("myDateDay")  # "05.01.2011" -> "Mi" (if German)
+   #-----------------------------------------------------------------
+   # Add 2 formulas with date-values as results.
+   #-----------------------------------------------------------------
+   mySheet.writeCell(1,2,"formula:date","=A1")
+   mySheet.writeCell(2,2,"formula:date","=A2")
+   #-----------------------------------------------------------------
+   # Reset the data-style for date-values
+   #-----------------------------------------------------------------
+   mySheet.setDateFormat("myDate")     # back to "DD.MM.YYYY"
+   #-----------------------------------------------------------------
+   # Continue with 2 time-values
+   #-----------------------------------------------------------------
+   mySheet.writeCell(1,3,"time","13:37") 
+   mySheet.writeCell(2,3,"time","20:15")
+   #-----------------------------------------------------------------
+   # Write 2 currency-values
+   #-----------------------------------------------------------------
+   mySheet.writeCell(1,4,"currency","19,99") 
+   mySheet.writeCell(2,4,"currency","-7,78")
+   #-----------------------------------------------------------------
+   # Insert a formula for the time-difference
+   #-----------------------------------------------------------------
+   cell=mySheet.writeGetCell(3,3,"formula:time","=C2-C1")
+   #-----------------------------------------------------------------
+   # Set a border, center the text, change background- and font-color.
+   #-----------------------------------------------------------------
+   mySheet.setAttributes(cell,{ "border" => "0.01cm solid turquoise",
+                                "text-align" => "center",           
+                                "background-color" => "yellow2",   
+                                "color" => "blue"})               
+   #-----------------------------------------------------------------
+   # Inset a formula for the sum of the above currency-values
+   #-----------------------------------------------------------------
+   cell=mySheet.writeGetCell(3,4,"formula:currency","=D2+D1")
+   #-----------------------------------------------------------------
+   # Apply different borders and display the font as italic and bold.
+   #-----------------------------------------------------------------
+   mySheet.setAttributes(cell,{ "border-right" => "0.05cm solid magenta4",
+                                "border-bottom" => "0.03cm solid lightgreen",
+                                "border-top" => "0.08cm solid salmon",
+                                "font-style" => "italic",
+                                "font-weight" => "bold"})
+   #-----------------------------------------------------------------
+   # Create a new style for percent-values and apply it to a new
+   # percent-value.
+   # Be aware that a valid data-style is chosen ("myPercentFormat"
+   # is RODS' default-data-style for percent-values.)
+   #-----------------------------------------------------------------
+   mySheet.writeStyleAbbr({"name" => "myNewPercentStyle",        
+                           "margin-left" => "0.3cm",
+                           "text-align" => "start",
+                           "color" => "blue",
+                           "border" => "0.01cm solid black",
+                           "font-style" => "italic",
+                           "data-style-name" => "myPercentFormat", # <- data-style !
+                           "font-weight" => "bold"})
+   cell=mySheet.writeGetCell(4,2,"percent","4,71")
+   mySheet.setStyle(cell,"myNewPercentStyle")
+   #-----------------------------------------------------------------
+   # Add a comment-field, change the font-color and font-style.
+   #-----------------------------------------------------------------
+   mySheet.writeComment(cell,"by Dr. Heinz Breinlinger")
+   cell=mySheet.writeGetCell(4,3,"formula:time","=B4*C3")
+   mySheet.setAttributes(cell,{ "color" => "lightmagenta",
+                                "font-style" => "italic"})
+   #-----------------------------------------------------------------
+   # Insert a formula for the percentage of a currency-value.
+   #-----------------------------------------------------------------
+   cell=mySheet.writeGetCell(4,4,"formula:currency","=B4*D3")
+   #-----------------------------------------------------------------
+   # Change some attributes of the cell.
+   #-----------------------------------------------------------------
+   mySheet.setAttributes(cell,{ "color" => "turquoise7",
+                                "text-align" => "center",
+                                "font-style" => "bold"})
+   #-----------------------------------------------------------------
+   # Create a new style and apply it to 2 new text-values.
+   #-----------------------------------------------------------------
+   mySheet.writeStyleAbbr({"name" => "myBold",
+                          "text-align" => "end",
+                          "font-weight" => "bold",
+                          "background-color" => "purple"})
+   cell=mySheet.writeGetCell(3,1,"string","Diff/Sum")
+   mySheet.setStyle(cell,"myBold")
+   cell=mySheet.writeGetCell(4,1,"string","Percent")
+   mySheet.setStyle(cell,"myBold")
+   #-----------------------------------------------------------------
+   # Insert a text with an annotation.
+   #-----------------------------------------------------------------
+   cell=mySheet.writeGetCell(6,1,"string","annotation")
+   mySheet.writeComment(cell,"C3,C4,D3,D4 are formulas")
+   #-----------------------------------------------------------------
+   # Draw a long green vertical line to frame what we created.
+   #-----------------------------------------------------------------
+   1.upto(7){ |row|
+     cell=mySheet.getCell(row,5)
+     mySheet.setAttributes(cell,{ "border-right" => "0.07cm solid green6" }) 
+   }
+   #-----------------------------------------------------------------
+   # Complete it with a red horicontal line right across.
+   #-----------------------------------------------------------------
+   1.upto(5){ |col|
+     cell=mySheet.getCell(7,col)
+     mySheet.setAttributes(cell,{ "border-bottom" => "0.085cm solid red5" }) # 
+   }
+   #-----------------------------------------------------------------
+   # Read and calculate 2 currency-values.
+   #-----------------------------------------------------------------
+   amount=0.0
+   1.upto(2){ |i|
+     row=mySheet.getRow(i)
+     text,type=mySheet.readCellFromRow(row,4)
+     if(type == "currency")
+       amount+=text.to_f
+     end
+   }
+   #-----------------------------------------------------------------
+   # Delete the table we do not need.
+   #-----------------------------------------------------------------
+   mySheet.deleteTable("not needed")
+   #-----------------------------------------------------------------
+   # Save the sheet under a different name (if you don not want to
+   # override the original).
+   #-----------------------------------------------------------------
+   mySheet.saveAs("Example.ods")
+   #-----------------------------------------------------------------
+   # Print the result of the former computation.
+   #-----------------------------------------------------------------
+   puts("Sums up to: #{amount}")  # -> "Sums up to: 12.21"
+   #-----------------------------------------------------------------
+   # Open the file we wrote in the previous step again.
+   #-----------------------------------------------------------------
+   mySheet=Rods.new("Example.ods") 
+   #-----------------------------------------------------------------
+   # Set the current table for subsequent operations.
+   # This is not necessary here as the table of interest is the 
+   # first in the spreadsheet and automatically becomes the default-table.
+   #-----------------------------------------------------------------
+   mySheet.setCurrentTable("example") 
+   #-----------------------------------------------------------------
+   # Read a currency-value from the sheet and print it.
+   # Remember that all values are passed to and from the spreadsheet
+   # as strings which get their meaning by the accompanying types.
+   #-----------------------------------------------------------------
+   text,type=mySheet.readCell(2,4)
+   if(text && type)
+     if(type == "currency")
+       puts("not so much: #{text} bucks") # -> "not so much: -7.78 bucks"
+     end
+   end
+
+ = Example 0.9.0 a
+
+   #!/usr/bin/ruby
+   # coding: UTF-8
+   #
+   # Author: Dr. Heinz Breinlinger
+   #
+   require 'rubygems'
+   require 'rods'
+
+   mySheet=Rods.new("Template.ods")
+   1.upto(3){ |row|
+     1.upto(4){ |col|
+       mySheet.writeCell(row,col,"time","13:47")
+     }
+   }
+   mySheet.insertColumn(3)
+   1.upto(3){ |row|
+     mySheet.writeCell(row,3,"string","o' clock")
+   }
+   mySheet.insertRow(2)
+   cell=mySheet.insertCell(3,3)
+   mySheet.writeText(cell,"string","insertCell")
+   row=mySheet.getRow(4)
+   row=mySheet.insertRowAbove(row)
+   mySheet.writeCell(4,1,"string","Willi")
+   cell=mySheet.insertCellFromRow(row,1)
+   mySheet.writeText(cell,"string","Supi")
+   mySheet.saveAs("Test8.ods")
+
+ = Example 0.9.0 b
+
+   #!/usr/bin/ruby
+   # coding: UTF-8
+   #
+   # Author: Dr. Heinz Breinlinger
+   #
+   require 'rubygems'
+   require 'rods'
+
+   mySheet=Rods.new("Template.ods")
+   mySheet.writeCell(1,1,"string","oneone")
+   cell=mySheet.writeGetCell(1,2,"string","onetwo")
+   mySheet.deleteCellBefore(cell)
+   cell=mySheet.writeGetCell(1,5,"string","onefive")
+   mySheet.deleteCellBefore(cell)
+
+   cellOne=mySheet.writeGetCell(5,1,"string","fiveone")
+   cellFive=mySheet.writeGetCell(5,5,"string","fivefive")
+   cellSix=mySheet.writeGetCell(5,6,"string","fivesix")
+   cellNine=mySheet.writeGetCell(5,9,"string","fivenine")
+   mySheet.deleteCellAfter(cellOne)
+   mySheet.deleteCellAfter(cellFive)
+   cell=mySheet.getCell(5,4)
+   mySheet.deleteCellBefore(cell)
+   cell=mySheet.getCell(5,4)
+   mySheet.deleteCellAfter(cell)
+   mySheet.deleteCell(5,2)
+   mySheet.deleteCell(5,3)
+   row=mySheet.getRow(5)
+   mySheet.deleteRowAbove(row)
+   mySheet.insertRow(2)
+   mySheet.insertRow(2)
+   row=mySheet.getRow(2)
+   mySheet.deleteRowBelow(row)
+   row=mySheet.getRow(1)
+   mySheet.deleteRowBelow(row)
+   row=mySheet.getRow(2)
+   mySheet.deleteRowBelow(row)
+   mySheet.deleteRow(2)
+   mySheet.deleteRow(1)
+   mySheet.deleteRow(1)
+   mySheet.saveAs("Test9.ods")
+
+ = Example 0.9.0 c
+
+   #!/usr/bin/ruby
+   # coding: UTF-8
+   #
+   # Author: Dr. Heinz Breinlinger
+   #
+   require 'rubygems'
+   require 'rods'
+
+   mySheet=Rods.new("Konten.ods")
+   startRow=mySheet.getRow(11)
+   i=0
+   while(row=mySheet.getNextExistentRow(startRow))
+     i+=1
+     puts("#{i}")
+     mySheet.deleteRow2(row)
+   end
+   mySheet.saveAs("Test10.ods")
+
+ = Example 0.9.0 d
+
+   #!/usr/bin/ruby
+   # coding: UTF-8
+   #
+   # Author: Dr. Heinz Breinlinger
+   #
+   require 'rubygems'
+   require 'rods'
+
+   mySheet=Rods.new("Konten.ods")
+   mySheet.deleteColumn(8)
+   mySheet.saveAs("Test11.ods")
+
+ = Example 0.9.0 e
+
+   #!/usr/bin/ruby
+   # coding: UTF-8
+   #
+   # Author: Dr. Heinz Breinlinger
+   #
+   require 'rubygems'
+   require 'rods'
+
+   mySheet=Rods.new("Konten.ods")
+   startCell=mySheet.getCell(12,1)
+   i=0
+   while(cell=mySheet.getNextExistentCell(startCell))
+     i+=1
+     puts("#{i}")
+     mySheet.deleteCell2(cell)
+   end
+   mySheet.saveAs("Test12.ods")
+
+ = Example 0.8.0
+
+   #!/usr/bin/ruby
+   # coding: UTF-8
+   #
+   # Author: Dr. Heinz Breinlinger
+   #
+   require 'rubygems'
+   require 'rods'
+ 
+   mySheet=Rods.new("Template.ods")
+   1.upto(3){ |row|
+     1.upto(4){ |col|
+       mySheet.writeCell(row,col,"time","13:47")
+     }
+   }
+   #-----------------------------------------------------
+   # inserting new column -> shifting existing columns
+   #-----------------------------------------------------
+   mySheet.insertColumn(3) 
+   1.upto(3){ |row|
+     mySheet.writeCell(row,3,"string","o' clock")
+   }
+   mySheet.saveAs("Test7.ods")
+
+ = Example 0.7.5
+
+   #!/usr/bin/ruby
+   # coding: UTF-8
+   #
+   # Author: Dr. Heinz Breinlinger
+   #
+   require 'rubygems'
+   require 'rods'
+ 
+   mySheet=Rods.new("Template.ods")
+   mySheet.writeCell(1,1,"string","oneOne")
+   mySheet.writeCell(1,2,"string","oneTwo")
+   mySheet.writeCell(2,1,"string","twoOne") # finally becomes cell 3,1
+   mySheet.writeCell(2,2,"string","twoTwo") # finally becomes cell 3,2
+   row=mySheet.getRow(1)
+   newRow=mySheet.insertRowBelow(row)
+   mySheet.writeCell(2,1,"string","twoNewOne")
+   cell=mySheet.writeGetCell(2,2,"string","moved") # finally becomes cell "2,3"
+   mySheet.insertCellBefore(cell)
+   mySheet.writeCell(2,2,"string","twoNewTwoNew")  # new cell "2,2"
+   mySheet.saveAs("Test6.ods")
+
+ = Example 0.7.0
+
+   #!/usr/bin/ruby
+   # coding: UTF-8
+   #
+   # Author: Dr. Heinz Breinlinger
+   #
+   require 'rubygems'
+   require 'rods'
+
+   mySheet=Rods.new("Konten.ods")
+   # Finds all cells with content 'content' and returns them along with the
+   # indices of row and column as an array of hashes.
+   # [{ :cell => cell,
+   #    :row  => rowIndex,
+   #    :col  => colIndex},
+   #  { :cell => cell,
+   #    :row  => rowIndex,
+   #    :col  => colIndex}]
+   #  
+   # Regular expressions for 'content' are allowed but must be enclosed in 
+   # single (not double) quotes !
+   #
+   # In case of no matches at all, an empty array is returned.
+   # 
+   # Keep in mind that the content of a cell with a formula is not the formula, but the
+   # current value of the computed result.
+   #
+   # Also consider that you have to search for the external (i.e. visible)
+   # represenation of a cell's content, not it's internal computational value.
+   # For instance, when looking for a currency value of 1525 (that is shown as
+   # '1.525 $'), you'll have to code
+   #
+   #   result=mySheet.getCellsAndIndicesFor('1[.,]525')
+   #
+   # The following finds all occurences of a comma- or dot-separated number,
+   # consisting of 1 digit before and 2 digits behind the decimal-separator.
+   #-------------------------------------------------------------------------
+   result=mySheet.getCellsAndIndicesFor('\d{1}[.,]\d{2}')
+   result.each{ |cellHash|
+     puts("----------------------------------------------")
+     puts("Node: #{cellHash[:cell]}") # Be aware: Prints out whole node ! ;-)
+     puts("Row: #{cellHash[:row]}")
+     puts("Column: #{cellHash[:col]}")
+   }
+   puts("done")
+
+ = Example for additions in 0.6.2
+
+   #!/usr/bin/ruby
+   # coding: UTF-8
+   #
+   # Author: Dr. Heinz Breinlinger
+   #
+   require 'rubygems'
+   require 'rods'
+
+   mySheet=Rods.new("Template.ods")
+   cell=mySheet.writeGetCell(3,3,"string","Underline")
+   mySheet.setAttributes(cell,{ "style:text-underline-color" => "blue",
+                                "style:text-underline-style" => "solid",
+                                "style:text-underline-width" => "auto"})
+   cell=mySheet.writeGetCell(4,4,"string","Underline_Default_with_Black")
+   #----------------------------------------------------------------------
+   # if not specified otherwise, width and color are set to default
+   # - black
+   # - solid
+   #----------------------------------------------------------------------
+   mySheet.setAttributes(cell,{ "style:text-underline-style" => "solid" })
+   mySheet.saveAs("Test3.ods")
+   puts("done")
+ 
+ = Example for additions in 0.6.1
+
+   #!/usr/bin/ruby
+   # coding: UTF-8
+   #
+   # Author: Dr. Heinz Breinlinger
+   #
+   require 'rubygems'
+   require 'rods'
+
+   mySheet=Rods.new("Template.ods")
+   mySheet.insertTableAfter("Tabelle1","Neue Tabelle")
+   mySheet.insertTableAfter("Neue Tabelle","Neue Tabelle2")
+   mySheet.insertTableAfter("Neue Tabelle2","Neue Tabelle3")
+   mySheet.insertTableAfter("Tabelle3","Neue Tabelle4")
+   mySheet.insertTableBefore("Tabelle1","Vor1")
+   mySheet.insertTableBefore("Neue Tabelle4","Vor4")
+   mySheet.saveAs("Test2.ods")
+   puts("done")
+ 
+ = Caveat
+
+ The XML-structure of a <file>.ods is 
+ * first rows 
+ * then cells
+ 
+ As a result
+ 
+   1.upto(500){ |i|
+     text1,type1=readCell(i,3)  # XML-Parser starts from the top-node 
+     text2,type2=readCell(i,4)  # XML-Parser starts from the top-node
+     puts("Read #{text1} of #{type1} and #{text2} of #{type2}")
+   }
+
+ is significantly slower than the slight variation
+
+   1.upto(500){ |i|
+     row=getRow(i)                      # XML-Parser starts from top-node
+     text1,type1=readCellFromRow(row,3) # XML-Parser continues from row-node
+     text2,type2=readCellFromRow(row,4) # XML-Parser continues from row-node
+     puts("Read #{text1} of #{type1} and #{text2} of #{type2}
+   }
+
+ This difference hardly matters while dealing with small documents, but degrades performance significantly when you 
+ move up or down a sheet with a lot of rows and process several cells on the same row !
+
+ Provided you just want to read exisiting cells (cf. explanation above), the following is a real speed-buster.
+
+   # coding: UTF-8
+   #
+   # Author: Dr. Heinz Breinlinger
+   #
+   require 'rubygems'
+   require 'rods'
+
+   mySheet=Rods.new("Konten.ods")
+   sum=0.0
+   i=0
+   row=mySheet.getRow(1)
+   #---------------------------------------------------------------------------------
+   # The routines
+   # - getNextExistentRow(row)
+   # - getPreviousExistentRow(row)
+   # - getNextExistentCell(cell)
+   # - getPreviousExistentCell(cell)
+   # allow the XML-Parser to just continue from the "adjacent" node and 
+   # return the previsous/next element without having to start from the top-node 
+   # of the document over and over again !
+   # Caveat: According to the explanation above, you definitely know, that a cell/row
+   # exist, if they bear a value; if they don't, it depends on the sheets history,
+   # whether these are 'alive' and therefore accessible by the afore functions or not !
+   #---------------------------------------------------------------------------------
+   while(row=mySheet.getNextExistentRow(row))  
+     i+=1
+     puts("#{i}")
+     confirmed,type=mySheet.readCellFromRow(row,1)
+     next if (! confirmed || confirmed.empty?())
+     account,type=mySheet.readCellFromRow(row,9)
+     next if (! account || account.empty?())
+     transfer,type=mySheet.readCellFromRow(row,7)
+     next if (! transfer || transfer.empty?())
+     if(confirmed.match(/x/i) && account.match(/Hauskonto/))
+       puts("#{i}: --> #{transfer} €")
+       sum+=transfer.to_f
+     end
+   end
+   puts("------------")
+   puts("Sum: #{sum}")
+
+ On the ATOM-Nettop I developed the gem, even the first script above took just 2-3 seconds and on my Core-i7-Notebook it was finished so quickly
+ that I supposed it had halted on an immediate error, so: don't be concerned and just experiment :-).
+ 
+ The same considerations apply for the family of 'delete'-functions added in version 0.9.0 ! See the examples above.
+ 
+ = Standards
+ * Open Document Format for Office Applications (Open Document) v1.1 based on OpenOffice.org (OOo)
+   * http://www.oasis-open.org/specs/#opendocumentv1.1
+     * Hint: Download the pdf-version. Reading the html-version online was to slow at least 
+       on my attempts.
+ * W3C Extensible Stylesheet Language (XSL) Version 1.0 (W3C Recommendation 15 October 2001)
+   * http://www.w3.org/TR/2001/REC-xsl-20011015/
+      
