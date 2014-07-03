@@ -69,8 +69,7 @@ class Rods
   # internal: Error-routine for displaying fatal error-message and exiting
   #-------------------------------------------------------------------------
   def die(message)
-    puts("\nERROR:\n#{message}\nEXIT\n\n")
-    exit
+    raise message
   end
   ##########################################################################
   # internal: Returns a new REXML::Element of type 'cell' with repetition-attribute set to 'n'
