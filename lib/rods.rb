@@ -427,9 +427,18 @@ class Rods
     #----------------------------------------------------------------
     # Nun noch aktuelle, i.e. Default-Tabelle setzen
     #----------------------------------------------------------------
+    if @numTables==0
+      insertTable("Table 1")
+    end
     firstTable=@spreadSheet.elements["table:table[1]"]
     @currentTableName=firstTable.attributes["table:name"]
     tell("initHousekeeping: number of tables: #{@numTables} ... defaulting to '#{@currentTableName}'")
+  end
+  ##########################################################################
+  # returns the list of table names
+  # ------------------------------------------------------------------------
+  def tableNames
+    @tables.keys
   end
   ##########################################################################
   # Renames the table of the given name and updates the internal table-administration.
@@ -880,6 +889,7 @@ class Rods
     # Autor (ich :-)
     #-------------------------------------
     initialCreator=@officeMeta.elements["meta:initial-creator"]
+    initialCreator=@officeMeta.add_element(REXML::Element.new("meta:initial-creator"))
     die("finalize: Could not extract meta:initial-creator") unless (initialCreator)
     initialCreator.text="Dr. Heinz Breinlinger"
     tell("finalize: automator: Dr. Heinz Breinlinger")
