@@ -728,19 +728,21 @@ class Rods
     #------------------------
     # Format
     #------------------------
-    unless(text.match(/^\d{2}:\d{2}$/))
-      die("time2TimeVal: wrong time-format '#{text}' -> expected: 'hh:mm'")
+    unless(text.match(/^\d{2}:\d{2}(:\d{2})?$/))
+      die("time2TimeVal: wrong time-format '#{text}' -> expected: 'hh:mm' or 'hh:mm:ss'")
     end
     #------------------------
     # Range
     #------------------------
-    unless(text.match(/^[0-1][0-9]:[0-5][0-9]$/) || text.match(/^[2][0-3]:[0-5][0-9]$/))
+    unless(text.match(/^[0-1][0-9]:[0-5][0-9](:[0-5][0-9])?$/) || text.match(/^[2][0-3]:[0-5][0-9](:[0-5][0-9])?$/))
       die("time2TimeVal: time '#{text}' not in valid range")
     end
-    time=text.match(/(\d{2}):(\d{2})/)
+    time=text.match(/(\d{2}):(\d{2})(:(\d{2}))?/)
     hour=time[1]
     minute=time[2]
-    internalValue="PT"+hour+"H"+minute+"M00S"
+    seconds = time[4]
+    seconds = "00" if seconds.nil?
+    internalValue="PT"+hour+"H"+minute+"M"+seconds+"S"
     tell("time2TimeVal: mapping: #{text} -> #{internalValue}")
     return internalValue
     exit
