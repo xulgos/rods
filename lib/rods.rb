@@ -2252,6 +2252,22 @@ class Rods
     return formulaOut
   end
   ##########################################################################
+  # convert column number to letters for usage in formulas
+  # 1 => A
+  # implementation is not ideal, consumes useless memory for large n :-)
+  def column_number_to_address(n)
+    raise ArgumentError, "n should be >= 1" if n < 1
+    n -= 1 # column A should map to 1, arrays start counting from 0
+    chars = []
+    digits = 0
+    while n >= chars.size
+      digits += 1
+      chars << (('A' * digits)..('Z' * digits)).to_a
+      chars.flatten!
+    end
+    return chars[n]
+  end
+  ##########################################################################
   # Applies style of given name to given cell and overwrites all previous style-settings
   # of the latter including the former data-style !
   #   mySheet.writeStyleAbbr({"name" => "myStrange",
