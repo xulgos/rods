@@ -1871,6 +1871,31 @@ class Rods
     # Zeit-Style Teil 1 (Format)
     #--------------------------------------------------------
     writeStyleXml(STYLES,{TAG => "number:time-style",
+                          "style:name" => "myTimeFormatSeconds",
+                          "child1" => {TAG => "number:hours",
+                                       "number:style" => "long"},
+                          "child2" => {TAG => "number:text",
+                                       TEXT => ":"},
+                          "child3" => {TAG => "number:minutes",
+                                       "number:style" => "long"},
+                          "child4" => {TAG => "number:text",
+                                       TEXT => ":"},
+                          "child5" => {TAG => "number:seconds",
+                                       "number:style" => "long"}})
+    #--------------------------------------------------------
+    # Zeit-Style Teil 2 (Referenz zu Format oben)
+    #--------------------------------------------------------
+    writeStyleXml(CONTENT,{TAG => "style:style",
+                   "style:name" => "myTimeSeconds",
+                   "style:family" => "table-cell",
+                   "style:parent-style-name" => "Default",
+                   "style:data-style-name" => "myTimeFormatSeconds"})
+    #------------------------------------------------------------------------
+    # Zeit
+    #------------------------------------------------------------------------
+    # Zeit-Style Teil 1 (Format)
+    #--------------------------------------------------------
+    writeStyleXml(STYLES,{TAG => "number:time-style",
                           "style:name" => "myTimeFormat",
                           "child1" => {TAG => "number:hours",
                                        "number:style" => "long"},
@@ -2528,7 +2553,7 @@ class Rods
               "salmon" => "#ff8080"
   }
     @fixedStyles=["myTable", "myRow", "myColumn", "myFloatFormat", "myFloat", "myTimeFormat", 
-                  "myTime", "myPercentFormat", "myPercent", "myString", "myDateFormat", 
+                  "myTime", "myTimeSeconds", "myPercentFormat", "myPercent", "myString", "myDateFormat", 
                   "myDate", "myDateFormatDay", "myDateDay", "myCurrencyFormatPositive", 
                   "myCurrencyFormat", "myCurrency", "myCommentParagraph", "myCommentText", 
                   "myCommentGraphics"]
