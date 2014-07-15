@@ -2247,7 +2247,7 @@ class Rods
     #---------------------------------------------
     # Zellbezeichnerformat AABC3421 in [.AABC3421] wandeln
     #---------------------------------------------
-    formulaOut.gsub!(/(\$*[A-Za-z]+\$*\d+)/,"[.\\1]")
+    formulaOut.gsub!(/((\$?[A-Ta-z'.0-9][A-Ta-z' .0-9]*)\.)?(\$?[A-Za-z]+\$?\d+(:\$?[A-Za-z]+\$?\d+)?)/,"[\\2.\\3]")
     tell("internalizeFormula: #{formulaIn} -> #{formulaOut}")
     return formulaOut
   end
