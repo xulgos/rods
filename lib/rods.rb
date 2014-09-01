@@ -463,6 +463,10 @@ class Rods
       tell("renameTable: renaming table '#{oldName}' to '#{newName}'")
     end
   end
+
+  def getCurrentTable()
+    @currentTableName
+  end
   ##########################################################################
   # Sets the table of the given name as the default-table for all subsequent
   # operations.
@@ -2264,7 +2268,7 @@ class Rods
     #---------------------------------------------
     # Praefix setzen
     #---------------------------------------------
-    formulaOut.sub!(/^=/,"of:=")
+    formulaOut.sub!(/^=/,"oooc:=")
     #---------------------------------------------
     # Dezimaltrennzeichen ',' durch '.' in Zahlen ersetzen
     #---------------------------------------------
