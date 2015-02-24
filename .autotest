@@ -1,0 +1,10 @@
+Autotest.add_hook :initialize do |autotest|
+  autotest.clear_mappings
+  autotest.add_exception '.git'
+  autotest.libs << "#{File::PATH_SEPARATOR}spec"
+  autotest.testlib = 'spec_helper'
+
+  autotest.add_mapping(%r%^lib.*?([a-z_]+)\.rb$%) do |filename, matches|
+    autotest.files_matching %r%^spec.*?#{matches[1]}_spec\.rb$%
+  end
+end
