@@ -13,5 +13,9 @@ Gem::Specification.new do |s|
   s.homepage = %q{http://ruby.homelinux.com/ruby/rods/}
   s.files = %W(README Rakefile rods.gemspec) + Dir["{spec,lib}/**/*.rb"]
   s.require_path = "lib"
-  s.add_runtime_dependency = "zip"
+  s.add_runtime_dependency "zip"
+  s.add_runtime_dependency "rubysl-rexml"
+  s.add_development_dependency "echoe"
+  s.add_development_dependency "minitest"
+  s.add_development_dependency "ZenTest"
 end
