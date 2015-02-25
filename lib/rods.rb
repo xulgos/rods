@@ -20,25 +20,27 @@
 require 'rubygems'
 require 'zip/zipfilesystem'
 require 'rexml/document'
+require 'helpers'
+require 'color'
 
 module Rods
-  ROW="row"
-  CELL="cell"
-  COLUMN="column"
-  TAG="tag"
-  TEXT="text"
-  CHILD="child"
-  STYLES="styles"
-  CONTENT="content"
-  DUMMY="dummy"
-  WIDTH="width"
-  NODE="node"
-  BEFORE="before"
-  AFTER="after"
-  INDEX="index"
-  NUMBER="number"
-  BOTH="both"
-  WIDTHEXCEEDED="exceeded"
+  ROW = "row"
+  CELL = "cell"
+  COLUMN = "column"
+  TAG = "tag"
+  TEXT = "text"
+  CHILD = "child"
+  STYLES = "styles"
+  CONTENT = "content"
+  DUMMY = "dummy"
+  WIDTH = "width"
+  NODE = "node"
+  BEFORE = "before"
+  AFTER = "after"
+  INDEX = "index"
+  NUMBER = "number"
+  BOTH = "both"
+  WIDTHEXCEEDED = "exceeded"
 
   class Document
     ##########################################################################
@@ -46,18 +48,18 @@ module Rods
     # date-values. The switch is valid for all subsequently created cells with 
     # date-values.  
     # Builtin valid values are
-    # * 'myDate'
+    # * 'date_style'
     #   * -> "02.01.2011" (German formatting)
-    # * 'myDateDay' 
+    # * 'dateDay' 
     #   * -> "Su"
     # Example
-    #   mySheet.setDateFormat("myDateDay")  # RODS' default format for display of weekday
-    #   mySheet.setDateFormat("myDate")     # RODS' default format for date ("12.01.2011" German format)
+    #   sheet.setDateFormat("dateDay")  # RODS' default format for display of weekday
+    #   sheet.setDateFormat("date_style")     # RODS' default format for date ("12.01.2011" German format)
     #-------------------------------------------------------------------------
     def setDateFormat(formatName)
       case formatName
-        when "myDate" then @dateStyle="myDate"
-        when "myDateDay" then @dateStyle="myDateDay"
+        when "date_style" then @dateStyle = "date_style"
+        when "date_day_style" then @dateStyle = "date_day_style"
         else die("setDateFormat: invalid format-name #{format}")
       end
     end
@@ -103,29 +105,29 @@ module Rods
       # Zeile
       #----------------------------------------------
       if(type == ROW)
-        row=REXML::Element.new("table:table-row")
+        row = REXML::Element.new("table:table-row")
         if(repetition > 1)
-          row.attributes["table:number-rows-repeated"]=repetition.to_s
+          row.attributes["table:number-rows-repeated"] = repetition.to_s
         end
         return row
       #----------------------------------------------
       # Zelle
       #----------------------------------------------
       elsif(type == CELL)
-        cell=REXML::Element.new("table:table-cell")
+        cell = REXML::Element.new("table:table-cell")
         if(repetition > 1)
-          cell.attributes["table:number-columns-repeated"]=repetition.to_s
+          cell.attributes["table:number-columns-repeated"] = repetition.to_s
         end
         return cell
       #----------------------------------------------
       # Spalte (als Tabellen-Header)
       #----------------------------------------------
         elsif(type == COLUMN)
-        column=REXML::Element.new("table:table-column")
+        column = REXML::Element.new("table:table-column")
         if(repetition > 1)
-          column.attributes["table:number-columns-repeated"]=repetition.to_s
+          column.attributes["table:number-columns-repeated"] = repetition.to_s
         end
-        column.attributes["table:default-cell-style-name"]="Default"
+        column.attributes["table:default-cell-style-name"] = "Default"
         return column
       #----------------------------------------------
       else
@@ -148,9 +150,9 @@ module Rods
       end
       #----------------------------------------------------------------------
       if(type == ROW)
-        kindOfRepetition="table:number-rows-repeated"
+        kindOfRepetition = "table:number-rows-repeated"
       elsif(type == CELL)
-        kindOfRepetition="table:number-columns-repeated"
+        kindOfRepetition = "table:number-columns-repeated"
       else
         die("setRepetition: wrong type #{type}")
       end
@@ -158,19 +160,19 @@ module Rods
       if(repetition.to_i == 1)
         element.attributes.delete(kindOfRepetition)
       else
-        element.attributes[kindOfRepetition]=repetition.to_s
+        element.attributes[kindOfRepetition] = repetition.to_s
       end
     end
     ##########################################################################
     # Writes the given text to the cell with the given indices.
     # Creates the cell if not existing.
     # Formats the cell according to type and returns the cell.
-    #   cell=mySheet.writeGetCell(3,3,"formula:time","=C2-C1")
+    #   cell = sheet.writeGetCell(3,3,"formula:time"," = C2-C1")
     # This is useful for a subsequent call to 
-    #   mySheet.setAttributes(cell,{ "background-color" => "yellow3"})
+    #   sheet.setAttributes(cell,{ "background-color" => "yellow3"})
     #-------------------------------------------------------------------------
     def writeGetCell(rowInd,colInd,type,text)
-      cell=getCell(rowInd,colInd)
+      cell = getCell(rowInd,colInd)
       writeText(cell,type,text)
       return cell
     end
@@ -178,13 +180,13 @@ module Rods
     # Writes the given text to the cell with the given indices.
     # Creates the cell if not existing.
     # Formats the cell according to type.
-    #   mySheet.writeCell(1,1,"date","31.12.2010") # 1st row, 1st column
-    #   mySheet.writeCell(2,1,"formula:date","=A1+1") 
-    #   mySheet.writeCell(1,3,"time","13:37") # German time-format
-    #   mySheet.writeCell(1,4,"currency","19,99") # you could also use '.' as a decimal separator
+    #   sheet.writeCell(1,1,"date","31.12.2010") # 1st row, 1st column
+    #   sheet.writeCell(2,1,"formula:date"," = A1+1") 
+    #   sheet.writeCell(1,3,"time","13:37") # German time-format
+    #   sheet.writeCell(1,4,"currency","19,99") # you could also use '.' as a decimal separator
     #-------------------------------------------------------------------------
     def writeCell(rowInd,colInd,type,text)
-      cell=getCell(rowInd,colInd)
+      cell = getCell(rowInd,colInd)
       writeText(cell,type,text)
     end
     ##########################################################################
@@ -192,11 +194,11 @@ module Rods
     # Row is a REXML::Element.
     # Creates the cell if not existing.
     # Formats the cell according to type and returns the cell.
-    #   row=mySheet.getRow(17)
-    #   cell=mySheet.writeGetCellFromRow(row,4,"formula:currency","=B5*1,19")
+    #   row = sheet.getRow(17)
+    #   cell = sheet.writeGetCellFromRow(row,4,"formula:currency"," = B5*1,19")
     #-------------------------------------------------------------------------
     def writeGetCellFromRow(row,colInd,type,text)
-      cell=getCellFromRow(row,colInd)
+      cell = getCellFromRow(row,colInd)
       writeText(cell,type,text)
       return cell
     end
@@ -205,22 +207,22 @@ module Rods
     # Row is a REXML::Element.
     # Creates the cell if it does not exist.
     # Formats the cell according to type.
-    #   row=mySheet.getRow(3)
-    #   mySheet.writeCellFromRow(row,1,"date","28.12.2010")
-    #   mySheet.writeCellFromRow(row,2,"formula:date","=A1+3")
+    #   row = sheet.getRow(3)
+    #   sheet.writeCellFromRow(row,1,"date","28.12.2010")
+    #   sheet.writeCellFromRow(row,2,"formula:date"," = A1+3")
     #-------------------------------------------------------------------------
     def writeCellFromRow(row,colInd,type,text)
-      cell=getCellFromRow(row,colInd)
+      cell = getCellFromRow(row,colInd)
       writeText(cell,type,text)
     end
     ##########################################################################
     # Returns the cell at the given index in the given row.
     # Cell and row are REXML::Elements.
     # The cell is created if it does not exist.
-    #   row=mySheet.getRow(15)
-    #   cell=mySheet.getCellFromRow(row,17) # 17th cell of 15th row
+    #   row = sheet.getRow(15)
+    #   cell = sheet.getCellFromRow(row,17) # 17th cell of 15th row
     # Looks a bit strange compared to
-    #   cell=mySheet.getCell(15,17)
+    #   cell = sheet.getCell(15,17)
     # but is considerably faster if you are operating on several cells of the
     # same row as after locating the first cell of the row the XML-Parser can start 
     # from the node of the already found row instead of having to locate the
@@ -233,26 +235,26 @@ module Rods
     # Returns the cell at the given indices.
     # Cell is a REXML::Element.
     # The cell is created if it does not exist.
-    #   cell=mySheet.getCell(14,37)
+    #   cell = sheet.getCell(14,37)
     #-------------------------------------------------------------------------
     def getCell(rowInd,colInd)
-      row=getRow(rowInd)
+      row = getRow(rowInd)
       return getChildByIndex(row,CELL,colInd)
     end
     ##########################################################################
     # Returns the row at the given index.
     # Row is a REXML::Element.
     # The row is created if it does not exist.
-    #      row=getRow(1)
+    #      row = getRow(1)
     #      1.upto(500){ |i|
-    #        row=getRow(i) 
-    #        text1,type1=readCellFromRow(row,3)  
-    #        text2,type2=readCellFromRow(row,4) # XML-Parser can start from row-node instead of root-node !
+    #        row = getRow(i) 
+    #        text1,type1 = readCellFromRow(row,3)  
+    #        text2,type2 = readCellFromRow(row,4) # XML-Parser can start from row-node instead of root-node !
     #        puts("Read #{text1} of #{type1} and #{text2} of #{type2}
     #      }
     #-------------------------------------------------------------------------
     def getRow(rowInd)
-      currentTable=@tables[@currentTableName][NODE]
+      currentTable = @tables[@currentTableName][NODE]
       return getChildByIndex(currentTable,ROW,rowInd)
     end
     ##########################################################################
@@ -263,8 +265,8 @@ module Rods
     def getChildByIndex(parent,type,index)
       die("getChildByIndex: 'parent' #{parent} is not a node") unless (parent.class.to_s == "REXML::Element")
       die("getChildByIndex: 'index' #{index} is not a Fixnum") unless (index.class.to_s == "Fixnum")
-      i=0
-      lastElement=nil
+      i = 0
+      lastElement = nil
       #----------------------------------------------------------------------
       # Validierung
       #----------------------------------------------------------------------
@@ -281,21 +283,21 @@ module Rods
       # Typabhaengige Vorbelegungen
       #----------------------------------------------------------------------
       if(type == ROW)
-        kindOfElement="table:table-row"
-        kindOfRepetition="table:number-rows-repeated"
+        kindOfElement = "table:table-row"
+        kindOfRepetition = "table:number-rows-repeated"
       #---------------------------------------------------------------------
       # in der "Horizontalen" (Zelle oder Spalte) ggf. Breitenwerte anpassen
       # und typabhaengig vorbelegen
       #---------------------------------------------------------------------
       elsif((type == CELL) || (type == COLUMN))
         if(index > @tables[@currentTableName][WIDTH])
-          @tables[@currentTableName][WIDTH]=index
-          @tables[@currentTableName][WIDTHEXCEEDED]=true
+          @tables[@currentTableName][WIDTH] = index
+          @tables[@currentTableName][WIDTHEXCEEDED] = true
         end
-        kindOfRepetition="table:number-columns-repeated"
+        kindOfRepetition = "table:number-columns-repeated"
         case type
-          when CELL then kindOfElement="table:table-cell"
-          when COLUMN then kindOfElement="table:table-column"
+          when CELL then kindOfElement = "table:table-cell"
+          when COLUMN then kindOfElement = "table:table-column"
           else die("getChildByIndex: internal error: when-clause-failure for type #{type}")
         end
       else
@@ -307,8 +309,8 @@ module Rods
       # Index
       #----------------------------------------------------------------------
       parent.elements.each(kindOfElement){ |element|
-        i+=1
-        lastElement=element
+        i += 1
+        lastElement = element
         #--------------------------------------------------------------------
         # Suchindex erreicht ?
         #--------------------------------------------------------------------
@@ -318,13 +320,13 @@ module Rods
           # => Wiederholungsattribut loeschen, Element mit verbleibenden Leerelementen
           # anhaengen, Rueckgabe
           #------------------------------------------------------------------
-          if(repetition=element.attributes[kindOfRepetition])
-            numEmptyElementsAfter=repetition.to_i-1
+          if(repetition = element.attributes[kindOfRepetition])
+            numEmptyElementsAfter = repetition.to_i-1
             if(numEmptyElementsAfter < 1)
               die("getChildByIndex: new repetition < 1")
             end
             setRepetition(element,type,1)
-            element.next_sibling=createElement(type,numEmptyElementsAfter)
+            element.next_sibling = createElement(type,numEmptyElementsAfter)
           end
           return element 
         #--------------------------------------------------------------------
@@ -334,19 +336,19 @@ module Rods
           #------------------------------------------------------------------
           # Wiederholungsattribut ?
           #------------------------------------------------------------------
-          if(repetition=element.attributes[kindOfRepetition])
-            indexOfLastEmptyElement=i+repetition.to_i-1
+          if(repetition = element.attributes[kindOfRepetition])
+            indexOfLastEmptyElement = i+repetition.to_i-1
             #----------------------------------------------------------------
             # Liegt letzte Wiederholung noch vor dem Suchindex ?
             #----------------------------------------------------------------
             if(indexOfLastEmptyElement < index)
-              i=indexOfLastEmptyElement
+              i = indexOfLastEmptyElement
             #----------------------------------------------------------------
             # ... nein => Aufteilung des wiederholten Bereiches
             #----------------------------------------------------------------
             else
-              numEmptyElementsBefore=index-i
-              numEmptyElementsAfter=indexOfLastEmptyElement-index
+              numEmptyElementsBefore = index-i
+              numEmptyElementsAfter = indexOfLastEmptyElement-index
               #-------------------------------------------------
               # Wiederholungszahl des aktuellen Elementes reduzieren
               #-------------------------------------------------
@@ -354,12 +356,12 @@ module Rods
               #-------------------------------------------------
               # Neues, zurueckzugebendes Element einfuegen
               #-------------------------------------------------
-              element.next_sibling=createElement(type,1)
+              element.next_sibling = createElement(type,1)
               #-------------------------------------------------
               # ggf. weitere Leerelemente anhaengen
               #-------------------------------------------------
               if(numEmptyElementsAfter > 0)
-                element.next_sibling.next_sibling=createElement(type,numEmptyElementsAfter)
+                element.next_sibling.next_sibling = createElement(type,numEmptyElementsAfter)
               end
               #-------------------------------------------------
               # => Rueckgabe des Elementes mit Suchindex
@@ -372,16 +374,16 @@ module Rods
       #-----------------------------------------------------------------------
       # Index ausserhalb bisheriger Elemente inkl. wiederholter Leerelemente
       #-----------------------------------------------------------------------
-      numEmptyElementsBefore=index-i-1
+      numEmptyElementsBefore = index-i-1
       #----------------------------------------------------------------------
       # Hatte Vater bereits vor dem gesuchten Kind liegende Kinder ?
       #----------------------------------------------------------------------
       if(i > 0) # => lastElement != nil
         if(numEmptyElementsBefore > 0)
-          lastElement.next_sibling=createElement(type,numEmptyElementsBefore)
-          return (lastElement.next_sibling.next_sibling=createElement(type,1))
+          lastElement.next_sibling = createElement(type,numEmptyElementsBefore)
+          return (lastElement.next_sibling.next_sibling = createElement(type,1))
         else
-          return(lastElement.next_sibling=createElement(type,1))
+          return(lastElement.next_sibling = createElement(type,1))
         end
       #----------------------------------------------------------------------
       # Nein, neues Kind ist erstes Kind
@@ -391,16 +393,16 @@ module Rods
         # Hat das neue Kind Index 1 ?
         #-----------------------------------------------
         if(index == 1)
-          newElement=createElement(type,1)
+          newElement = createElement(type,1)
           parent.add(newElement)
           return newElement
         #-----------------------------------------------
         # Nein, Kind benoetigt "Leergeschwister" vorneweg
         #-----------------------------------------------
         else
-          newElement=createElement(type,numEmptyElementsBefore)
+          newElement = createElement(type,numEmptyElementsBefore)
           parent.add(newElement)
-          newElement.next_sibling=createElement(type,1)
+          newElement.next_sibling = createElement(type,1)
           return newElement.next_sibling
         end
       end
@@ -411,29 +413,29 @@ module Rods
     # all subsequent operations (first table of spreadsheet).
     #-------------------------------------------------------------------------
     def initHousekeeping()
-      @spreadSheet=@contentText.elements["/office:document-content/office:body/office:spreadsheet"]
+      @spreadSheet = @contentText.elements["/office:document-content/office:body/office:spreadsheet"]
       die("initHousekeeping: Could not extract office:spreadsheet") unless (@spreadSheet)
       #------------------------------------------------------------
       # Fuer alle Tabelleneintraege
       #------------------------------------------------------------
-      @numTables=0
+      @numTables = 0
       @spreadSheet.elements.each("table:table"){ |table|
-        tableName=table.attributes["table:name"]
+        tableName = table.attributes["table:name"]
         die("initHouskeeping: Could not extract tableName") if (tableName.empty?())
-        @tables[tableName]=Hash.new()
-        @tables[tableName][NODE]=table
-        @tables[tableName][WIDTH]=getTableWidth(table)
-        @tables[tableName][WIDTHEXCEEDED]=false
-        @numTables+=1
+        @tables[tableName] = Hash.new()
+        @tables[tableName][NODE] = table
+        @tables[tableName][WIDTH] = getTableWidth(table)
+        @tables[tableName][WIDTHEXCEEDED] = false
+        @numTables += 1
       }
       #----------------------------------------------------------------
       # Nun noch aktuelle, i.e. Default-Tabelle setzen
       #----------------------------------------------------------------
-      if @numTables==0
+      if @numTables == 0
         insertTable("Table 1")
       end
-      firstTable=@spreadSheet.elements["table:table[1]"]
-      @currentTableName=firstTable.attributes["table:name"]
+      firstTable = @spreadSheet.elements["table:table[1]"]
+      @currentTableName = firstTable.attributes["table:name"]
       tell("initHousekeeping: number of tables: #{@numTables} ... defaulting to '#{@currentTableName}'")
     end
     ##########################################################################
@@ -444,45 +446,45 @@ module Rods
     end
     ##########################################################################
     # Renames the table of the given name and updates the internal table-administration.
-    #   mySheet.renameTable("Tabelle1","not needed") # 'Tabelle1' is the default in a German environment
+    #   sheet.renameTable("Tabelle1","not needed") # 'Tabelle1' is the default in a German environment
     #-------------------------------------------------------------------------
     def renameTable(oldName,newName)
       die("renameTable: table '#{oldName}' does not exist") unless (@tables.has_key?(oldName))
       #------------------------------------------------------
       # XML-Tree anpassen
       #------------------------------------------------------
-      node=@tables[oldName][NODE]
-      node.attributes["table:name"]=newName
+      node = @tables[oldName][NODE]
+      node.attributes["table:name"] = newName
       #------------------------------------------------------
       # Tabellen-Hash anpassen
       #------------------------------------------------------
-      @tables[newName]=@tables[oldName]
+      @tables[newName] = @tables[oldName]
       @tables.delete(oldName)
       if(oldName == @currentTableName)
-        @currentTableName=newName
+        @currentTableName = newName
         tell("renameTable: renaming table (which is current table !) '#{oldName}' to '#{newName}'")
       else
         tell("renameTable: renaming table '#{oldName}' to '#{newName}'")
       end
     end
 
-    def getCurrentTable()
+    def current_table
       @currentTableName
     end
     ##########################################################################
     # Sets the table of the given name as the default-table for all subsequent
     # operations.
-    #   mySheet.setCurrentTable("example")
+    #   sheet.setCurrentTable("example")
     #-------------------------------------------------------------------------
     def setCurrentTable(tableName)
       die("setCurrentTable: table '#{tableName}' does not exist") unless (@tables.has_key?(tableName))
-      @currentTableName=tableName
+      @currentTableName = tableName
       tell("setCurrentTable: setting #{tableName} as current table")
     end
     ##########################################################################
     # Inserts a table of the given name before the given spreadsheet and updates
     # the internal table-administration.
-    #   mySheet.insertTableBefore("table2","table1") 
+    #   sheet.insertTableBefore("table2","table1") 
     #-------------------------------------------------------------------------
     def insertTableBefore(relativeTableName,tableName)
       insertTableBeforeAfter(relativeTableName,tableName,BEFORE)
@@ -490,7 +492,7 @@ module Rods
     ##########################################################################
     # Inserts a table of the given name after the given spreadsheet and updates
     # the internal table-administration.
-    #   mySheet.insertTableAfter("table1","table2") 
+    #   sheet.insertTableAfter("table1","table2") 
     #-------------------------------------------------------------------------
     def insertTableAfter(relativeTableName,tableName)
       insertTableBeforeAfter(relativeTableName,tableName,AFTER)
@@ -498,9 +500,9 @@ module Rods
     ##########################################################################
     # internal: Inserts a table of the given name before or after the given spreadsheet and updates
     # the internal table-administration. The default position is 'after'.
-    #   mySheet.insertTableBeforeAfter("table1","table2",BEFORE) 
+    #   sheet.insertTableBeforeAfter("table1","table2",BEFORE) 
     #-------------------------------------------------------------------------
-    def insertTableBeforeAfter(relativeTableName,tableName,position=AFTER)
+    def insertTableBeforeAfter(relativeTableName,tableName,position = AFTER)
       die("insertTableAfter: table '#{relativeTableName}' does not exist") unless (@tables.has_key?(relativeTableName))
       die("insertTableAfter: table '#{tableName}' already exists") if (@tables.has_key?(tableName))
       #-----------------------------------------
@@ -509,24 +511,24 @@ module Rods
       @spreadSheet.elements["table:table"].each{ |element|
         puts("Name: #{element.attributes['table:name']}")
       }
-      relativeTable=@spreadSheet.elements["*[@table:name = '#{relativeTableName}']"]
+      relativeTable = @spreadSheet.elements["*[@table:name = '#{relativeTableName}']"]
       die("insertTableAfter: internal error: Could not locate existing table #{relativeTableName}") unless (relativeTable) 
       #-----------------------------------------
       # Neues Tabellenelement zunaecht per se (i.e. unverankert)  erschaffen
       #-----------------------------------------
-      newTable=REXML::Element.new("table:table")
+      newTable = REXML::Element.new("table:table")
       newTable.add_attributes({"table:name" =>  tableName,
                                "table:print" => "false",
-                               "table:style-name" => "myTable"})
+                               "table:style-name" => "table_style"})
       #-----------------------------------------
       # Unterelemente anlegen und neue Tabelle
       # hinter vorherige einfuegen
       #-----------------------------------------
       writeXml(newTable,{TAG => "table:table-column",
-                         "table:style" => "myColumn",
+                         "table:style" => "column_style",
                          "table:default-cell-style-name" => "Default"})
       writeXml(newTable,{TAG => "table:table-row",
-                         "table:style-name" => "myRow",
+                         "table:style-name" => "row_style",
                          CHILD => {TAG => "table:table-cell"}})
       case position
         when BEFORE then @spreadSheet.insert_before(relativeTable,newTable)
@@ -536,45 +538,45 @@ module Rods
       #---------------------------------------------------------------------------
       # Tabellen-Hash aktualisieren
       #---------------------------------------------------------------------------
-      @tables[tableName]=Hash.new()
-      @tables[tableName][NODE]=newTable
-      @tables[tableName][WIDTH]=getTableWidth(newTable)
-      @tables[tableName][WIDTHEXCEEDED]=false
-      @numTables+=1
+      @tables[tableName] = Hash.new()
+      @tables[tableName][NODE] = newTable
+      @tables[tableName][WIDTH] = getTableWidth(newTable)
+      @tables[tableName][WIDTHEXCEEDED] = false
+      @numTables += 1
     end
     ##########################################################################
     # Inserts a table of the given name at the end of the spreadsheet and updates
     # the internal table-administration.
-    #   mySheet.insertTable("example") 
+    #   sheet.insertTable("example") 
     #-------------------------------------------------------------------------
     def insertTable(tableName)
       die("insertTable: table '#{tableName}' already exists") if (@tables.has_key?(tableName))
       #---------------------------------------------------------------------------
       # XML-Tree schreiben
       #---------------------------------------------------------------------------
-      newTable=writeXml(@spreadSheet,{TAG => "table:table",
+      newTable = writeXml(@spreadSheet,{TAG => "table:table",
                                       "table:name" => tableName,
                                       "table:print" => "false",
-                                      "table:style-name" => "myTable",
+                                      "table:style-name" => "table_style",
                                       "child1" => {TAG => "table:table-column",
-                                                   "table:style" => "myColumn",
+                                                   "table:style" => "column_style",
                                                    "table:default-cell-style-name" => "Default"},
                                       "child2" => {TAG => "table:table-row",
-                                                   "table:style-name" => "myRow",
+                                                   "table:style-name" => "row_style",
                                                    "child3" => {TAG => "table:table-cell"}}})
       #---------------------------------------------------------------------------
       # Tabellen-Hash aktualisieren
       #---------------------------------------------------------------------------
-      @tables[tableName]=Hash.new()
-      @tables[tableName][NODE]=newTable
-      @tables[tableName][WIDTH]=getTableWidth(newTable)
-      @tables[tableName][WIDTHEXCEEDED]=false
-      @numTables+=1
+      @tables[tableName] = Hash.new()
+      @tables[tableName][NODE] = newTable
+      @tables[tableName][WIDTH] = getTableWidth(newTable)
+      @tables[tableName][WIDTHEXCEEDED] = false
+      @numTables += 1
     end
     ##########################################################################
     # Deletes the table of the given name and updates the internal 
     # table-administration.
-    #   mySheet.deleteTable("Tabelle2")
+    #   sheet.deleteTable("Tabelle2")
     #-------------------------------------------------------------------------
     def deleteTable(tableName)
       die("deleteTable: table '#{tableName}' cannot be deleted as it is the current table !") if (tableName == @currentTableName)
@@ -585,13 +587,13 @@ module Rods
         #--------------------------------------------------
         # Loeschung in XML-Tree
         #--------------------------------------------------
-        node=@tables[tableName][NODE]
+        node = @tables[tableName][NODE]
         @spreadSheet.elements.delete(node)
         #--------------------------------------------------
         # Loeschung in Tabellen-Hash
         #--------------------------------------------------
         @tables.delete(tableName)
-        @numTables-=1
+        @numTables -= 1
         tell("deleteTable: deleting table #{tableName}")
       else
         die("deleteTable: invalid table-name/not existing table: '#{tableName}'")
@@ -603,17 +605,17 @@ module Rods
     def getTableWidth(table)
       die("getTableWidth: table #{table} is not a REXML::Element") unless (table.class.to_s == "REXML::Element")
       die("getTableWidth: current table does not contain table:table-column") unless(table.elements["table:table-column"])
-      tableName=table.attributes["table:name"]
+      tableName = table.attributes["table:name"]
       die("getTableWidth: Could not extract tableName") if (tableName.empty?())
-      numColumnsOfTable=0
+      numColumnsOfTable = 0
       #--------------------------------------------------------------
       # Vorhandene Spalteneintraege zaehlen
       #--------------------------------------------------------------
       table.elements.each("table:table-column"){ |tableColumn|
-        numColumnsOfTable+=1
-        numRepetitions=tableColumn.attributes["table:number-columns-repeated"]
+        numColumnsOfTable += 1
+        numRepetitions = tableColumn.attributes["table:number-columns-repeated"]
         if(numRepetitions)
-          numColumnsOfTable+=numRepetitions.to_i-1
+          numColumnsOfTable += numRepetitions.to_i-1
         end
       }
       tell("getTableWidth: width of '#{tableName}': #{numColumnsOfTable}")
@@ -630,23 +632,23 @@ module Rods
       # alle Zeilen auf neue Tabellenbreite auffuellen
       #---------------------------------------------------------------
       @tables.each{ |tableName,tableHash|
-        table=tableHash[NODE]
-        width=tableHash[WIDTH]
-        numColumnsOfTable=getTableWidth(table)
+        table = tableHash[NODE]
+        width = tableHash[WIDTH]
+        numColumnsOfTable = getTableWidth(table)
         if(tableHash[WIDTHEXCEEDED])
           die("padTables: current table does not contain table:table-column") unless(table.elements["table:table-column"])
           #--------------------------------------------------------------
           # Differenz zu Sollbreite ermitteln und Wiederholungszahl des
           # letzten Spalteneintrages aktualisieren/setzen
           #--------------------------------------------------------------
-          lastTableColumn=table.elements["table:table-column[last()]"]
+          lastTableColumn = table.elements["table:table-column[last()]"]
           if(lastTableColumn.attributes["table:number-columns-repeated"])
-            numRepetitions=(lastTableColumn.attributes["table:number-columns-repeated"]).to_i+width-numColumnsOfTable
+            numRepetitions = (lastTableColumn.attributes["table:number-columns-repeated"]).to_i+width-numColumnsOfTable
           else
-            numRepetitions=width-numColumnsOfTable+1 # '+1' da Spalte selbst als Wiederholung zaehlt !
+            numRepetitions = width-numColumnsOfTable+1 # '+1' da Spalte selbst als Wiederholung zaehlt !
           end
-          lastTableColumn.attributes["table:number-columns-repeated"]=numRepetitions.to_s
-          tableHash[WIDTHEXCEEDED]=false
+          lastTableColumn.attributes["table:number-columns-repeated"] = numRepetitions.to_s
+          tableHash[WIDTHEXCEEDED] = false
           tell("padTables: adjusted columns: #{numColumnsOfTable} -> #{width}")
         else
           tell("padTables: equal: #{numColumnsOfTable} <-> #{width}")
@@ -658,7 +660,7 @@ module Rods
     # adapts their repetition-attributes. It was formerly called by 'padTables' and is obsolete.
     #----------------------------------------------------------------------
     def padRow(row,width)
-      j=0
+      j = 0
       #-----------------------------------------------------
       # Falls ueberhaupt Spaltenobjekte vorhanden sind
       #-----------------------------------------------------
@@ -667,19 +669,19 @@ module Rods
         # Spalten zaehlen
         #--------------------------
         row.elements.each("table:table-cell"){ |cell|
-          j=j+1
+          j = j+1
           #-------------------------------------------
           # Spaltenwiederholungen addieren
           #-------------------------------------------
-          repetition=cell.attributes["table:number-columns-repeated"]
+          repetition = cell.attributes["table:number-columns-repeated"]
           if(repetition)
-            j=j+(repetition.to_i-1)
+            j = j+(repetition.to_i-1)
           end
         }
         #-------------------------------
         # Fuellmenge bestimmen
         #-------------------------------
-        numPaddings=width-j
+        numPaddings = width-j
         #------------------------------
         # Fuellbedarf ?
         #------------------------------
@@ -687,7 +689,7 @@ module Rods
           #-------------------------------
           # Letztes Element der Zeile holen
           #-------------------------------
-          cell=row.elements["table:table-cell[last()]"]
+          cell = row.elements["table:table-cell[last()]"]
           #-------------------------------
           # Leerzelle ?
           #-------------------------------
@@ -695,20 +697,20 @@ module Rods
             #-----------------------------
             # Leerzelle mit Wiederholung ?
             #-----------------------------
-            if(repetition=cell.attributes["table:number-columns-repeated"])
-              newRepetition=(repetition.to_i+numPaddings)
+            if(repetition = cell.attributes["table:number-columns-repeated"])
+              newRepetition = (repetition.to_i+numPaddings)
             #----------------------------
             # nein, einzelne Leerzelle -> Wiederholungszahl setzen
             #----------------------------
             else
-              newRepetition=numPaddings
+              newRepetition = numPaddings
             end
             setRepetition(cell,CELL,newRepetition)
           #-------------------------------
           # keine Leerzelle -> Leerzelle(n) anhaengen
           #-------------------------------
           else
-            cell.next_sibling=createElement(CELL,numPaddings)
+            cell.next_sibling = createElement(CELL,numPaddings)
           end
         #------------------------------------------------------
         # bei negativem Wert -> Fehler
@@ -743,12 +745,12 @@ module Rods
       unless(text.match(/^[0-1][0-9]:[0-5][0-9](:[0-5][0-9])?$/) || text.match(/^[2][0-3]:[0-5][0-9](:[0-5][0-9])?$/))
         die("time2TimeVal: time '#{text}' not in valid range")
       end
-      time=text.match(/(\d{2}):(\d{2})(:(\d{2}))?/)
-      hour=time[1]
-      minute=time[2]
+      time = text.match(/(\d{2}):(\d{2})(:(\d{2}))?/)
+      hour = time[1]
+      minute = time[2]
       seconds = time[4]
       seconds = "00" if seconds.nil?
-      internalValue="PT"+hour+"H"+minute+"M"+seconds+"S"
+      internalValue = "PT"+hour+"H"+minute+"M"+seconds+"S"
       tell("time2TimeVal: mapping: #{text} -> #{internalValue}")
       return internalValue
       exit
@@ -784,30 +786,30 @@ module Rods
     # newly created cell ! The text is internally cleaned from currency-symbols and
     # converted to a valid (English) float representation (but remains a string)
     # in case of type "currency" or "float".
-    #   amount=0.0
+    #   amount = 0.0
     #   5.upto(8){ |i|
-    #     row=mySheet.getRow(i)
-    #     text,type=mySheet.readCellFromRow(row,i)
-    #     mySheet.writeCellFromRow(row,9,type,(-1.0*text.to_f).to_s)
+    #     row = sheet.getRow(i)
+    #     text,type = sheet.readCellFromRow(row,i)
+    #     sheet.writeCellFromRow(row,9,type,(-1.0*text.to_f).to_s)
     #     if(type == "currency")
-    #       amount+=text.to_f
+    #       amount += text.to_f
     #     end
     #   }
     #   puts("Earned #{amount} bucks")
     #---------------------------------------------------------------
     def readCellFromRow(row,colInd)
-      j=0
+      j = 0
       #------------------------------------------------------------------
       # Fuer alle Spalten
       #------------------------------------------------------------------
       row.elements.each("table:table-cell"){ |cell|
-        j=j+1
+        j = j+1
         #-------------------------------------------
         # Spaltenwiederholungen addieren
         #-------------------------------------------
-        repetition=cell.attributes["table:number-columns-repeated"]
+        repetition = cell.attributes["table:number-columns-repeated"]
         if(repetition)
-          j=j+(repetition.to_i-1)
+          j = j+(repetition.to_i-1)
         end
         #-------------------------------------------
         # Falls Spaltenindex uebersprungen oder erreicht
@@ -817,19 +819,19 @@ module Rods
           # Zelltext und Datentyp zurueckgeben
           # ggf. Waehrungssymbol abschneiden
           #-------------------------------------------
-          textElement=cell.elements["text:p"]
+          textElement = cell.elements["text:p"]
           if(! textElement)
             return nil,nil
           else
-            text=textElement.text
+            text = textElement.text
             if(! text)
-              text=""
+              text = ""
             end
-            type=cell.attributes["office:value-type"]
+            type = cell.attributes["office:value-type"]
             if(! type)
-              type="string"
+              type = "string"
             end
-            text=normalizeText(text,type)
+            text = normalizeText(text,type)
             return text,type
           end
         end
@@ -848,7 +850,7 @@ module Rods
     # The content of a formula is it's last calculated result or 0 in case of a
     # newly created cell. See annotations at 'readCellFromRow'.
     #   1.upto(10){ |i|
-    #      text,type=readCell(i,i)
+    #      text,type = readCell(i,i)
     #      writeCell(i,10-i,type,text)
     #   }
     #-------------------------------------------------------------------------
@@ -856,21 +858,21 @@ module Rods
       #------------------------------------------------------------------
       # Fuer alle Zeilen
       #------------------------------------------------------------------
-      i=0
-      j=0
+      i = 0
+      j = 0
       #------------------------------------------------------------------
       # Zelle mit Indizes suchen
       #------------------------------------------------------------------
-      currentTable=@tables[@currentTableName][NODE]
+      currentTable = @tables[@currentTableName][NODE]
       currentTable.elements.each("table:table-row"){ |row|
-        i=i+1  
-        j=0
-        repetition=row.attributes["table:number-rows-repeated"]
+        i = i+1  
+        j = 0
+        repetition = row.attributes["table:number-rows-repeated"]
         #-------------------------------------------
         # Zeilenwiederholungen addieren
         #-------------------------------------------
         if(repetition)
-          i=i+(repetition.to_i-1)
+          i = i+(repetition.to_i-1)
         end
         #-------------------------------------------
         # Falls Zeilenindex uebersprungen oder erreicht
@@ -896,26 +898,26 @@ module Rods
       #-------------------------------------
       # Autor (ich :-)
       #-------------------------------------
-      initialCreator=@officeMeta.elements["meta:initial-creator"]
-      initialCreator=@officeMeta.add_element(REXML::Element.new("meta:initial-creator"))
+      initialCreator = @officeMeta.elements["meta:initial-creator"]
+      initialCreator = @officeMeta.add_element(REXML::Element.new("meta:initial-creator"))
       die("finalize: Could not extract meta:initial-creator") unless (initialCreator)
-      initialCreator.text="Dr. Heinz Breinlinger"
+      initialCreator.text = "Dr. Heinz Breinlinger"
       tell("finalize: automator: Dr. Heinz Breinlinger")
       #-------------------------------------
       # Datum/Zeit
       #-------------------------------------
-      metaCreationDate=@officeMeta.elements["meta:creation-date"]
+      metaCreationDate = @officeMeta.elements["meta:creation-date"]
       die("finalize: could not extract meta:creation-date") unless (metaCreationDate)
-      now=Time.new()
-      time=now.year.to_s+"-"+now.month.to_s+"-"+now.day.to_s+"T"+now.hour.to_s+":"+now.min.to_s+":"+now.sec.to_s
-      metaCreationDate.text=time
+      now = Time.new()
+      time = now.year.to_s+"-"+now.month.to_s+"-"+now.day.to_s+"T"+now.hour.to_s+":"+now.min.to_s+":"+now.sec.to_s
+      metaCreationDate.text = time
       tell("finalize: time: #{time}")
       #-------------------------------------
       # Anzahl der Tabellen
       #-------------------------------------
-      metaDocumentStatistic=@officeMeta.elements["meta:document-statistic"]
+      metaDocumentStatistic = @officeMeta.elements["meta:document-statistic"]
       die("finalize: Could not extract meta:document-statistic") unless (metaDocumentStatistic)
-      metaDocumentStatistic.attributes["meta:table-count"]=@numTables.to_s
+      metaDocumentStatistic.attributes["meta:table-count"] = @numTables.to_s
       tell("finalize: num of tables: #{@numTables}")
       #-------------------------------------
       tell("finalize: writing meta.xml ...")
@@ -972,36 +974,36 @@ module Rods
       # meta.xml
       #-------------------------------------------------------
       tell("init: parsing meta.xml ...")
-      @metaText=REXML::Document.new zipfile.file.read("meta.xml")
-      @officeMeta=@metaText.elements["/office:document-meta/office:meta"]
+      @metaText = REXML::Document.new zipfile.file.read("meta.xml")
+      @officeMeta = @metaText.elements["/office:document-meta/office:meta"]
       die("init: Could not extract office:document-meta") unless (@officeMeta)
       #-------------------------------------------------------
       # manifest.xml
       #-------------------------------------------------------
       tell("init: parsing manifest.xml ...")
-      @manifestText=REXML::Document.new zipfile.file.read("META-INF/manifest.xml")
-      @manifestRoot=@manifestText.elements["/manifest:manifest"]
+      @manifestText = REXML::Document.new zipfile.file.read("META-INF/manifest.xml")
+      @manifestRoot = @manifestText.elements["/manifest:manifest"]
       die("init: Could not extract manifest:manifest") unless (@manifestRoot)
       #-------------------------------------------------------
       # settings.xml
       #-------------------------------------------------------
       tell("init: parsing settings.xml ...")
-      @settingsText=REXML::Document.new zipfile.file.read("settings.xml")
-      @officeSettings=@settingsText.elements["/office:document-settings/office:settings"]
+      @settingsText = REXML::Document.new zipfile.file.read("settings.xml")
+      @officeSettings = @settingsText.elements["/office:document-settings/office:settings"]
       die("init: Could not extract office:-settings") unless (@officeSettings)
       #-------------------------------------------------------
       # styles.xml
       #-------------------------------------------------------
       tell("init: parsing styles.xml ...")
-      @stylesText=REXML::Document.new zipfile.file.read("styles.xml")
-      @officeStyles=@stylesText.elements["/office:document-styles/office:styles"]
+      @stylesText = REXML::Document.new zipfile.file.read("styles.xml")
+      @officeStyles = @stylesText.elements["/office:document-styles/office:styles"]
       die("init: Could not extract office:document-styles") unless (@officeStyles)
       #--------------------------------------------------------------
       # content.xml
       #--------------------------------------------------------------
       tell("init: parsing content.xml ...")
-      @contentText=REXML::Document.new zipfile.file.read("content.xml")
-      @autoStyles=@contentText.elements["/office:document-content/office:automatic-styles"]
+      @contentText = REXML::Document.new zipfile.file.read("content.xml")
+      @autoStyles = @contentText.elements["/office:document-content/office:automatic-styles"]
       die("init: Could not extract office:automatic-styles") unless (@autoStyles)
       #--------------------------------------------------------
       # Tabellendaten ermitteln und Initialwerte setzen
@@ -1019,7 +1021,7 @@ module Rods
     # the currency-symbol
     #----------------------------------------------------------
     def normalizeText(text,type)
-      newText=String.new(text)
+      newText = String.new(text)
       if((type == "currency") || (type == "float"))
         #--------------------------------------
         # Tausendertrennzeichen beseitigen
@@ -1042,9 +1044,9 @@ module Rods
     # Writes the given text-string to given cell and sets style of
     # cell to corresponding type. Keep in mind: All values of tables are
     # passed and retrieved as strings !
-    #   mySheet.writeText(mySheet.getCell(17,39),"currency","14,37")
+    #   sheet.writeText(sheet.getCell(17,39),"currency","14,37")
     # The example can of course be simplified by
-    #   mySheet.writeCell(17,39,"currency","14,37")
+    #   sheet.writeCell(17,39,"currency","14,37")
     #-----------------------------------------------------------
     def writeText(cell,type,text)
       #------------------------------------------
@@ -1059,19 +1061,19 @@ module Rods
       # String
       #-------------------------------------------
       if(type == "string")
-        cell.attributes["office:value-type"]="string"
-        cell.attributes["table:style-name"]=@stringStyle
+        cell.attributes["office:value-type"] = "string"
+        cell.attributes["table:style-name"] = @stringStyle
       #-------------------------------------------
       # Float
       #-------------------------------------------
       elsif(type == "float")
-        cell.attributes["office:value-type"]="float"
+        cell.attributes["office:value-type"] = "float"
         #-----------------------------------------------------
         # Dezimaltrenner von "," in "." aendern 
         #-----------------------------------------------------
-        internalText=text.sub(/,/,".")   
-        cell.attributes["office:value"]=internalText
-        cell.attributes["table:style-name"]=@floatStyle
+        internalText = text.sub(/,/,".")   
+        cell.attributes["office:value"] = internalText
+        cell.attributes["table:style-name"] = @floatStyle
       #-------------------------------------------
       # Formula
       # Cave: Zahlformat 1,25 muss geaendert werden in 1.25
@@ -1090,72 +1092,72 @@ module Rods
         #---------------------------------------------
         # Formel fuer interne Darstellung aufbereiten
         #---------------------------------------------
-        cell.attributes["table:formula"]=internalizeFormula(text) 
+        cell.attributes["table:formula"] = internalizeFormula(text) 
         #---------------------------------------------
         # Zellformatierung bestimmen
         #---------------------------------------------
         case type
           when "formula","formula:float"
-            cell.attributes["office:value-type"]="float"
-            cell.attributes["office:value"]=0
-            cell.attributes["table:style-name"]=@floatStyle
+            cell.attributes["office:value-type"] = "float"
+            cell.attributes["office:value"] = 0
+            cell.attributes["table:style-name"] = @floatStyle
           when "formula:time"
-            cell.attributes["office:value-type"]="time"
-            cell.attributes["office:time-value"]="PT00H00M00S"
-            cell.attributes["table:style-name"]=@timeStyle
-            # cell.attributes["table:style-name"]=""
+            cell.attributes["office:value-type"] = "time"
+            cell.attributes["office:time-value"] = "PT00H00M00S"
+            cell.attributes["table:style-name"] = @timeStyle
+            # cell.attributes["table:style-name"] = ""
           when "formula:date"
-            cell.attributes["office:value-type"]="date"
-            cell.attributes["office:date-value"]="0"
-            cell.attributes["table:style-name"]=@dateStyle
+            cell.attributes["office:value-type"] = "date"
+            cell.attributes["office:date-value"] = "0"
+            cell.attributes["table:style-name"] = @dateStyle
           when "formula:currency"
-            cell.attributes["office:value-type"]="currency"
+            cell.attributes["office:value-type"] = "currency"
             #-----------------------------------------------------
             # Dezimaltrenner von "," in "." aendern
             #-----------------------------------------------------
-            internalText="0.0"   
-            cell.attributes["office:value"]=internalText
-            cell.attributes["office:currency"]=@currencySymbolInternal
-            cell.attributes["table:style-name"]=@currencyStyle
+            internalText = "0.0"   
+            cell.attributes["office:value"] = internalText
+            cell.attributes["office:currency"] = @currencySymbolInternal
+            cell.attributes["table:style-name"] = @currencyStyle
           else die("writeText: invalid type of formula #{type}")
         end
-        text="0"
+        text = "0"
       #-------------------------------------------
       # Percent
       #-------------------------------------------
       elsif(type == "percent")
-        cell.attributes["office:value-type"]="percentage"
-        cell.attributes["office:value"]=percent2PercentVal(text)
-        cell.attributes["table:style-name"]=@percentStyle
-        text=text+" %"
+        cell.attributes["office:value-type"] = "percentage"
+        cell.attributes["office:value"] = percent2PercentVal(text)
+        cell.attributes["table:style-name"] = @percentStyle
+        text = text+" %"
       #-------------------------------------------
       # Currency
       #-------------------------------------------
       elsif(type == "currency")
-        cell.attributes["office:value-type"]="currency"
+        cell.attributes["office:value-type"] = "currency"
         #-----------------------------------------------------
         # Dezimaltrenner von "," in "." aendern und
         # Waehrungs-Symbol hintanstellen
         #-----------------------------------------------------
-        internalText=text.sub(/,/,".")   
-        text=text+" "+@currencySymbol
-        cell.attributes["office:value"]=internalText
-        cell.attributes["office:currency"]=@currencySymbolInternal
-        cell.attributes["table:style-name"]=@currencyStyle
+        internalText = text.sub(/,/,".")   
+        text = text+" "+@currencySymbol
+        cell.attributes["office:value"] = internalText
+        cell.attributes["office:currency"] = @currencySymbolInternal
+        cell.attributes["table:style-name"] = @currencyStyle
       #-------------------------------------------
       # Date
       #-------------------------------------------
       elsif(type == "date")
-        cell.attributes["office:value-type"]="date"
-        cell.attributes["table:style-name"]=@dateStyle
-        cell.attributes["office:date-value"]=date2DateVal(text)
+        cell.attributes["office:value-type"] = "date"
+        cell.attributes["table:style-name"] = @dateStyle
+        cell.attributes["office:date-value"] = date2DateVal(text)
       #-------------------------------------------
       # Time (im Format 13:37)
       #-------------------------------------------
       elsif(type == "time")
-        cell.attributes["office:value-type"]="time"
-        cell.attributes["table:style-name"]=@timeStyle
-        cell.attributes["office:time-value"]=time2TimeVal(text)
+        cell.attributes["office:value-type"] = "time"
+        cell.attributes["table:style-name"] = @timeStyle
+        cell.attributes["office:time-value"] = time2TimeVal(text)
       else
         puts("Wrong type #{type}: Doing nothing")
       end
@@ -1165,24 +1167,14 @@ module Rods
       # Textelement bereits vorhanden ?
       #-------------------------------------------
       if(cell.elements["text:p"])
-        cell.elements["text:p"].text=text
+        cell.elements["text:p"].text = text
       #-------------------------------------------
       # nicht vorhanden (Leerzelle) -> neu anlegen
       #-------------------------------------------
       else
-        newElement=cell.add_element("text:p")
-        newElement.text=text
+        newElement = cell.add_element("text:p")
+        newElement.text = text
       end
-    end
-    ##########################################################################
-    # internal: Maps a convenience color-value into a hex-value
-    # example:  "turquoise" => "#008080"
-    #-------------------------------------------------------------------------
-    def getColor(color)
-      hexColor=@palette[color]
-      die("getColor: color \'#{color}\' is not known in existing palette") unless (hexColor)
-      tell("getColor: Mapping #{color} to #{hexColor}")
-      return hexColor
     end
     ##########################################################################
     # internal: Norms and maps a known set of attributes of the given style-Hash to
@@ -1191,22 +1183,12 @@ module Rods
     # Unknown hash-keys are copied as is.
     #-------------------------------------------------------------------------
     def normStyleHash(inHash)
-      outHash=Hash.new()
+      outHash = Hash.new()
       inHash.each{ |key,value|
-        #---------------------------------------------------------------------
-        # Ersetzung von Farbwerten
-        #---------------------------------------------------------------------
-        if((key == "color") || (key == "fo:color") || (key == "background-color") || (key == "fo:background-color") || (key == "text-underline-color") || (key == "style:text-underline-color"))
-          #-------------------------------------------------------
-          # Falls Farbwert nicht hexadezimal angegeben (i.e. '#' zu Beginn),
-          # => in Farbpalette nachschlagen, ggf. Fehlermeldung
-          #-------------------------------------------------------
-          if(!value.match(/^#/)) then value=getColor(value)
-          end
         #--------------------------------------------------------
         # dito bei Farben fuer den Rand
         #--------------------------------------------------------
-        elsif(key.match(/^(fo:)?border/))
+        if key.match /^(fo:)?border/
           die("normStyleHash: wrong format for border '#{value}'") unless (value.match(/^\S+\s+\S+\s+\S+$/))
           #---------------------------------------------
           # Cave: Matcht auf Audruecke der Art
@@ -1214,13 +1196,13 @@ module Rods
           # zwischen 0.1 und cm Leerzeichen sein koennen, da nur
           # auf die letzten 3 Ausdrucke gematcht wird !
           #---------------------------------------------
-          match=value.match(/\S+\s\S+\s(\S+)\s*$/) 
-          color=match[1]
+          match = value.match(/\S+\s\S+\s(\S+)\s*$/) 
+          color = match[1]
           #-------------------------------------------------
           # Falls Farbwert nicht hexadezimal -> Ersetzen
           #-------------------------------------------------
           unless(color.match(/#[a-fA-F0-9]{6}/))
-            hexColor=getColor(color)
+            hexColor = Helpers.find_color_with_name color
             value.sub!(color,hexColor)
           end
         end
@@ -1247,7 +1229,7 @@ module Rods
           #-------------------------------------
           # andernfalls Key und Value kopieren
           #-------------------------------------
-          else outHash[key]=value
+          else outHash[key] = value
         end
       }
       return outHash
@@ -1257,13 +1239,13 @@ module Rods
     # styles.xml along with the indicator of the corresponding file.
     #-------------------------------------------------------------------------
     def getStyle(styleName)
-      style=@autoStyles.elements["*[@style:name = '#{styleName}']"]
+      style = @autoStyles.elements["*[@style:name = '#{styleName}']"]
       if(style)
-        file=CONTENT
+        file = CONTENT
       else
-        style=@officeStyles.elements["*[@style:name = '#{styleName}']"]
+        style = @officeStyles.elements["*[@style:name = '#{styleName}']"]
         die("getStyle: Could not find style \'#{styleName}\' in content.xml or styles.xml") unless (style)
-        file=STYLES
+        file = STYLES
       end
       tell("getStyle: found style '#{styleName}'")
       return file,style
@@ -1273,18 +1255,18 @@ module Rods
     # of given cell. Checks, whether the resulting style already exists in the
     # archive of created styles or creates and archives a new style. Applies the
     # found or created style to cell. Cell is a REXML::Element.
-    #   mySheet.setAttributes(cell,{ "border-right" => "0.05cm solid magenta4",
+    #   sheet.setAttributes(cell,{ "border-right" => "0.05cm solid magenta4",
     #                                "border-bottom" => "0.03cm solid lightgreen",
     #                                "border-top" => "0.08cm solid salmon",
     #                                "font-style" => "italic",
     #                                "font-weight" => "bold"})
-    #   mySheet.setAttributes(cell,{ "border" => "0.01cm solid turquoise", # turquoise frame
+    #   sheet.setAttributes(cell,{ "border" => "0.01cm solid turquoise", # turquoise frame
     #                                "text-align" => "center",             # center alignment
     #                                "background-color" => "yellow2",      # background-color
     #                                "color" => "blue"})                   # font-color
     #   1.upto(7){ |row|
-    #     cell=mySheet.getCell(row,5)
-    #     mySheet.setAttributes(cell,{ "border-right" => "0.07cm solid green6" }) 
+    #     cell = sheet.getCell(row,5)
+    #     sheet.setAttributes(cell,{ "border-right" => "0.07cm solid green6" }) 
     #   }
     #-------------------------------------------------------------------------
     def setAttributes(cell,attributes)
@@ -1294,22 +1276,22 @@ module Rods
       # Flag, ob neue Attribute und deren Auspraegungen bereits im aktuellen
       # style vorhanden sind
       #----------------------------------------------------------------------
-      containsMatchingAttributes=TRUE
+      containsMatchingAttributes = TRUE
       #-----------------------------------------------------------------------
       # Attribut-Hash, welcher "convenience"-Werte enthalten kann (und wird ;-) 
       # zunaechst normieren
       #-----------------------------------------------------------------------
-      attributes=normStyleHash(attributes)
+      attributes = normStyleHash(attributes)
       die("setAttributes: attribute style:name not allowed in attribute-list as automatically generated") if (attributes.has_key?("style:name"))
       #------------------------------------------------------------------
       # Falls Zelle bereits style zugewiesen hat
       #------------------------------------------------------------------
-      currentStyleName=cell.attributes["table:style-name"]
+      currentStyleName = cell.attributes["table:style-name"]
       if(currentStyleName)
         #---------------------------------------------------------------
         # style suchen (lassen)
         #---------------------------------------------------------------
-        file,currentStyle=getStyle(currentStyleName)
+        file,currentStyle = getStyle(currentStyleName)
         #-----------------------------------------------------------------------
         # Pruefung, ob oben gefundener style die neuen Attribute und deren Werte
         # bereits enthaelt.
@@ -1319,7 +1301,7 @@ module Rods
         # Knoten vorkommen und muss daher nicht naeher qualifiziert werden !
         #-----------------------------------------------------------------------
         attributes.each{ |attribute,value|
-          currentValue=currentStyle.attributes[attribute]
+          currentValue = currentStyle.attributes[attribute]
           #-------------------------------------------------
           # Attribut in Context-Node nicht gefunden ?
           #-------------------------------------------------
@@ -1336,7 +1318,7 @@ module Rods
             #-----------------------------------------------------------
             else
               tell("setAttributes: #{currentStyleName}: #{attribute}/#{value} not matching in Sub-Node")
-              containsMatchingAttributes=FALSE
+              containsMatchingAttributes = FALSE
               break
             end
           #--------------------------------------------------
@@ -1353,7 +1335,7 @@ module Rods
             #-------------------------------------------------
             else
               tell("setAttributes: #{currentStyleName}: #{attribute}/#{value} not matching with #{currentValue} in Top-Node")
-              containsMatchingAttributes=FALSE
+              containsMatchingAttributes = FALSE
             end
           end
         }
@@ -1376,28 +1358,28 @@ module Rods
         #----------------------------------------------------------------------
         # Da style fehlt, ggf. aus office:value-type bestmoeglichen style ermitteln
         #----------------------------------------------------------------------
-        valueType=cell.attributes["office:value-type"]
+        valueType = cell.attributes["office:value-type"]
         if(valueType)
           case valueType
-            when "string" then currentStyleName="myString"
-            when "percentage" then currentStyleName="myPercentage"
-            when "currency" then currentStyleName="myCurrency"
-            when "float" then currentStyleName="myFloat"
-            when "date" then currentStyleName="myDate"
-            when "time" then currentStyleName="myTime"
+            when "string" then currentStyleName = "string_style"
+            when "percentage" then currentStyleName = "percent_styleage"
+            when "currency" then currentStyleName = "currency_style"
+            when "float" then currentStyleName = "float_style"
+            when "date" then currentStyleName = "date_style"
+            when "time" then currentStyleName = "time_style"
           else
             die("setAttributes: unknown office:value-type #{valueType} found in #{cell}")
           end
         else
           #-----------------------------------------
-          # 'myString' als Default
+          # 'string_style' als Default
           #-----------------------------------------
-          currentStyleName="myString" 
+          currentStyleName = "string_style" 
         end
         #-------------------------------------------------------
         # passenden Style in Archiv suchen oder klonen und anpassen
         #-------------------------------------------------------
-        file,currentStyle=getStyle(currentStyleName)
+        file,currentStyle = getStyle(currentStyleName)
         getAppropriateStyle(cell,currentStyle,attributes)
       end
     end
@@ -1417,15 +1399,15 @@ module Rods
       #------------------------------------------------------
       # Klonen
       #------------------------------------------------------
-      newStyle=cloneNode(currentStyle)
+      newStyle = cloneNode(currentStyle)
       #------------------------------------------------------
       # Neuen style-Namen generieren und in Attributliste einfuegen
       # (oben wurde bereits geprueft, dass selbige keinen style-Namen enthaelt)
       # Cave: Wird neuer style spaeter verworfen (da in Archiv vorhanden), wird
       # @styleCounter wieder dekrementiert
       #------------------------------------------------------
-      newStyleName="myAutoStyle"+(@styleCounter+=1).to_s
-      attributes["style:name"]=newStyleName
+      newStyleName = "auto_style"+(@styleCounter += 1).to_s
+      attributes["style:name"] = newStyleName
       #------------------------------------------------------
       # Attributliste in neuen style einfuegen
       #------------------------------------------------------
@@ -1434,7 +1416,7 @@ module Rods
       # noch nicht geschriebenen style verhashen
       # (dabei wird auch style:name auf Dummy-Wert gesetzt)
       #-----------------------------------------------------------
-      hashKey=style2Hash(newStyle)
+      hashKey = style2Hash(newStyle)
       #----------------------------------------------------------
       # Neuer style bereits in Archiv vorhanden ?
       #----------------------------------------------------------
@@ -1443,17 +1425,17 @@ module Rods
         # Zelle style aus Archiv zuweisen
         # @styleCounter dekrementieren und neuen style verwerfen
         #-------------------------------------------------------
-        archiveStyleName=@styleArchive[hashKey]
-        cell.attributes["table:style-name"]=archiveStyleName
-        @styleCounter-=1
-        newStyle=nil
+        archiveStyleName = @styleArchive[hashKey]
+        cell.attributes["table:style-name"] = archiveStyleName
+        @styleCounter -= 1
+        newStyle = nil
         tell("getAppropriateStyle: archived style #{archiveStyleName} matches new attributes")
       else
         #-------------------------------------------------------
         # Neuen style in Hash aufnehmen, Zelle zuweisen und schreiben (!)
         #-------------------------------------------------------
-        @styleArchive[hashKey]=newStyleName # archivieren
-        cell.attributes["table:style-name"]=newStyleName # Zelle zuweisen
+        @styleArchive[hashKey] = newStyleName # archivieren
+        cell.attributes["table:style-name"] = newStyleName # Zelle zuweisen
         @autoStyles.elements << newStyle # in content.xml schreiben
         tell("getAppropriateStyle: adding/archiving style '#{newStyleName}' (hash: #{hashKey})")
       end
@@ -1475,11 +1457,11 @@ module Rods
       #--------------------------------------------------------
       if(attributes.has_key?("style:text-underline-style"))
         if(! attributes.has_key?("style:text-underline-width"))
-          attributes["style:text-underline-width"]="auto"
+          attributes["style:text-underline-width"] = "auto"
           puts("checkStyleAttributes: automatically set style:text-underline-width to 'auto'")
         end
         if(! attributes.has_key?("style:text-underline-color"))
-          attributes["style:text-underline-color"]="#000000" # schwarz
+          attributes["style:text-underline-color"] = "#000000" # schwarz
           puts("checkStyleAttributes: automatically set style:text-underline-color to 'black'")
         end
       end
@@ -1492,20 +1474,20 @@ module Rods
       #--------------------------------------------------------
       # fo:font-style und fo:font-weight vereinheitlichen (asiatisch/komplex)
       #--------------------------------------------------------
-      fontStyle=attributes["fo:font-style"]
+      fontStyle = attributes["fo:font-style"]
       if(fontStyle)
         if(attributes.has_key?("fo:font-style-asian") || attributes.has_key?("fo:font-style-complex"))
           tell("checkStyleAttributes: automatically overwritten fo:font-style-asian/complex with value of fo:font-style")
         end
-        attributes["fo:font-style-asian"]=attributes["fo:font-style-complex"]=fontStyle
+        attributes["fo:font-style-asian"] = attributes["fo:font-style-complex"] = fontStyle
       end
       #--------------------------------------------------------
-      fontWeight=attributes["fo:font-weight"]
+      fontWeight = attributes["fo:font-weight"]
       if(fontWeight)
         if(attributes.has_key?("fo:font-weight-asian") || attributes.has_key?("fo:font-weight-complex"))
           tell("checkStyleAttributes: automatically overwritten fo:font-weight-asian/complex with value of fo:font-weight")
         end
-        attributes["fo:font-weight-asian"]=attributes["fo:font-weight-complex"]=fontWeight
+        attributes["fo:font-weight-asian"] = attributes["fo:font-weight-complex"] = fontWeight
       end
       #-----------------------------------------------------------------------
       # Sind nur entweder fo:border fo:border-... enthalten ?
@@ -1522,20 +1504,20 @@ module Rods
       # Sind fo:margin-left und fo:text-align kompatibel ?
       # Rules of precedence (hier willkuerlich): Alignment schlaegt Einruecktiefe ;-)
       #-----------------------------------------------------------------------
-      leftMargin=attributes["fo:margin-left"]
-      textAlign=attributes["fo:text-align"]
+      leftMargin = attributes["fo:margin-left"]
+      textAlign = attributes["fo:text-align"]
       #----------------------------------------------------------------------
       # Mittig oder rechtsbuendig impliziert aeusserst linken Rand
       #----------------------------------------------------------------------
       if(leftMargin && textAlign && (textAlign != "start") && (leftMargin != "0"))
         tell("checkStyleAttributes: automatically corrected: fo:text-align \'#{attributes['fo:text-align']}\' does not match fo:margin-left \'#{attributes['fo:margin-left']}\'")
-        attributes["fo:margin-left"]="0" 
+        attributes["fo:margin-left"] = "0" 
       #----------------------------------------------------------------------
       # Einrueckung bedingt Linksbuendigkeit
       #----------------------------------------------------------------------
       elsif(leftMargin && (leftMargin != "0") && !textAlign)
         tell("checkStyleAttributes: automatically corrected: fo:margin-left \'#{attributes['fo:margin-left']}\' needs fo:text-align \'start\' to work")
-        attributes["fo:text-align"]="start" 
+        attributes["fo:text-align"] = "start" 
       end 
     end
     ##########################################################################
@@ -1551,9 +1533,9 @@ module Rods
       # Cave: Sub-Nodes koennen, muessen aber nicht vorhanden sein
       #   in diesem Fall werden sie spaeter angelegt
       #-----------------------------------------------------------------
-      tableCellProperties=style.elements["style:table-cell-properties"]
-      textProperties=style.elements["style:text-properties"]
-      paragraphProperties=style.elements["style:paragraph-properties"]
+      tableCellProperties = style.elements["style:table-cell-properties"]
+      textProperties = style.elements["style:text-properties"]
+      paragraphProperties = style.elements["style:paragraph-properties"]
       #-----------------------------------------------------------------
       # Vorverarbeitung
       #-----------------------------------------------------------------
@@ -1566,7 +1548,7 @@ module Rods
         # style:table-cell-properties
         #------------------------------------------------------------------------
         if(key.match(/^fo:border/) || (key == "style:text-align-source") || key == ("fo:background-color"))
-          tableCellProperties=style.add_element("style:table-cell-properties") unless (tableCellProperties)
+          tableCellProperties = style.add_element("style:table-cell-properties") unless (tableCellProperties)
           #--------------------------------------------------------------------------
           # Cave: fo:border-(bottom|top|left|right) und fo:border duerfen NICHT 
           # gleichzeitig vorhanden sein !
@@ -1577,36 +1559,36 @@ module Rods
           if(key.match(/^fo:border-/)) # Falls Border-Seitenangabe (bottom|top|left|right)
             tableCellProperties.attributes.delete("fo:border") # fo:border selbst loeschen
           end
-          tableCellProperties.attributes[key]=value
+          tableCellProperties.attributes[key] = value
         else
           case key
             #------------------------------------------------------------------------
             # style:style 
             #------------------------------------------------------------------------
             when "style:name","style:family","style:parent-style-name","style:data-style-name"
-              style.attributes[key]=value
+              style.attributes[key] = value
             #------------------------------------------------------------------------
             # style:text-properties
             #------------------------------------------------------------------------
             when "fo:color","fo:font-style","fo:font-style-asian","fo:font-style-complex",
                  "fo:font-weight","fo:font-weight-asian","fo:font-weight-complex","style:text-underline-style",
                  "style:text-underline-width","style:text-underline-color"
-              textProperties=style.add_element("style:text-properties") unless (textProperties)
-              textProperties.attributes[key]=value
+              textProperties = style.add_element("style:text-properties") unless (textProperties)
+              textProperties.attributes[key] = value
               #---------------------------------------------------------
               # asiatische und komplexe Varianten nachziehen
               #---------------------------------------------------------
               if(key == "fo:font-style")
-                textProperties.attributes["fo:font-style-asian"]=textProperties.attributes["fo:font-style-complex"]=value
+                textProperties.attributes["fo:font-style-asian"] = textProperties.attributes["fo:font-style-complex"] = value
               elsif(key == "fo:font-weight")
-                textProperties.attributes["fo:font-weight-asian"]=textProperties.attributes["fo:font-weight-complex"]=value
+                textProperties.attributes["fo:font-weight-asian"] = textProperties.attributes["fo:font-weight-complex"] = value
               end
             #------------------------------------------------------------------------
             # style:paragraph-properties
             #------------------------------------------------------------------------
             when "fo:margin-left","fo:text-align"
-              paragraphProperties=style.add_element("style:paragraph-properties") unless (paragraphProperties)
-              paragraphProperties.attributes[key]=value
+              paragraphProperties = style.add_element("style:paragraph-properties") unless (paragraphProperties)
+              paragraphProperties.attributes[key] = value
           else
               die("insertStyleAttributes: invalid or not implemented attribute #{key}")
           end
@@ -1619,7 +1601,7 @@ module Rods
     #-------------------------------------------------------------------------
     def cloneNode(node)
       die("cloneNode: node #{node} is not a REXML::Element") unless (node.class.to_s == "REXML::Element")
-      newNode=node.clone()
+      newNode = node.clone()
       #-----------------------------------------------
       # Rekursion fuer Kind-Elemente
       #-----------------------------------------------
@@ -1630,13 +1612,13 @@ module Rods
     end
     ##########################################################################
     # Creates a new style out of the given attribute-hash with abbreviated and simplified syntax.
-    #   mySheet.writeStyleAbbr({"name" => "myNewPercentStyle",        # <- style-name to be applied to a cell
+    #   sheet.writeStyleAbbr({"name" => "new_percent_style",        # <- style-name to be applied to a cell
     #                           "margin-left" => "0.3cm",
     #                           "text-align" => "start",
     #                           "color" => "blue",
     #                           "border" => "0.01cm solid black",
     #                           "font-style" => "italic",
-    #                           "data-style-name" => "myPercentFormat", # <- predefined RODS data-style
+    #                           "data-style-name" => "percent_format_style", # <- predefined RODS data-style
     #                           "font-weight" => "bold"})
     #-------------------------------------------------------------------------
     def writeStyleAbbr(attributes)
@@ -1652,13 +1634,13 @@ module Rods
       #-----------------------------------------------------------------------
       # Hashes potentieller Kind-Elemente und Tag-Vorbefuellung
       #-----------------------------------------------------------------------
-      tableCellProperties=Hash.new(); tableCellProperties[TAG]="style:table-cell-properties"
-      textProperties=Hash.new(); textProperties[TAG]="style:text-properties"
-      paragraphProperties=Hash.new(); paragraphProperties[TAG]="style:paragraph-properties"
+      tableCellProperties = Hash.new(); tableCellProperties[TAG] = "style:table-cell-properties"
+      textProperties = Hash.new(); textProperties[TAG] = "style:text-properties"
+      paragraphProperties = Hash.new(); paragraphProperties[TAG] = "style:paragraph-properties"
       #----------------------------------------------------------------------
       # Nur wenige Default-Werte
       #----------------------------------------------------------------------
-      styleAttributes={TAG => "style:style",
+      styleAttributes = {TAG => "style:style",
                        "style:name" => "noName", # eigentlich unnoetig, da Attribut zwingend und oben geprueft
                        "style:family" => "table-cell",
                        "style:parent-style-name" => "Default"}
@@ -1675,29 +1657,29 @@ module Rods
         # Werte den Hashes zuordnen
         #--------------------------------------------------------
         case key
-          when "style:name" then styleAttributes["style:name"]=value
-          when "style:family" then styleAttributes["style:family"]=value
-          when "style:parent-style-name" then styleAttributes["style:parent-style-name"]=value
-          when "style:data-style-name" then styleAttributes["style:data-style-name"]=value
+          when "style:name" then styleAttributes["style:name"] = value
+          when "style:family" then styleAttributes["style:family"] = value
+          when "style:parent-style-name" then styleAttributes["style:parent-style-name"] = value
+          when "style:data-style-name" then styleAttributes["style:data-style-name"] = value
           #---------------------------------------------------------------------------------
-          when "fo:background-color" then tableCellProperties["fo:background-color"]=value
-          when "style:text-align-source" then tableCellProperties["style:text-align-source"]=value
-          when "fo:border-bottom" then tableCellProperties["fo:border-bottom"]=value
-          when "fo:border-top" then tableCellProperties["fo:border-top"]=value
-          when "fo:border-left" then tableCellProperties["fo:border-left"]=value
-          when "fo:border-right" then tableCellProperties["fo:border-right"]=value
-          when "fo:border" then tableCellProperties["fo:border"]=value
+          when "fo:background-color" then tableCellProperties["fo:background-color"] = value
+          when "style:text-align-source" then tableCellProperties["style:text-align-source"] = value
+          when "fo:border-bottom" then tableCellProperties["fo:border-bottom"] = value
+          when "fo:border-top" then tableCellProperties["fo:border-top"] = value
+          when "fo:border-left" then tableCellProperties["fo:border-left"] = value
+          when "fo:border-right" then tableCellProperties["fo:border-right"] = value
+          when "fo:border" then tableCellProperties["fo:border"] = value
           #---------------------------------------------------------------------------------
-          when "fo:color" then textProperties["fo:color"]=value
-          when "fo:font-style" then textProperties["fo:font-style"]=value
-          when "fo:font-style-asian" then textProperties["fo:font-style-asian"]=value
-          when "fo:font-style-complex" then textProperties["fo:font-style-complex"]=value
-          when "fo:font-weight" then textProperties["fo:font-weight"]=value
-          when "fo:font-weight-asian" then textProperties["fo:font-weight-asian"]=value
-          when "fo:font-weight-complex" then textProperties["fo:font-weight-complex"]=value
+          when "fo:color" then textProperties["fo:color"] = value
+          when "fo:font-style" then textProperties["fo:font-style"] = value
+          when "fo:font-style-asian" then textProperties["fo:font-style-asian"] = value
+          when "fo:font-style-complex" then textProperties["fo:font-style-complex"] = value
+          when "fo:font-weight" then textProperties["fo:font-weight"] = value
+          when "fo:font-weight-asian" then textProperties["fo:font-weight-asian"] = value
+          when "fo:font-weight-complex" then textProperties["fo:font-weight-complex"] = value
           #---------------------------------------------------------------------------------
-          when "fo:margin-left" then paragraphProperties["fo:margin-left"]=value
-          when "fo:text-align" then paragraphProperties["fo:text-align"]=value
+          when "fo:margin-left" then paragraphProperties["fo:margin-left"] = value
+          when "fo:text-align" then paragraphProperties["fo:text-align"] = value
         else
           die("writeStyle: invalid or not implemented attribute #{key}")
         end
@@ -1706,9 +1688,9 @@ module Rods
       # Belegte Kind-Hashes hinzufuegen
       # (Laenge > 1, da vordem bereits TAG in Kind-Hashes eingefuegt)
       #------------------------------------------------------------
-      if (tableCellProperties.length > 1) then styleAttributes["child1"]=tableCellProperties end
-      if (textProperties.length > 1) then styleAttributes["child2"]=textProperties end
-      if (paragraphProperties.length > 1) then styleAttributes["child3"]=paragraphProperties end
+      if (tableCellProperties.length > 1) then styleAttributes["child1"] = tableCellProperties end
+      if (textProperties.length > 1) then styleAttributes["child2"] = textProperties end
+      if (paragraphProperties.length > 1) then styleAttributes["child3"] = paragraphProperties end
       writeStyleXml(CONTENT,styleAttributes)
     end
     ##########################################################################
@@ -1726,7 +1708,7 @@ module Rods
     #    # date-Style part 1 (format)
     #    #--------------------------------------------------------
     #    writeStyleXml(STYLES,{TAG => "number:date-style",
-    #                   "style:name" => "myDateFormat",
+    #                   "style:name" => "date_format_style",
     #                   "number:automatic-order" => "true",
     #                   "number:format-source" => "language",
     #                   "child1" => {TAG => "number:day"},
@@ -1740,32 +1722,32 @@ module Rods
     #    # date-Style part 2 (referencing format above)
     #    #--------------------------------------------------------
     #    writeStyleXml(CONTENT,{TAG => "style:style",
-    #                   "style:name" => "myDate",
+    #                   "style:name" => "date_style",
     #                   "style:family" => "table-cell",
     #                   "style:parent-style-name" => "Default",
-    #                   "style:data-style-name" => "myDateFormat"})
+    #                   "style:data-style-name" => "date_format_style"})
     #------------------------------------------------------------------------
     def writeStyleXml(file,styleHash)
-      topNode=@autoStyles # Default
+      topNode = @autoStyles # Default
       #----------------------------------------------------------
       # In welche Ausgabedatei ?
       #----------------------------------------------------------
       case file
-        when STYLES then topNode=@officeStyles
-        when CONTENT then topNode=@autoStyles
+        when STYLES then topNode = @officeStyles
+        when CONTENT then topNode = @autoStyles
         else die("writeStyleXml: wrong file-parameter #{file}")
       end
       die("writeStyleXml: Style-Hash #{styleHash} is not a Hash") unless (styleHash.class.to_s == "Hash")
       die("writeStyleXml: Missing attribute style:name") unless (styleHash.has_key?("style:name"))
-      styleName=styleHash["style:name"]
+      styleName = styleHash["style:name"]
       #-----------------------------------------------------------
       # Style dieses Namens bereits vorhanden ? -> Loeschen,
       # sofern kein Default-Style von RODS, und aus style-Archiv ggf. entfernen.
       # Cave: style wird nur in der angegebenen der beiden Dateien
       # content.xml ODER styles.xml gesucht !
       #-----------------------------------------------------------
-      isFixedStyle=@fixedStyles.index(styleName)
-      styleNode=topNode.elements["*[@style:name = '#{styleName}']"]
+      isFixedStyle = @fixedStyles.index(styleName)
+      styleNode = topNode.elements["*[@style:name = '#{styleName}']"]
       if(styleNode && !isFixedStyle)
         tell("writeStyleXml: Deleting previous style with style:name '#{styleName}'")
         topNode.elements.delete(styleNode)
@@ -1784,15 +1766,15 @@ module Rods
       # und schreiben, sofern nicht Default-Style
       #-----------------------------------------------------------
       unless(styleNode && isFixedStyle)
-        nodeWritten=writeXml(topNode,styleHash)
+        nodeWritten = writeXml(topNode,styleHash)
         #-----------------------------------------------------------
         # geschriebenen Knoten verhashen
         #-----------------------------------------------------------
-        hashKey=style2Hash(nodeWritten)
+        hashKey = style2Hash(nodeWritten)
         if(@styleArchive.has_key?(hashKey))
           tell("writeStyleXml: style is already in archive")
         else
-          @styleArchive[hashKey]=styleName
+          @styleArchive[hashKey] = styleName
         end
         tell("writeStyleXml: adding/archiving style '#{styleName}' (hash: #{hashKey})")
       end
@@ -1811,10 +1793,10 @@ module Rods
       #     notwendig, da die Attributreihenfolge von XML-Knoten variiert !
       #     (z.B. bei/nach Klonung)
       #------------------------------------------------------------------
-      styleNodeString=styleNode.to_s
-      styleNodeString.sub!(/style:name\s*=\s*('|")\S+('|")/,"style:name="+DUMMY)
+      styleNodeString = styleNode.to_s
+      styleNodeString.sub!(/style:name\s* = \s*('|")\S+('|")/,"style:name = "+DUMMY)
       styleNodeString.gsub!(/\s+/,"")
-      sortedString=styleNodeString.split(//).sort.join
+      sortedString = styleNodeString.split(//).sort.join
       return sortedString.hash.to_s
     end
     ##########################################################################
@@ -1827,7 +1809,7 @@ module Rods
       # Tabellenformat selbst
       #------------------------------------------------------------------------
       writeStyleXml(CONTENT,{TAG => "style:style",
-                             "style:name" => "myTable",
+                             "style:name" => "table_style",
                              "style:family" => "table",
                              "style:master-page-name" => "Default",
                              CHILD => {TAG => "style:table-properties",
@@ -1837,7 +1819,7 @@ module Rods
       # Zeilenformat 
       #------------------------------------------------------------------------
       writeStyleXml(CONTENT,{TAG => "style:style",
-                             "style:name" => "myRow",
+                             "style:name" => "row_style",
                              "style:family" => "table-row",
                              CHILD => {TAG => "style:table-row-properties",
                                        "style:use-optimal-row-height" => "true",
@@ -1847,7 +1829,7 @@ module Rods
       # Spaltenformat 
       #------------------------------------------------------------------------
       writeStyleXml(CONTENT,{TAG => "style:style",
-                             "style:name" => "myColumn",
+                             "style:name" => "column_style",
                              "style:family" => "table-column",
                              CHILD => {TAG => "style:table-column-properties",
                                        "style:column-width" => "2.267cm",
@@ -1859,7 +1841,7 @@ module Rods
       # Float-Style Teil 1 (Format)
       #--------------------------------------------------------
       writeStyleXml(STYLES,{TAG => "number:number-style",
-                     "style:name" => "myFloatFormat",
+                     "style:name" => "float_format_style",
                      CHILD => {TAG => "number:number",
                                "number:decimal-places" => "2",
                                "number:min-integer-digits" => "1"}})
@@ -1867,17 +1849,17 @@ module Rods
       # Float-Style Teil 2 (Referenz zu Format oben)
       #--------------------------------------------------------
       writeStyleXml(CONTENT,{TAG => "style:style",
-                     "style:name" => "myFloat",
+                     "style:name" => "float_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default",
-                     "style:data-style-name" => "myFloatFormat"})
+                     "style:data-style-name" => "float_format_style"})
       #------------------------------------------------------------------------
       # Zeit
       #------------------------------------------------------------------------
       # Zeit-Style Teil 1 (Format)
       #--------------------------------------------------------
       writeStyleXml(STYLES,{TAG => "number:time-style",
-                            "style:name" => "myTimeFormatSeconds",
+                            "style:name" => "time_format_styleSeconds",
                             "child1" => {TAG => "number:hours",
                                          "number:style" => "long"},
                             "child2" => {TAG => "number:text",
@@ -1892,17 +1874,17 @@ module Rods
       # Zeit-Style Teil 2 (Referenz zu Format oben)
       #--------------------------------------------------------
       writeStyleXml(CONTENT,{TAG => "style:style",
-                     "style:name" => "myTimeSeconds",
+                     "style:name" => "time_seconds_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default",
-                     "style:data-style-name" => "myTimeFormatSeconds"})
+                     "style:data-style-name" => "time_format_styleSeconds"})
       #------------------------------------------------------------------------
       # Zeit
       #------------------------------------------------------------------------
       # Zeit-Style Teil 1 (Format)
       #--------------------------------------------------------
       writeStyleXml(STYLES,{TAG => "number:time-style",
-                            "style:name" => "myTimeFormat",
+                            "style:name" => "time_format_style",
                             "child1" => {TAG => "number:hours",
                                          "number:style" => "long"},
                             "child2" => {TAG => "number:text",
@@ -1913,17 +1895,17 @@ module Rods
       # Zeit-Style Teil 2 (Referenz zu Format oben)
       #--------------------------------------------------------
       writeStyleXml(CONTENT,{TAG => "style:style",
-                     "style:name" => "myTime",
+                     "style:name" => "time_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default",
-                     "style:data-style-name" => "myTimeFormat"})
+                     "style:data-style-name" => "time_format_style"})
       #------------------------------------------------------------------------
       # Prozent
       #------------------------------------------------------------------------
       # Prozent-Style Teil 1 (Format)
       #--------------------------------------------------------
       writeStyleXml(STYLES,{TAG => "number:percent-style",
-                     "style:name" => "myPercentFormat",
+                     "style:name" => "percent_format_style",
                      "child1" => {TAG => "number:number",
                                   "number:decimal-places" => "2",
                                   "number:min-integer-digits" => "1"},
@@ -1933,15 +1915,15 @@ module Rods
       # Prozent-Style Teil 2 (Referenz zu Format oben)
       #--------------------------------------------------------
       writeStyleXml(CONTENT,{TAG => "style:style",
-                     "style:name" => "myPercent",
+                     "style:name" => "percent_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default",
-                     "style:data-style-name" => "myPercentFormat"})
+                     "style:data-style-name" => "percent_format_style"})
       #------------------------------------------------------------------------
       # String
       #------------------------------------------------------------------------
       writeStyleXml(CONTENT,{TAG => "style:style",
-                     "style:name" => "myString",
+                     "style:name" => "string_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default"})
       #------------------------------------------------------------------------
@@ -1950,7 +1932,7 @@ module Rods
       # Date-Style Teil 1 (Format)
       #--------------------------------------------------------
       writeStyleXml(STYLES,{TAG => "number:date-style",
-                     "style:name" => "myDateFormat",
+                     "style:name" => "date_format_style",
                      "number:automatic-order" => "true",
                      "number:format-source" => "language",
                      "child1" => {TAG => "number:day"},
@@ -1964,33 +1946,33 @@ module Rods
       # Date-Style Teil 2 (Referenz zu Format oben)
       #--------------------------------------------------------
       writeStyleXml(CONTENT,{TAG => "style:style",
-                     "style:name" => "myDate",
+                     "style:name" => "date_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default",
-                     "style:data-style-name" => "myDateFormat"})
+                     "style:data-style-name" => "date_format_style"})
       #------------------------------------------------------------------------
       # Datum als Wochentag
       #------------------------------------------------------------------------
       # Date-Style Teil 1 (Format)
       #--------------------------------------------------------
       writeStyleXml(STYLES,{TAG => "number:date-style",
-                            "style:name" => "myDateFormatDay",
+                            "style:name" => "date_format_day_style",
                             CHILD => {TAG => "number:day-of-week"}})
       #--------------------------------------------------------
       # Date-Style Teil 2 (Referenz zu Format oben)
       #--------------------------------------------------------
       writeStyleXml(CONTENT,{TAG => "style:style",
-                     "style:name" => "myDateDay",
+                     "style:name" => "date_day_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default",
-                     "style:data-style-name" => "myDateFormatDay"})
+                     "style:data-style-name" => "date_format_day_style"})
       #------------------------------------------------------------------------
       # Waehrung
       #------------------------------------------------------------------------
       # Currency-Style Teil 1 (Mapping bei positiver Zahl)
       #--------------------------------------------------------
       writeStyleXml(STYLES,{TAG => "number:currency-style",
-                     "style:name" => "myCurrencyFormatPositive",
+                     "style:name" => "currency_format_positive_style",
                      "child1" => {TAG => "number:number",
                                   "number:decimal-places" => "2",
                                   "number:min-integer-digits" => "1",
@@ -2005,7 +1987,7 @@ module Rods
       # Currency-Style Teil 2 (Format mit Referenz zu Mapping)
       #--------------------------------------------------------
       writeStyleXml(STYLES,{TAG => "number:currency-style",
-                     "style:name" => "myCurrencyFormat",
+                     "style:name" => "currency_format_style",
                      "child1" => {TAG => "style:text-properties",
                                   "fo:color" => "#ff0000"},
                      "child2" => {TAG => "number:text",
@@ -2021,21 +2003,21 @@ module Rods
                                   "number:country" => @country,
                                   TEXT => @currencySymbol },
                      "child6" => {TAG => "style:map",
-                                  "style:condition" => "value()>=0",
-                                  "style:apply-style-name" => "myCurrencyFormatPositive" }})
+                                  "style:condition" => "value()> = 0",
+                                  "style:apply-style-name" => "currency_format_positive_style" }})
       #--------------------------------------------------------
       # Currency-Style Teil 3 (Referenz zu Format oben)
       #--------------------------------------------------------
       writeStyleXml(CONTENT,{TAG => "style:style",
-                     "style:name" => "myCurrency",
+                     "style:name" => "currency_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default",
-                     "style:data-style-name" => "myCurrencyFormat"})
+                     "style:data-style-name" => "currency_format_style"})
       #--------------------------------------------------------
       # Annotation-Styles Teil 1
       #--------------------------------------------------------
       writeStyleXml(STYLES,{TAG => "style:style",
-                     "style:name" => "myCommentParagraph",
+                     "style:name" => "comment_paragraph_style",
                      "style:family" => "paragraph",
                      "child1" => {TAG => "style:paragraph-properties",
                                   "style:writing-mode" => "page",
@@ -2076,7 +2058,7 @@ module Rods
       # Annotation-Styles Teil 2
       #--------------------------------------------------------
       writeStyleXml(STYLES,{TAG => "style:style",
-                     "style:name" => "myCommentText",
+                     "style:name" => "comment_text_style",
                      "style:family" => "text",
                      "child" => {TAG => "style:text-properties",
                                  "style:text-overline-mode" => "continuous",
@@ -2112,7 +2094,7 @@ module Rods
       # Annotation-Styles Teil 3
       #--------------------------------------------------------
       writeStyleXml(CONTENT,{TAG => "style:style",
-                     "style:name" => "myCommentGraphics",
+                     "style:name" => "comment_graphics_style",
                      "style:family" => "graphic",
                      CHILD => {TAG => "style:graphic-properties",
                                "fo:padding-right" => "0.1cm",
@@ -2133,13 +2115,13 @@ module Rods
     end
     ##########################################################################
     # Helper-Tool: Prints all styles of styles.xml in indented ASCII-notation
-    #   mySheet.printOfficeStyles()
+    #   sheet.printOfficeStyles()
     # * Lines starting with 'E' are Element-Tags
     # * Lines starting with 'A' are Attributes
     # * Lines starting with 'T' are Element-Text
     # Sample output:
     #   E: style:style
-    #     A: style:name => "myCommentGraphics"
+    #     A: style:name => "comment_graphics_style"
     #     A: style:family => "graphic"
     #     E: style:graphic-properties
     #       A: fo:padding-right => "0.1cm"
@@ -2163,13 +2145,13 @@ module Rods
     end
     ##########################################################################
     # Helper-Tool: Prints all styles of content.xml in indented ASCII-notation
-    #   mySheet.printAutoStyles()
+    #   sheet.printAutoStyles()
     # * Lines starting with 'E' are Element-Tags
     # * Lines starting with 'A' are Attributes
     # * Lines starting with 'T' are Element-Text
     # Sample output:
     #   E: number:date-style
-    #     A: style:name => "myDateFormat"
+    #     A: style:name => "date_format_style"
     #     A: number:automatic-order => "true"
     #     A: number:format-source => "language"
     #     E: number:day
@@ -2222,25 +2204,25 @@ module Rods
     def writeXml(node,treeHash)
       die("writeXml: Node #{node} is not a REXML::Element") unless (node.class.to_s == "REXML::Element")
       die("writeXml: Hash #{treeHash} is not a Hash") unless (treeHash.class.to_s == "Hash")
-      tag=""
-      text=""
-      attributes=Hash.new()
-      grandChildren=Hash.new()
+      tag = ""
+      text = ""
+      attributes = Hash.new()
+      grandChildren = Hash.new()
       #------------------------------
       # Uebergabe-Hash analysieren und Wertelisten aufbauen
       #------------------------------
       treeHash.each{ |key,value|
         case key
-          when TAG then tag=value
-          when TEXT then text=value
+          when TAG then tag = value
+          when TEXT then text = value
           else  
             if(key.match(/child/))
               die("writeXml: Hash #{value} for key #{key} is not a Hash") unless (value.class.to_s == "Hash")
-              grandChildren[key]=value
+              grandChildren[key] = value
             else
               die("writeXml: Hash-key #{key} is not a String") unless (key.class.to_s == "String")
               die("writeXml: Hash-Value #{value} for key #{key} is not a String") unless (value.class.to_s == "String")
-              attributes[key]=value
+              attributes[key] = value
             end
         end
       }
@@ -2248,8 +2230,8 @@ module Rods
       # Kind-Element schreiben ...
       #------------------------------
       die("writeXml: Missing Tag for XML-Tree") unless (tag != "")
-      child=node.add_element(tag,attributes)
-      child.text=text unless (text == "")
+      child = node.add_element(tag,attributes)
+      child.text = text unless (text == "")
       #------------------------------
       # ... und Enkel ebenfalls rekursiv schreiben
       #------------------------------
@@ -2260,17 +2242,17 @@ module Rods
     end
     ##########################################################################
     # internal: Convert given formula to internal representation.
-    # Example: "=E6-E5+0,27" => "of:=[.E6]+[.E5]+0.27"
+    # Example: " = E6-E5+0,27" => "of: = [.E6]+[.E5]+0.27"
     #------------------------------------------------------------------------
     def internalizeFormula(formulaIn)
-      if(!formulaIn.match(/^=/))
-        die("internalizeFormula: Formula #{formulaIn} does not begin with \'=\'")
+      if(!formulaIn.match(/^ = /))
+        die("internalizeFormula: Formula #{formulaIn} does not begin with \' = \'")
       end
-      formulaOut=String.new(formulaIn)
+      formulaOut = String.new(formulaIn)
       #---------------------------------------------
       # Praefix setzen
       #---------------------------------------------
-      formulaOut.sub!(/^=/,"oooc:=")
+      formulaOut.sub!(/^ = /,"oooc: = ")
       #---------------------------------------------
       # Dezimaltrennzeichen ',' durch '.' in Zahlen ersetzen
       #---------------------------------------------
@@ -2301,18 +2283,18 @@ module Rods
     ##########################################################################
     # Applies style of given name to given cell and overwrites all previous style-settings
     # of the latter including the former data-style !
-    #   mySheet.writeStyleAbbr({"name" => "myStrange",
+    #   sheet.writeStyleAbbr({"name" => "strange_style",
     #                           "text-align" => "right",
-    #                           "data-style-name" => "myCurrencyFormat" <- don't forget data-style !
+    #                           "data-style-name" => "currency_format_style" <- don't forget data-style !
     #                           "border-left" => "0.01cm solid grey4"})
-    #   mySheet.setStyle(cell,"myStrange") # <- style-name has to exist !
+    #   sheet.setStyle(cell,"strange_style") # <- style-name has to exist !
     #-------------------------------------------------------------------------
     def setStyle(cell,styleName)
       #-----------------------------------------------------------------------
       # Ist Style gueltig, d.h. in content.xml vorhanden ?
       #-----------------------------------------------------------------------
       die("setStyle: style \'#{styleName}\' does not exist") unless (@autoStyles.elements["*[@style:name = '#{styleName}']"])
-      cell.attributes['table:style-name']=styleName
+      cell.attributes['table:style-name'] = styleName
     end
     ##########################################################################
     # Inserts an annotation field for the given cell. 
@@ -2320,7 +2302,7 @@ module Rods
     # OpenOffice.org-session, the annotation will always be displayed in the upper
     # left corner of the sheet. The temporary display of the annotation is not 
     # affected however.
-    #   mySheet.writeComment(cell,"by Dr. Heinz Breinlinger (who else)")
+    #   sheet.writeComment(cell,"by Dr. Heinz Breinlinger (who else)")
     #------------------------------------------------------------------------
     def writeComment(cell,comment)
       die("writeComment: cell #{cell} is not a REXML::Element") unless (cell.class.to_s == "REXML::Element")
@@ -2334,15 +2316,15 @@ module Rods
                      "draw:caption-point-x" => "-0.61cm",
                      "svg:y" => "0cm",
                      "draw:caption-point-y" => "0.011cm",
-                     "draw:text-style-name" => "myCommentParagraph",
+                     "draw:text-style-name" => "comment_paragraph_style",
                      "svg:height" => "0.596cm",
-                     "draw:style-name" => "myCommentGraphics",
+                     "draw:style-name" => "comment_graphics_style",
                      "svg:width" => "2.899cm",
                      "child1" => {TAG => "dc:date",
                                   TEXT => "2010-01-01T00:00:00"
                                  },                    
                      "child2" => {TAG => "text:p",
-                                  "text:style-name" => "myCommentParagraph",
+                                  "text:style-name" => "comment_paragraph_style",
                                   TEXT => comment
                                  }
                     })
@@ -2355,34 +2337,34 @@ module Rods
       #------------------------------------------------
       # Automatic-Styles aus content.xml
       #------------------------------------------------
-      myStyles=@contentText.elements["/office:document-content/office:automatic-styles"]
-      currentTable=@tables[@currentTableName][NODE]
+      styles = @contentText.elements["/office:document-content/office:automatic-styles"]
+      currentTable = @tables[@currentTableName][NODE]
       currentTable.elements.each("//table:table-cell"){ |cell|
-        textElement=cell.elements["text:p"]
+        textElement = cell.elements["text:p"]
         #-----------------------------
         # Zelle mit Text ?
         #-----------------------------
         if(textElement)
-          text=textElement.text
+          text = textElement.text
           #-------------------------------
           # Ist Zelle Style zugewiesen ?
           #-------------------------------
-          styleName=cell.attributes['table:style-name']
+          styleName = cell.attributes['table:style-name']
           if(styleName)
             #-------------------------------------
             # Style vorhanden ?
             #-------------------------------------
-            style=myStyles.elements["style:style[@style:name = '#{styleName}']"]
+            style = styles.elements["style:style[@style:name = '#{styleName}']"]
             die("Could not find style #{styleName}") unless (style)
             #-------------------------------------
             # Properties-Element ebenfalls vorhanden ?
             #-------------------------------------
-            properties=style.elements["style:table-cell-properties"]
+            properties = style.elements["style:table-cell-properties"]
             die("Could not find table-cell-properties for #{styleName}") unless (properties)
             #-------------------------------------
             # Nun noch Hintergrundfarbe extrahieren
             #-------------------------------------
-            hexColor=properties.attributes["fo:background-color"]
+            hexColor = properties.attributes["fo:background-color"]
             puts("\"#{text}\" => \"#{hexColor}\",")
           end
         end
@@ -2390,20 +2372,20 @@ module Rods
     end
     ##########################################################################
     # Saves the file associated with the current RODS-object.
-    #   mySheet.save()
+    #   sheet.save()
     #-------------------------------------------------------------------------
     def save()
-      die("save: internal error: @myFile is not set -> cannot save file") unless (@myFile && (! @myFile.empty?))
-      die("save: this should not happen: file #{@myFile} is missing") unless (File.exists?(@myFile))
-      tell("save: saving as file #{@myFile}")
-      Zip::ZipFile.open(@myFile){ |zipfile|
+      die("save: internal error: @file is not set -> cannot save file") unless (@file && (! @file.empty?))
+      die("save: this should not happen: file #{@file} is missing") unless (File.exists?(@file))
+      tell("save: saving as file #{@file}")
+      Zip::ZipFile.open(@file){ |zipfile|
         finalize(zipfile) 
       } 
     end
     ##########################################################################
     # Saves the current content to a new destination/file.
     # Caveat: Thumbnails are not created (these are normally part of the *.ods-zip-file).
-    #   mySheet.saveAs("/home/heinz/Work/Example.ods")
+    #   sheet.saveAs("/home/heinz/Work/Example.ods")
     #-------------------------------------------------------------------------
     def saveAs(newFile)
       die("saveAs: file #{newFile} does not have valid ending '*.ods'") unless (newFile.match(/\.ods$/))
@@ -2421,7 +2403,7 @@ module Rods
           zipfile.file.chmod(0755,dir)
         }
         ["accelerator","floater","images","menubar","popupmenu","progressbar","statusbar","toolbar"].each{ |dir|
-          subDir="Configurations2/"+dir
+          subDir = "Configurations2/"+dir
           zipfile.mkdir(subDir)
           zipfile.file.chmod(0755,subDir)
         }
@@ -2431,15 +2413,15 @@ module Rods
     ##########################################################################
     # Constructor: The given file has to have a *.ods-ending
     #
-    #   mySheet=Rods.new("/home/heinz/Work/Template.ods") 
-    #   mySheet=Rods.new("/home/heinz/Work/Template.ods",["de,"DE","€","EUR"]) 
-    #   mySheet=Rods.new("/home/heinz/Work/Another.ods",["us","US","$","DOLLAR"]) 
+    #   sheet = Rods.new("/home/heinz/Work/Template.ods") 
+    #   sheet = Rods.new("/home/heinz/Work/Template.ods",["de,"DE","€","EUR"]) 
+    #   sheet = Rods.new("/home/heinz/Work/Another.ods",["us","US","$","DOLLAR"]) 
     #
     # "de","DE","€","EUR" are the default-settings for the language, country,
     # external and internal currency-symbol. All these values merely affect
     # currency-values and annotations (the latter though not visibly).
     #-------------------------------------------------------------------------
-    def initialize options={}
+    def initialize options = {}
       default = { language: :de, country: :DE, external_currency: :€, internal_currency: :EUR }
       default.merge! options
       @contentText
@@ -2455,134 +2437,50 @@ module Rods
       @manifestRoot
       @settingsText
       @officeSettings
-      @currentTableName                # Name der aktuellen Tabelle
-      @tables=Hash.new()               # Hash der Tabellen und ihrer Eigenschaften
-      @numTables                       # Anzahl der Tabellen
+      @currentTableName
+      @tables = Hash.new
+      @numTables
       @officeStyles
       @autoStyles
-      @floatStyle="myFloat"
-      @dateStyle="myDate"  
-      @stringStyle="myString"
-      @currencyStyle="myCurrency"
-      @percentStyle="myPercent"
-      @timeStyle="myTime"
-      @styleCounter=0
-      @myFile # (ggf. qualifizierter) Dateiname der eingelesenen Datei
+      @floatStyle = "float_style"
+      @dateStyle = "date_style"  
+      @stringStyle = "string_style"
+      @currencyStyle = "currency_style"
+      @percentStyle = "percent_style"
+      @timeStyle = "time_style"
+      @styleCounter = 0
+      @file # (ggf. qualifizierter) Dateiname der eingelesenen Datei
       #---------------------------------------------------------------
       # Hash-Tabelle der geschriebenen Styles
       #---------------------------------------------------------------
-      @styleArchive=Hash.new()
+      @styleArchive = Hash.new()
       #---------------------------------------------------------------
       # Farbpalette
       #---------------------------------------------------------------
-      @palette={"black" => "#000000",
-                "blue" => "#000080",
-                "green" => "#008000",
-                "turquoise" => "#008080",
-                "red" => "#800000",
-                "magenta" => "#800080",
-                "brown" => "#808000",
-                "grey" => "#808080",
-                "lightgrey" => "#c0c0c0",
-                "lightblue" => "#0000ff",
-                "lightgreen" => "#00ff00",
-                "lightturquoise" => "#00ffff",
-                "lightred" => "#ff0000",
-                "lightmagenta" => "#ff00ff",
-                "yellow" => "#ffff00",
-                "white" => "#ffffff",
-                "grey30" => "#b3b3b3",
-                "grey20" => "#cccccc",
-                "grey10" => "#e6e6e6",
-                "red1" => "#ff3366",
-                "red2" => "#dc2300",
-                "red3" => "#b84700",
-                "red4" => "#ff3333",
-                "red5" => "#eb613d",
-                "red6" => "#b84747",
-                "red7" => "#b80047",
-                "red8" => "#99284c",
-                "magenta1" => "#94006b",
-                "magenta2" => "#94476b",
-                "magenta3" => "#944794",
-                "magenta4" => "#9966cc",
-                "magenta5" => "#6b4794",
-                "magenta6" => "#6b2394",
-                "magenta7" => "#6b0094",
-                "magenta8" => "#5e11a6",
-                "blue1" => "#280099",
-                "blue2" => "#4700b8",
-                "blue3" => "#2300dc",
-                "blue4" => "#2323dc",
-                "blue5" => "#0047ff",
-                "blue6" => "#0099ff",
-                "blue7" => "#00b8ff",
-                "blue8" => "#99ccff",
-                "turquoise1" => "#00dcff",
-                "turquoise2" => "#00cccc",
-                "turquoise3" => "#23b8dc",
-                "turquoise4" => "#47b8b8",
-                "turquoise5" => "#33a3a3",
-                "turquoise6" => "#198a8a",
-                "turquoise7" => "#006b6b",
-                "turquoise8" => "#004a4a",
-                "green1" => "#355e00",
-                "green2" => "#5c8526",
-                "green3" => "#7da647",
-                "green4" => "#94bd5e",
-                "green5" => "#00ae00",
-                "green6" => "#33cc66",
-                "yellow1" => "#e6ff00",
-                "yellow2" => "#ffff99",
-                "yellow3" => "#ffff66",
-                "yellow4" => "#e6e64c",
-                "yellow5" => "#cccc00",
-                "yellow6" => "#b3b300",
-                "yellow7" => "#808019",
-                "yellow8" => "#666600",
-                "brown1" => "#4c1900",
-                "brown2" => "#663300",
-                "brown3" => "#804c19",
-                "brown4" => "#996633",
-                "orange1" => "#cc6633",
-                "orange2" => "#ff6633",
-                "orange3" => "#ff9966",
-                "orange4" => "#ffcc99",
-                "purple" => "#9999ff",
-                "bordeaux" => "#993366",
-                "paleyellow" => "#ffffcc",
-                "palegreen" => "#ccffff",
-                "darkpurple" => "#660066",
-                "salmon" => "#ff8080"
-    }
-      @fixedStyles=["myTable", "myRow", "myColumn", "myFloatFormat", "myFloat", "myTimeFormat", 
-                    "myTime", "myTimeSeconds", "myPercentFormat", "myPercent", "myString", "myDateFormat", 
-                    "myDate", "myDateFormatDay", "myDateDay", "myCurrencyFormatPositive", 
-                    "myCurrencyFormat", "myCurrency", "myCommentParagraph", "myCommentText", 
-                    "myCommentGraphics"]
+      @fixedStyles = [
+        "table_style",
+        "row_style",
+        "column_style",
+        "float_format_style",
+        "float_style",
+        "time_format_style", 
+        "time_style",
+        "time_seconds_style",
+        "percent_format_style",
+        "percent_style",
+        "string_style",
+        "date_format_style", 
+        "date_style",
+        "date_format_day_style",
+        "date_day_style",
+        "currency_format_positive_style", 
+        "currency_format_style",
+        "currency_style",
+        "comment_paragraph_style",
+        "comment_text_style", 
+        "comment_graphics_style"
+      ]
       open default[:file] if default.has_key? :file
-    end
-    ##########################################################################
-    # Helper-function: Print palette of implemented color-mappings
-    #   mySheet.printColorMap()
-    # generates ouput like ...
-    #   "lightturquoise" => "#00ffff",
-    #   "lightred" => "#ff0000",
-    #   "lightmagenta" => "#ff00ff",
-    #   "yellow" => "#ffff00",
-    # you can use for 'setAttributes' and 'writeStyleAbbr'.
-    #-------------------------------------------------------------------------
-    def printColorMap()
-      puts("printColorMap: convenience color-mappings")
-      puts("-----------------------------------------")
-      @palette.each{ |key,value|
-        puts("  #{key} -> #{value}")
-      }
-      puts("You can use the convenience keys in 'setAttribute' and 'writeStyleAbbr'")
-      puts("for the attributes")
-      puts("  border,border-bottom, border-top, border-left, border-right")
-      puts("  background-color")
-      puts("  color")
     end
     ##########################################################################
     # Fast Routine to get the previous row, because XML-Parser does not have
@@ -2596,7 +2494,7 @@ module Rods
       # Cave: table:table-row und table:table-column sind Siblings !!!!
       # Letztere duerfen jedoch NICHT zurueckgegeben werden
       #----------------------------------------------------------------------
-      previousSibling=row.previous_sibling
+      previousSibling = row.previous_sibling
       if(previousSibling && previousSibling.elements["self::table:table-row"])
         return previousSibling
       else
@@ -2648,7 +2546,7 @@ module Rods
     # The following finds all occurences of a comma- or dot-separated number,
     # consisting of 1 digit before and 2 digits behind the decimal-separator.
     #
-    # myArray=mySheet.getCellsAndIndicesFor('\d{1}[.,]\d{2}')
+    # array = sheet.getCellsAndIndicesFor('\d{1}[.,]\d{2}')
     #
     # Keep in mind that the content of a call with a formula is not the formula, but the
     # current value of the computed result.
@@ -2658,21 +2556,21 @@ module Rods
     # For instance, when looking for a currency value of 1525 (that is shown as
     # '1.525 EUR'), you'll have to code
     #
-    #   result=mySheet.getCellsAndIndicesFor('1[.,]525')
+    #   result = sheet.getCellsAndIndicesFor('1[.,]525')
     #   result.each{ |cellHash|
     #     puts("Found #{cellHash[:cell] on #{cellHash[:row] - #{cellHash[:col]")
     #   }
     #-------------------------------------------------------------------------
     def getCellsAndIndicesFor(content)
       die("getCellsAndIndicesFor: 'content' is not of typ String") unless (content.class.to_s == "String")
-      result=Array.new()
-      i=0
+      result = Array.new()
+      i = 0
       tell("getCellsAndIndicesFor: Searching for cells with content '#{content}'")
       #----------------------------------------------------------------
       # Alle Text-Nodes suchen
       #----------------------------------------------------------------
       @spreadSheet.elements.each("//table:table-cell/text:p"){ |textNode|
-        text=textNode.text
+        text = textNode.text
         #---------------------------------------------------------
         # Zelle gefunden ?
         #
@@ -2680,29 +2578,29 @@ module Rods
         # in einfachen Hochkommata uebergeben werden
         #---------------------------------------------------------
         if(text && (text.match(/#{content}/)))
-          result[i]=Hash.new() 
+          result[i] = Hash.new() 
           tell("getCellsAndIndicesFor: '#{content}' matched '#{text}'")
           #-----------------------------------------------------
           # Zelle und Zellenindex ermitteln
           #-----------------------------------------------------
-          cell=textNode.elements["ancestor::table:table-cell"]
+          cell = textNode.elements["ancestor::table:table-cell"]
           unless (cell)
             die("getCellsAndIndicesFor: internal error: Could not extract parent-cell of textNode with #{content}") 
           end
-          colIndex=getIndex(cell)
+          colIndex = getIndex(cell)
           #-----------------------------------------------------
           # Zeile und Zeilenindex ermitteln
           #-----------------------------------------------------
-          row=textNode.elements["ancestor::table:table-row"]
+          row = textNode.elements["ancestor::table:table-row"]
           unless (row)
             die("getCellsAndIndicesFor: internal error: Could not extract parent-row of textNode with #{content}") 
           end
-          rowIndex=getIndex(row)
-          result[i][:cell]=cell
-          result[i][:row]=rowIndex
-          result[i][:col]=colIndex
+          rowIndex = getIndex(row)
+          result[i][:cell] = cell
+          result[i][:row] = rowIndex
+          result[i][:col] = colIndex
           tell("getCellsAndIndicesFor: Indices #{rowIndex} #{colIndex}")
-          i+=1
+          i += 1
         end
       }
       return result
@@ -2736,9 +2634,9 @@ module Rods
     #
     # Cave: In case of flag 'BOTH' the method returns TWO values !
     #
-    # index=getIndexAndOrNumber(row,INDEX) # -> Line-number within table
-    # numColumns=getIndexAndOrNumber(column,NUMBER) # number of columns
-    # index,numColumns=getIndexAndOrNumber(row,BOTH) # Line-number and total number of lines
+    # index = getIndexAndOrNumber(row,INDEX) # -> Line-number within table
+    # numColumns = getIndexAndOrNumber(column,NUMBER) # number of columns
+    # index,numColumns = getIndexAndOrNumber(row,BOTH) # Line-number and total number of lines
     #-------------------------------------------------------------------------
     def getIndexAndOrNumber(node,flag)
       die("getIndexAndOrNumber: passed node '#{node}' is not a REXML::Element") \
@@ -2749,24 +2647,24 @@ module Rods
       # Typabhaengige Vorbelegungen
       #--------------------------------------------------------------
       if(node.elements["self::table:table-cell"])
-        kindOfSelf="table:table-cell"
-        kindOfParent="table:table-row"
-        kindOfRepetition="table:number-columns-repeated"
+        kindOfSelf = "table:table-cell"
+        kindOfParent = "table:table-row"
+        kindOfRepetition = "table:number-columns-repeated"
       elsif(node.elements["self::table:table-column"])
-        kindOfSelf="table:table-column"
-        kindOfParent="table:table"
-        kindOfRepetition="table:number-columns-repeated"
+        kindOfSelf = "table:table-column"
+        kindOfParent = "table:table"
+        kindOfRepetition = "table:number-columns-repeated"
       elsif(node.elements["self::table:table-row"])
-        kindOfSelf="table:table-row"
-        kindOfParent="table:table"
-        kindOfRepetition="table:number-rows-repeated"
+        kindOfSelf = "table:table-row"
+        kindOfParent = "table:table"
+        kindOfRepetition = "table:number-rows-repeated"
       else
         die("getIndexAndOrNumber: internal error: passed element '#{node}' is neither cell, nor row or column")
       end
       #--------------------------------------------------------------
       # Zugehoeriges Vater-Element ermitteln 
       #--------------------------------------------------------------
-      parent=node.elements["ancestor::"+kindOfParent]
+      parent = node.elements["ancestor::"+kindOfParent]
       unless (parent)
         die("getIndexAndOrNumber: internal error: Could not extract parent of #{node}") 
       end
@@ -2774,9 +2672,9 @@ module Rods
       # Index des Kind-Elements innerhalb Vater-Element oder
       # Gesamtzahl der Items ermitteln
       #--------------------------------------------------------------
-      index=number=0
+      index = number = 0
       parent.elements.each(kindOfSelf){ |child|
-        number+=1
+        number += 1
         #-----------------------------------------------
         # Kind-Element gefunden ? -> Index festhalten, 
         # je nach Flag Ruecksprung oder weiterzaehlen
@@ -2785,15 +2683,15 @@ module Rods
           if(flag == INDEX)
             return number
     elsif(flag == BOTH)
-      index=number
+      index = number
     end
         #-----------------------------------------------
         # Wiederholungen zaehlen
         # Cave: Aktuelles Element selbst zaehlt ebenfalls als Wiederholung
         # => um 1 dekrementieren
         #-----------------------------------------------
-        elsif(repetition=child.attributes[kindOfRepetition])
-          number+=repetition.to_i-1
+        elsif(repetition = child.attributes[kindOfRepetition])
+          number += repetition.to_i-1
         end
       }
       if(flag == INDEX)
@@ -2810,23 +2708,23 @@ module Rods
     #-------------------------------------------------------------------------
     def insertColumnBeforeInHeader(column)
       die("insertColumnBeforeInHeader: column #{column} is not a REXML::Element") unless (column.class.to_s == "REXML::Element")
-      newColumn=createColumn(1)
-      column.previous_sibling=newColumn
+      newColumn = createColumn(1)
+      column.previous_sibling = newColumn
       #-----------------------------------------
       # bisherige Tabellenbreite überschritten ?
       #-----------------------------------------
-      lengthOfHeader=getNumberOfSiblings(column)
+      lengthOfHeader = getNumberOfSiblings(column)
       if(lengthOfHeader > @tables[@currentTableName][WIDTH])
-        @tables[@currentTableName][WIDTH]=lengthOfHeader
-        @tables[@currentTableName][WIDTHEXCEEDED]=true
+        @tables[@currentTableName][WIDTH] = lengthOfHeader
+        @tables[@currentTableName][WIDTHEXCEEDED] = true
       end
       return newColumn
     end
     ##########################################################################
     # Delets the cell to the right of the given cell
     #
-    #   cell=mySheet.writeGetCell(4,7,"date","16.01.2011")
-    #   mySheet.deleteCellAfter(cell)
+    #   cell = sheet.writeGetCell(4,7,"date","16.01.2011")
+    #   sheet.deleteCellAfter(cell)
     #-------------------------------------------------------------------------
     def deleteCellAfter(cell)
       die("deleteCellAfter: cell #{cell} is not a REXML::Element") unless (cell.class.to_s == "REXML::Element")
@@ -2835,17 +2733,17 @@ module Rods
       # dekrementieren oder ggf. Wiederholungsattribut der
       # Folgezelle dekrementieren oder selbige loeschen
       #--------------------------------------------------------
-      repetitions=cell.attributes["table:number-columns-repeated"]
+      repetitions = cell.attributes["table:number-columns-repeated"]
       if(repetitions && repetitions.to_i > 1)
-        cell.attributes["table:number-columns-repeated"]=(repetitions.to_i-1).to_s
+        cell.attributes["table:number-columns-repeated"] = (repetitions.to_i-1).to_s
       else
-        nextCell=cell.next_sibling
+        nextCell = cell.next_sibling
         die("deleteCellAfter: cell is already last cell in row") unless (nextCell)
-        nextRepetitions=nextCell.attributes["table:number-columns-repeated"]
+        nextRepetitions = nextCell.attributes["table:number-columns-repeated"]
         if(nextRepetitions && nextRepetitions.to_i > 1)
-          nextCell.attributes["table:number-columns-repeated"]=(nextRepetitions.to_i-1).to_s
+          nextCell.attributes["table:number-columns-repeated"] = (nextRepetitions.to_i-1).to_s
         else
-          row=cell.elements["ancestor::table:table-row"]
+          row = cell.elements["ancestor::table:table-row"]
           unless (row)
             die("deleteCellAfter: internal error: Could not extract parent-row of cell #{cell}") 
           end
@@ -2856,8 +2754,8 @@ module Rods
     ##########################################################################
     # Delets the row below the given row
     #
-    #   row=mySheet.getRow(11)
-    #   mySheet.deleteRowBelow(row)
+    #   row = sheet.getRow(11)
+    #   sheet.deleteRowBelow(row)
     #-------------------------------------------------------------------------
     def deleteRowBelow(row)
       die("deleteRowBelow: row #{row} is not a REXML::Element") unless (row.class.to_s == "REXML::Element")
@@ -2866,17 +2764,17 @@ module Rods
       # dekrementieren oder ggf. Wiederholungsattribut der
       # Folgezeile dekrementieren oder selbige loeschen
       #--------------------------------------------------------
-      repetitions=row.attributes["table:number-rows-repeated"]
+      repetitions = row.attributes["table:number-rows-repeated"]
       if(repetitions && repetitions.to_i > 1)
-        row.attributes["table:number-rows-repeated"]=(repetitions.to_i-1).to_s
+        row.attributes["table:number-rows-repeated"] = (repetitions.to_i-1).to_s
       else
-        nextRow=row.next_sibling
+        nextRow = row.next_sibling
         die("deleteRowBelow: row #{row} is already last row in table") unless (nextRow)
-        nextRepetitions=nextRow.attributes["table:number-rows-repeated"]
+        nextRepetitions = nextRow.attributes["table:number-rows-repeated"]
         if(nextRepetitions && nextRepetitions.to_i > 1)
-          nextRow.attributes["table:number-rows-repeated"]=(nextRepetitions.to_i-1).to_s
+          nextRow.attributes["table:number-rows-repeated"] = (nextRepetitions.to_i-1).to_s
         else
-          table=row.elements["ancestor::table:table"]
+          table = row.elements["ancestor::table:table"]
           unless (table)
             die("deleteRowBelow: internal error: Could not extract parent-table of row #{row}") 
           end
@@ -2887,14 +2785,14 @@ module Rods
     ##########################################################################
     # Delets the cell at the given index in the given row
     #
-    #   row=mySheet.getRow(8)
-    #   mySheet.deleteCell(row,9)
+    #   row = sheet.getRow(8)
+    #   sheet.deleteCell(row,9)
     #-------------------------------------------------------------------------
     def deleteCellFromRow(row,colInd)
       die("deleteCell: row #{row} is not a REXML::Element") unless (row.class.to_s == "REXML::Element")
       die("deleteCell: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("deleteCell: invalid index #{colInd}") unless (colInd > 0)
-      cell=getCellFromRow(row,colInd+1)
+      cell = getCellFromRow(row,colInd+1)
       deleteCellBefore(cell)
     end
     ##########################################################################
@@ -2902,9 +2800,9 @@ module Rods
     #
     # 'cell' is a REXML::Element as returned by getCell(cellInd).
     #
-    # startCell=mySheet.getCell(34,1)
-    # while(cell=mySheet.getNextExistentCell(startCell))
-    #   mySheet.deleteCell2(cell)
+    # startCell = sheet.getCell(34,1)
+    # while(cell = sheet.getNextExistentCell(startCell))
+    #   sheet.deleteCell2(cell)
     # end
     #-------------------------------------------------------------------------
     def deleteCell2(cell)
@@ -2912,12 +2810,12 @@ module Rods
       #-------------------------------------------------------------------
       # Entweder Wiederholungszahl dekrementieren oder Zelle loeschen
       #-------------------------------------------------------------------
-      repetitions=cell.attributes["table:number-columuns-repeated"]
+      repetitions = cell.attributes["table:number-columuns-repeated"]
       if(repetitions && repetitions.to_i > 1)
-        cell.attributes["table:number-columns-repeated"]=(repetitions.to_i-1).to_s
+        cell.attributes["table:number-columns-repeated"] = (repetitions.to_i-1).to_s
         tell("deleteCell2: decrementing empty cells")
       else
-        row=cell.elements["ancestor::table:table-row"]
+        row = cell.elements["ancestor::table:table-row"]
         unless (row)
           die("deleteCell2: internal error: Could not extract parent-row of cell #{cell}") 
         end
@@ -2930,9 +2828,9 @@ module Rods
     #
     # 'row' is a REXML::Element as returned by getRow(rowInd).
     #
-    # startRow=mySheet.getRow(12)
-    # while(row=mySheet.getNextExistentRow(startRow))
-    #   mySheet.deleteRow2(row)
+    # startRow = sheet.getRow(12)
+    # while(row = sheet.getNextExistentRow(startRow))
+    #   sheet.deleteRow2(row)
     # end
     #-------------------------------------------------------------------------
     def deleteRow2(row)
@@ -2940,12 +2838,12 @@ module Rods
       #-------------------------------------------------------------------
       # Entweder Wiederholungszahl dekrementieren oder Zeile loeschen
       #-------------------------------------------------------------------
-      repetitions=row.attributes["table:number-rows-repeated"]
+      repetitions = row.attributes["table:number-rows-repeated"]
       if(repetitions && repetitions.to_i > 1)
-        row.attributes["table:number-rows-repeated"]=(repetitions.to_i-1).to_s
+        row.attributes["table:number-rows-repeated"] = (repetitions.to_i-1).to_s
         tell("deleteRow2: decrementing empty rows")
       else
-        table=row.elements["ancestor::table:table"]
+        table = row.elements["ancestor::table:table"]
         unless (table)
           die("deleteRow2: internal error: Could not extract parent-table of row #{row}") 
         end
@@ -2956,18 +2854,18 @@ module Rods
     ##########################################################################
     # Delets the row at the given index
     #
-    #   mySheet.deleteRow(7)
+    #   sheet.deleteRow(7)
     #-------------------------------------------------------------------------
     def deleteRow(rowInd)
       die("deleteRow: index #{rowInd} is not a Fixnum/Integer") unless (rowInd.class.to_s == "Fixnum")
       die("deleteRow: invalid index #{rowInd}") unless (rowInd > 0)
-      row=getRow(rowInd+1)
+      row = getRow(rowInd+1)
       deleteRowAbove(row)
     end
     ##########################################################################
     # Delets the cell at the given indices
     #
-    #   mySheet.deleteCell(7,9)
+    #   sheet.deleteCell(7,9)
     #-------------------------------------------------------------------------
     def deleteCell(rowInd,colInd)
       die("deleteCell: index #{rowInd} is not a Fixnum/Integer") unless (rowInd.class.to_s == "Fixnum")
@@ -2975,14 +2873,14 @@ module Rods
       die("deleteCell: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("deleteCell: invalid index #{colInd}") unless (colInd > 0)
       tell("deleteCell: deleting cell at #{rowInd}:#{colInd}")
-      row=getRow(rowInd)
+      row = getRow(rowInd)
       deleteCellFromRow(row,colInd)
     end
     ##########################################################################
     # Delets the row above the given row
     #
-    #   row=mySheet.getRow(5)
-    #   mySheet.deleteRowAbove(row)
+    #   row = sheet.getRow(5)
+    #   sheet.deleteRowAbove(row)
     #-------------------------------------------------------------------------
     def deleteRowAbove(row)
       die("deleteRowAbove: row #{row} is not a REXML::Element") unless (row.class.to_s == "REXML::Element")
@@ -2990,13 +2888,13 @@ module Rods
       # Entweder Wiederholungsattribut der vorherigen Zeile
       # dekrementieren oder selbige loeschen
       #--------------------------------------------------------
-      previousRow=row.previous_sibling
+      previousRow = row.previous_sibling
       die("deleteRowAbove: row is already first row in row") unless (previousRow)
-      previousRepetitions=previousRow.attributes["table:number-rows-repeated"]
+      previousRepetitions = previousRow.attributes["table:number-rows-repeated"]
       if(previousRepetitions && previousRepetitions.to_i > 1)
-        previousRow.attributes["table:number-rows-repeated"]=(previousRepetitions.to_i-1).to_s
+        previousRow.attributes["table:number-rows-repeated"] = (previousRepetitions.to_i-1).to_s
       else
-        table=row.elements["ancestor::table:table"]
+        table = row.elements["ancestor::table:table"]
         unless (table)
           die("deleteRowAbove: internal error: Could not extract parent-table of row #{row}") 
         end
@@ -3006,8 +2904,8 @@ module Rods
     ##########################################################################
     # Delets the cell to the left of the given cell
     #
-    #   cell=mySheet.writeGetCell(4,7,"formula:currency","=A1+B2")
-    #   mySheet.deleteCellBefore(cell)
+    #   cell = sheet.writeGetCell(4,7,"formula:currency"," = A1+B2")
+    #   sheet.deleteCellBefore(cell)
     #-------------------------------------------------------------------------
     def deleteCellBefore(cell)
       die("deleteCellBefore: cell #{cell} is not a REXML::Element") unless (cell.class.to_s == "REXML::Element")
@@ -3015,13 +2913,13 @@ module Rods
       # Entweder Wiederholungsattribut der vorherigen Zelle
       # dekrementieren oder selbige loeschen
       #--------------------------------------------------------
-      previousCell=cell.previous_sibling
+      previousCell = cell.previous_sibling
       die("deleteCellBefore: cell is already first cell in row") unless (previousCell)
-      previousRepetitions=previousCell.attributes["table:number-columns-repeated"]
+      previousRepetitions = previousCell.attributes["table:number-columns-repeated"]
       if(previousRepetitions && previousRepetitions.to_i > 1)
-        previousCell.attributes["table:number-columns-repeated"]=(previousRepetitions.to_i-1).to_s
+        previousCell.attributes["table:number-columns-repeated"] = (previousRepetitions.to_i-1).to_s
       else
-        row=cell.elements["ancestor::table:table-row"]
+        row = cell.elements["ancestor::table:table-row"]
         unless (row)
           die("deleteCellBefore: internal error: Could not extract parent-row of cell #{cell}") 
         end
@@ -3030,48 +2928,48 @@ module Rods
     end
     ##########################################################################
     # Inserts a new cell before the given cell thereby shifting existing cells
-    #   cell=mySheet.getCell(5,1)
-    #   mySheet.insertCellBefore(cell) # adds cell at beginning of row 5
+    #   cell = sheet.getCell(5,1)
+    #   sheet.insertCellBefore(cell) # adds cell at beginning of row 5
     #-------------------------------------------------------------------------
     def insertCellBefore(cell)
       die("insertCellBefore: cell #{cell} is not a REXML::Element") unless (cell.class.to_s == "REXML::Element")
-      newCell=createCell(1)
-      cell.previous_sibling=newCell
+      newCell = createCell(1)
+      cell.previous_sibling = newCell
       #-----------------------------------------
       # bisherige Tabellenbreite überschritten ?
       #-----------------------------------------
-      lengthOfRow=getNumberOfSiblings(cell)
+      lengthOfRow = getNumberOfSiblings(cell)
       if(lengthOfRow > @tables[@currentTableName][WIDTH])
-        @tables[@currentTableName][WIDTH]=lengthOfRow
-        @tables[@currentTableName][WIDTHEXCEEDED]=true
+        @tables[@currentTableName][WIDTH] = lengthOfRow
+        @tables[@currentTableName][WIDTHEXCEEDED] = true
         tell("insertCellBefore: new table width: #{lengthOfRow}")
       end
       return newCell
     end
     ##########################################################################
     # Inserts a new cell after the given cell thereby shifting existing cells
-    #   cell=mySheet.getCell(4,7)
-    #   mySheet.insertCellAfter(cell)
+    #   cell = sheet.getCell(4,7)
+    #   sheet.insertCellAfter(cell)
     #-------------------------------------------------------------------------
     def insertCellAfter(cell)
       die("insertCellAfter: cell #{cell} is not a REXML::Element") unless (cell.class.to_s == "REXML::Element")
-      newCell=createCell(1)
-      cell.next_sibling=newCell
+      newCell = createCell(1)
+      cell.next_sibling = newCell
       #-----------------------------------------------------------------------
       # Cave: etwaige Wiederholungen uebertragen
       #-----------------------------------------------------------------------
-      repetitions=cell.attributes["table:number-columns-repeated"]
+      repetitions = cell.attributes["table:number-columns-repeated"]
       if(repetitions)
         cell.attributes.delete("table:number-columns-repeated")
-        newCell.next_sibling=createCell(repetitions.to_i)
+        newCell.next_sibling = createCell(repetitions.to_i)
       end
       #-----------------------------------------
       # bisherige Tabellenbreite ueberschritten ?
       #-----------------------------------------
-      lengthOfRow=getNumberOfSiblings(cell)
+      lengthOfRow = getNumberOfSiblings(cell)
       if(lengthOfRow > @tables[@currentTableName][WIDTH])
-        @tables[@currentTableName][WIDTH]=lengthOfRow
-        @tables[@currentTableName][WIDTHEXCEEDED]=true
+        @tables[@currentTableName][WIDTH] = lengthOfRow
+        @tables[@currentTableName][WIDTHEXCEEDED] = true
         tell("insertCellAfter: new table width: #{lengthOfRow}")
       end
       return newCell
@@ -3080,21 +2978,21 @@ module Rods
     # Inserts and returns a cell at the given index in the given row, 
     # thereby shifting existing cells.
     #
-    #   row=mySheet.getRow(5)
-    #   cell=mySheet.insertCellFromRow(row,17) 
+    #   row = sheet.getRow(5)
+    #   cell = sheet.insertCellFromRow(row,17) 
     #-------------------------------------------------------------------------
     def insertCellFromRow(row,colInd)
       die("insertCell: row #{row} is not a REXML::Element") unless (row.class.to_s == "REXML::Element")
       die("insertCell: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("insertCell: invalid index #{colInd}") unless (colInd > 0)
       tell("insertCell: inserting new cell in column:#{colInd}")
-      cell=getCellFromRow(row,colInd)
+      cell = getCellFromRow(row,colInd)
       return insertCellBefore(cell)
     end
     ##########################################################################
     # Inserts and returns a cell at the given index, thereby shifting existing cells.
     #
-    #   cell=mySheet.insertCell(4,17) 
+    #   cell = sheet.insertCell(4,17) 
     #-------------------------------------------------------------------------
     def insertCell(rowInd,colInd)
       die("insertCell: index #{rowInd} is not a Fixnum/Integer") unless (rowInd.class.to_s == "Fixnum")
@@ -3102,69 +3000,69 @@ module Rods
       die("insertCell: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("insertCell: invalid index #{colInd}") unless (colInd > 0)
       tell("insertCell: inserting new cell at #{rowInd}:#{colInd}")
-      cell=getCell(rowInd,colInd)
+      cell = getCell(rowInd,colInd)
       return insertCellBefore(cell)
     end
     ##########################################################################
     # Inserts and returns a row at the given index, thereby shifting existing rows
-    #   row=mySheet.insertRow(1) # inserts row above former row 1
+    #   row = sheet.insertRow(1) # inserts row above former row 1
     #-------------------------------------------------------------------------
     def insertRow(rowInd)
       die("insertRow: invalid rowInd #{rowInd}") unless (rowInd > 0)
       die("insertRow: rowInd #{rowInd} is not a Fixnum/Integer") unless (rowInd.class.to_s == "Fixnum")
       tell("insertRow: inserting new row")
-      row=getRow(rowInd)
+      row = getRow(rowInd)
       return insertRowAbove(row)
     end
     ##########################################################################
     # Inserts a new row above the given row thereby shifting existing rows
-    #   row=mySheet.getRow(1)
-    #   mySheet.insertRowAbove(row)
+    #   row = sheet.getRow(1)
+    #   sheet.insertRowAbove(row)
     #-------------------------------------------------------------------------
     def insertRowAbove(row)
-      newRow=createRow(1)
-      row.previous_sibling=newRow
+      newRow = createRow(1)
+      row.previous_sibling = newRow
       return newRow
     end
     ##########################################################################
     # Inserts a new row below the given row thereby shifting existing rows
-    #   row=mySheet.getRow(8)
-    #   mySheet.insertRowBelow(row)
+    #   row = sheet.getRow(8)
+    #   sheet.insertRowBelow(row)
     #-------------------------------------------------------------------------
     def insertRowBelow(row)
-      newRow=createRow(1)
-      row.next_sibling=newRow
+      newRow = createRow(1)
+      row.next_sibling = newRow
       #-----------------------------------------------------------------------
       # Cave: etwaige Wiederholungen uebertragen
       #-----------------------------------------------------------------------
-      repetitions=row.attributes["table:number-rows-repeated"]
+      repetitions = row.attributes["table:number-rows-repeated"]
       if(repetitions)
         row.attributes.delete("table:number-rows-repeated")
-        newRow.next_sibling=createRow(repetitions.to_i)
+        newRow.next_sibling = createRow(repetitions.to_i)
       end
       return newRow
     end
     ##########################################################################
     # Deletes the column at the given index
     #
-    #   mySheet.deleteColumn(8)
+    #   sheet.deleteColumn(8)
     #-------------------------------------------------------------------------
     def deleteColumn(colInd)
       die("deleteColumn: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("deleteColumn: invalid index #{colInd}") unless (colInd > 0)
-      currentWidth=@tables[@currentTableName][WIDTH]
+      currentWidth = @tables[@currentTableName][WIDTH]
       die("deleteColumn: column-index #{colInd} is outside valid range/current table width") if (colInd > currentWidth)
       #-------------------------------------------------------------------
       # Entweder Wiederholungsattribut der fraglichen Spalte dekrementieren
       # oder selbige loeschen
       #-------------------------------------------------------------------
-      currentTable=@tables[@currentTableName][NODE]
-      column=getChildByIndex(currentTable,COLUMN,colInd)
-      repetitions=column.attributes["table:number-columns-repeated"]
+      currentTable = @tables[@currentTableName][NODE]
+      column = getChildByIndex(currentTable,COLUMN,colInd)
+      repetitions = column.attributes["table:number-columns-repeated"]
       if(repetitions && repetitions.to_i > 1)
-        column.attributes["table:number-columns-repeated"]=(repetitions.to_i-1).to_s
+        column.attributes["table:number-columns-repeated"] = (repetitions.to_i-1).to_s
       else
-        table=column.elements["ancestor::table:table"]
+        table = column.elements["ancestor::table:table"]
         unless (table)
           die("deleteColumn: internal error: Could not extract parent-table of column #{column}") 
         end
@@ -3175,49 +3073,49 @@ module Rods
       # Spaltenposition einfuegen und dabei implizit
       # Tabellenbreite aktualisieren
       #-----------------------------------------------
-      row=getRow(1)
+      row = getRow(1)
       deleteCellFromRow(row,colInd)
-      i=1
-      while(row=getNextExistentRow(row)) # fuer alle Zeilen ab der zweiten
+      i = 1
+      while(row = getNextExistentRow(row)) # fuer alle Zeilen ab der zweiten
         deleteCellFromRow(row,colInd)
-        i+=1
+        i += 1
       end 
     end
     ##########################################################################
     # Inserts a column at the given index, thereby shifting existing columns
-    #   mySheet.insertColumn(1) # inserts column before former column 1
+    #   sheet.insertColumn(1) # inserts column before former column 1
     #-------------------------------------------------------------------------
     def insertColumn(colInd)
       die("insertColumn: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("insertColumn: invalid index #{colInd}") unless (colInd > 0)
       tell("insertColumn: inserting new column")
-      currentTable=@tables[@currentTableName][NODE]
+      currentTable = @tables[@currentTableName][NODE]
       #-----------------------------------------------
       # Neuer Spalteneintrag im Header mit impliziter
       # Aktualisierung der Tabellenbreite
       #-----------------------------------------------
-      column=getChildByIndex(currentTable,COLUMN,colInd)
+      column = getChildByIndex(currentTable,COLUMN,colInd)
       insertColumnBeforeInHeader(column)
       #-----------------------------------------------
       # Fuer alle existierenden Zeilen neue Zelle an
       # Spaltenposition einfuegen und dabei implizit
       # Tabellenbreite aktualisieren
       #-----------------------------------------------
-      row=getRow(1)
-      cell=getChildByIndex(row,CELL,colInd)
+      row = getRow(1)
+      cell = getChildByIndex(row,CELL,colInd)
       insertCellBefore(cell)
-      i=1
-      while(row=getNextExistentRow(row)) # fuer alle Zeilen ab der zweiten
-        cell=getChildByIndex(row,CELL,colInd)
+      i = 1
+      while(row = getNextExistentRow(row)) # fuer alle Zeilen ab der zweiten
+        cell = getChildByIndex(row,CELL,colInd)
         insertCellBefore(cell)
-        i+=1
+        i += 1
       end 
     end
     ##########################################################################
     # internal: returns cell at index if existent, nil otherwise
-    #   row=getRowIfExists(4)
+    #   row = getRowIfExists(4)
     #   if(row)
-    #     cell=getCellFromRowIfExists(row,7)
+    #     cell = getCellFromRowIfExists(row,7)
     #     unless(cell) .....
     #   end
     #-------------------------------------------------------------------------
@@ -3226,12 +3124,12 @@ module Rods
     end
     ##########################################################################
     # internal: returns row at index if existent, nil otherwise
-    #   if(mySheet.getRowIfExists(4))
+    #   if(sheet.getRowIfExists(4))
     #     ........
     #   end
     #-------------------------------------------------------------------------
     def getRowIfExists(rowInd)
-      currentTable=@tables[@currentTableName][NODE]
+      currentTable = @tables[@currentTableName][NODE]
       return getElementIfExists(currentTable,ROW,rowInd)
     end
     ##########################################################################
@@ -3249,26 +3147,26 @@ module Rods
       #--------------------------------------------------------------
       case type
         when CELL
-          kindOfSelf="table:table-cell"
-          kindOfParent="table:table-row"
-          kindOfRepetition="table:number-columns-repeated"
+          kindOfSelf = "table:table-cell"
+          kindOfParent = "table:table-row"
+          kindOfRepetition = "table:number-columns-repeated"
         when COLUMN
-          kindOfSelf="table:table-column"
-          kindOfParent="table:table"
-          kindOfRepetition="table:number-columns-repeated"
+          kindOfSelf = "table:table-column"
+          kindOfParent = "table:table"
+          kindOfRepetition = "table:number-columns-repeated"
         when ROW
-          kindOfSelf="table:table-row"
-          kindOfParent="table:table"
-          kindOfRepetition="table:number-rows-repeated"
+          kindOfSelf = "table:table-row"
+          kindOfParent = "table:table"
+          kindOfRepetition = "table:number-rows-repeated"
         else
           die("getElementIfExists: invalid type #{type}")
       end
       #--------------------------------------------------------------
       # Ist Kind-Element mit Index in Vater-Element vorhanden ?
       #--------------------------------------------------------------
-      i=0
+      i = 0
       parent.elements.each(kindOfSelf){ |child|
-        i+=1
+        i += 1
         #----------------------------------------------------------
         # Index ueberschritten ? -> Ruecksprung mit nil
         # Index gefunden ? -> Rueckgabe des Elementes
@@ -3279,8 +3177,8 @@ module Rods
         elsif(i == index)
           tell("getElementIfExists: Found element #{type} at index #{index}")
           return child
-        elsif(repetition=child.attributes[kindOfRepetition])
-          index+=repetition.to_i-1 # '-1', da aktuelles Element ebenfalls als Wiederholung zaehlt
+        elsif(repetition = child.attributes[kindOfRepetition])
+          index += repetition.to_i-1 # '-1', da aktuelles Element ebenfalls als Wiederholung zaehlt
         end
       }
       #-------------------------------------------------------
@@ -3298,7 +3196,7 @@ module Rods
         Zip::ZipFile.open(file){ |zipfile|
           init(zipfile)
         }
-        @myFile=file
+        @file = file
       else
         die("open: file #{file} does not exist")
       end
@@ -3317,7 +3215,7 @@ module Rods
 
     private :tell, :die, :createCell, :createRow, :getChildByIndex, :createElement, :setRepetition, :initHousekeeping, 
             :getTableWidth, :padTables, :padRow, :time2TimeVal, :percent2PercentVal, :date2DateVal, 
-            :finalize, :init, :normalizeText, :getColor, :normStyleHash, :getStyle, :getIndex,
+            :finalize, :init, :normalizeText, :normStyleHash, :getStyle, :getIndex,
             :getNumberOfSiblings, :getIndexAndOrNumber, :createColumn,
             :getAppropriateStyle, :checkStyleAttributes, :insertStyleAttributes, :cloneNode, 
             :writeStyle, :writeStyleXml, :style2Hash, :writeDefaultStyles, :writeXml, 
