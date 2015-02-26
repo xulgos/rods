@@ -521,10 +521,10 @@ module Rods
       # Unterelemente anlegen und neue Tabelle
       # hinter vorherige einfuegen
       #-----------------------------------------
-      writeXml(newTable,{TAG => "table:table-column",
+      write_xml(newTable,{TAG => "table:table-column",
                          "table:style" => "column_style",
                          "table:default-cell-style-name" => "Default"})
-      writeXml(newTable,{TAG => "table:table-row",
+      write_xml(newTable,{TAG => "table:table-row",
                          "table:style-name" => "row_style",
                          CHILD => {TAG => "table:table-cell"}})
       case position
@@ -551,7 +551,7 @@ module Rods
       #---------------------------------------------------------------------------
       # XML-Tree schreiben
       #---------------------------------------------------------------------------
-      newTable = writeXml(@spreadSheet,{TAG => "table:table",
+      newTable = write_xml(@spreadSheet,{TAG => "table:table",
                                       "table:name" => tableName,
                                       "table:print" => "false",
                                       "table:style-name" => "table_style",
@@ -1763,7 +1763,7 @@ module Rods
       # und schreiben, sofern nicht Default-Style
       #-----------------------------------------------------------
       unless(styleNode && isFixedStyle)
-        nodeWritten = writeXml(topNode,styleHash)
+        nodeWritten = write_xml(topNode,styleHash)
         #-----------------------------------------------------------
         # geschriebenen Knoten verhashen
         #-----------------------------------------------------------
@@ -2198,44 +2198,28 @@ module Rods
     # the written node. The returned node is irrelevant for the recursion but
     # valid for saving the node in a hash-pool for later style-comparisons.
     #------------------------------------------------------------------------
-    def writeXml(node,treeHash)
-      die("writeXml: Node #{node} is not a REXML::Element") unless (node.class.to_s == "REXML::Element")
-      die("writeXml: Hash #{treeHash} is not a Hash") unless (treeHash.class.to_s == "Hash")
+    def write_xml node, treeHash
       tag = ""
       text = ""
-      attributes = Hash.new()
-      grandChildren = Hash.new()
-      #------------------------------
-      # Uebergabe-Hash analysieren und Wertelisten aufbauen
-      #------------------------------
-      treeHash.each{ |key,value|
+      attributes = Hash.new
+      grand_children = Hash.new
+      treeHash.each do |key,value|
         case key
           when TAG then tag = value
           when TEXT then text = value
           else  
             if(key.match(/child/))
-              die("writeXml: Hash #{value} for key #{key} is not a Hash") unless (value.class.to_s == "Hash")
-              grandChildren[key] = value
+              grand_children[key] = value
             else
-              die("writeXml: Hash-key #{key} is not a String") unless (key.class.to_s == "String")
-              die("writeXml: Hash-Value #{value} for key #{key} is not a String") unless (value.class.to_s == "String")
               attributes[key] = value
             end
         end
-      }
-      #------------------------------
-      # Kind-Element schreiben ...
-      #------------------------------
-      die("writeXml: Missing Tag for XML-Tree") unless (tag != "")
-      child = node.add_element(tag,attributes)
-      child.text = text unless (text == "")
-      #------------------------------
-      # ... und Enkel ebenfalls rekursiv schreiben
-      #------------------------------
-      grandChildren.each{ |key,hash|
-        writeXml(child,hash) # hash wurde oben bereits als Typ Hash verifiziert
-      }
-      return child
+      end
+      die("Missing Tag for XML-Tree") unless (tag != "")
+      child = node.add_element tag, attributes
+      child.text = text unless text == ""
+      grand_children.each{ |key,hash| write_xml child, hash }
+      child
     end
     ##########################################################################
     # internal: Convert given formula to internal representation.
@@ -2308,7 +2292,7 @@ module Rods
       # Ggf. alten Kommentar loeschen
       #--------------------------------------------
       cell.elements.delete("office:annotation")
-      writeXml(cell,{TAG => "office:annotation",
+      write_xml(cell,{TAG => "office:annotation",
                      "svg:x" => "4.119cm",
                      "draw:caption-point-x" => "-0.61cm",
                      "svg:y" => "0cm",
@@ -3212,7 +3196,7 @@ module Rods
             :finalize, :init, :normalizeText, :normStyleHash, :getStyle, :getIndex,
             :getNumberOfSiblings, :getIndexAndOrNumber, :createColumn,
             :getAppropriateStyle, :checkStyleAttributes, :insertStyleAttributes, :cloneNode, 
-            :writeStyle, :writeStyleXml, :style2Hash, :writeDefaultStyles, :writeXml, 
+            :writeStyle, :writeStyleXml, :style2Hash, :writeDefaultStyles, :write_xml, 
             :internalizeFormula, :getColorPalette, :open, :printStyles, :insertTableBeforeAfter, 
             :insertColumnBeforeInHeader, :getElementIfExists, :getRowIfExists, :getCellFromRowIfExists
   end # Klassenende
