@@ -10,10 +10,6 @@
 # Copyright (c) <em>Dr. Heinz Breinlinger</em> (2011).
 # Licensed under the same terms as Ruby. No warranty is provided.
 #
-# = Prerequisites
-# As *.ods-files are zipped archives you need to
-#   $ sudo gem install zip
-# 
 # = Tutorial
 # Please refer to README for how to use the interface with many annotated examples.
 # 
@@ -2389,7 +2385,6 @@ module Rods
     #   sheet.saveAs("/home/heinz/Work/Example.ods")
     #-------------------------------------------------------------------------
     def saveAs(newFile)
-      die("saveAs: file #{newFile} does not have valid ending '*.ods'") unless (newFile.match(/\.ods$/))
       if(File.exists?(newFile))
         tell("saveAs: file #{newFile} exists -> deleting")
         File.delete(newFile)
@@ -2412,7 +2407,6 @@ module Rods
       }
     end
     ##########################################################################
-    # Constructor: The given file has to have a *.ods-ending
     #
     #   sheet = Rods.new("/home/heinz/Work/Template.ods") 
     #   sheet = Rods.new("/home/heinz/Work/Template.ods",["de,"DE","€","EUR"]) 
@@ -3191,7 +3185,6 @@ module Rods
     # internal: Opens zip-file
     #-------------------------------------------------------------------------
     def open(file)
-      die("open: file #{file} does not have valid ending '*.ods'") unless (file.match(/\.ods$/))
       if(File.exists?(file))
         tell("open: found file #{file}")
         Zip::ZipFile.open(file){ |zipfile|
