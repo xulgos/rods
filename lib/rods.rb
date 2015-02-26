@@ -410,25 +410,22 @@ module Rods
     # all subsequent operations (first table of spreadsheet).
     #-------------------------------------------------------------------------
     def init_house_keeping
-      @spreadSheet = @content_text.elements["/office:document-content/office:body/office:spreadsheet"]
-      die "Could not extract office:spreadsheet" unless @spreadSheet
-      @numTables = 0
-      @spreadSheet.elements.each "table:table" do |table|
-        tableName = table.attributes["table:name"]
-        die "Could not extract tableName" if tableName.empty?
-        @tables[tableName] = Hash.new
-        @tables[tableName][NODE] = table
-        @tables[tableName][WIDTH] = getTableWidth table
-        @tables[tableName][WIDTHEXCEEDED] = false
-        @numTables += 1
+      @spread_sheet = @content_text.elements["/office:document-content/office:body/office:spreadsheet"]
+      die "Could not extract office:spreadsheet" unless @spread_sheet
+      @num_tables = 0
+      @spread_sheet.elements.each "table:table" do |table|
+        table_name = table.attributes["table:name"]
+        die "Could not extract table_name" if table_name.empty?
+        @tables[table_name] = Hash.new
+        @tables[table_name][NODE] = table
+        @tables[table_name][WIDTH] = get_table_width table
+        @tables[table_name][WIDTHEXCEEDED] = false
+        @num_tables += 1
       end
-      #----------------------------------------------------------------
-      # Nun noch aktuelle, i.e. Default-Tabelle setzen
-      #----------------------------------------------------------------
-      if @numTables == 0
+      if @num_tables == 0
         insertTable "Table 1"
       end
-      firstTable = @spreadSheet.elements["table:table[1]"]
+      firstTable = @spread_sheet.elements["table:table[1]"]
       @currentTableName = firstTable.attributes["table:name"]
     end
     ##########################################################################
@@ -501,10 +498,10 @@ module Rods
       #-----------------------------------------
       # alte Tabelle ermitteln
       #-----------------------------------------
-      @spreadSheet.elements["table:table"].each{ |element|
+      @spread_sheet.elements["table:table"].each{ |element|
         puts("Name: #{element.attributes['table:name']}")
       }
-      relativeTable = @spreadSheet.elements["*[@table:name = '#{relativeTableName}']"]
+      relativeTable = @spread_sheet.elements["*[@table:name = '#{relativeTableName}']"]
       die("insertTableAfter: internal error: Could not locate existing table #{relativeTableName}") unless (relativeTable) 
       #-----------------------------------------
       # Neues Tabellenelement zunaecht per se (i.e. unverankert)  erschaffen
@@ -524,8 +521,8 @@ module Rods
                          "table:style-name" => "row_style",
                          CHILD => {TAG => "table:table-cell"}})
       case position
-        when BEFORE then @spreadSheet.insert_before(relativeTable,newTable)
-        when AFTER then @spreadSheet.insert_after(relativeTable,newTable)
+        when BEFORE then @spread_sheet.insert_before(relativeTable,newTable)
+        when AFTER then @spread_sheet.insert_after(relativeTable,newTable)
         else die("insertTableBeforeAfter: invalid parameter #{position}")
       end
       #---------------------------------------------------------------------------
@@ -533,9 +530,9 @@ module Rods
       #---------------------------------------------------------------------------
       @tables[tableName] = Hash.new()
       @tables[tableName][NODE] = newTable
-      @tables[tableName][WIDTH] = getTableWidth(newTable)
+      @tables[tableName][WIDTH] = get_table_width(newTable)
       @tables[tableName][WIDTHEXCEEDED] = false
-      @numTables += 1
+      @num_tables += 1
     end
     ##########################################################################
     # Inserts a table of the given name at the end of the spreadsheet and updates
@@ -547,7 +544,7 @@ module Rods
       #---------------------------------------------------------------------------
       # XML-Tree schreiben
       #---------------------------------------------------------------------------
-      newTable = write_xml(@spreadSheet,{TAG => "table:table",
+      newTable = write_xml(@spread_sheet,{TAG => "table:table",
                                       "table:name" => tableName,
                                       "table:print" => "false",
                                       "table:style-name" => "table_style",
@@ -562,9 +559,9 @@ module Rods
       #---------------------------------------------------------------------------
       @tables[tableName] = Hash.new()
       @tables[tableName][NODE] = newTable
-      @tables[tableName][WIDTH] = getTableWidth(newTable)
+      @tables[tableName][WIDTH] = get_table_width(newTable)
       @tables[tableName][WIDTHEXCEEDED] = false
-      @numTables += 1
+      @num_tables += 1
     end
     ##########################################################################
     # Deletes the table of the given name and updates the internal 
@@ -581,12 +578,12 @@ module Rods
         # Loeschung in XML-Tree
         #--------------------------------------------------
         node = @tables[tableName][NODE]
-        @spreadSheet.elements.delete(node)
+        @spread_sheet.elements.delete(node)
         #--------------------------------------------------
         # Loeschung in Tabellen-Hash
         #--------------------------------------------------
         @tables.delete(tableName)
-        @numTables -= 1
+        @num_tables -= 1
         tell("deleteTable: deleting table #{tableName}")
       else
         die("deleteTable: invalid table-name/not existing table: '#{tableName}'")
@@ -595,24 +592,19 @@ module Rods
     ##########################################################################
     # internal: Calculates the current width of the current table.
     #-------------------------------------------------------------------------
-    def getTableWidth(table)
-      die("getTableWidth: table #{table} is not a REXML::Element") unless (table.class.to_s == "REXML::Element")
-      die("getTableWidth: current table does not contain table:table-column") unless(table.elements["table:table-column"])
-      tableName = table.attributes["table:name"]
-      die("getTableWidth: Could not extract tableName") if (tableName.empty?())
-      numColumnsOfTable = 0
-      #--------------------------------------------------------------
-      # Vorhandene Spalteneintraege zaehlen
-      #--------------------------------------------------------------
-      table.elements.each("table:table-column"){ |tableColumn|
-        numColumnsOfTable += 1
-        numRepetitions = tableColumn.attributes["table:number-columns-repeated"]
-        if(numRepetitions)
-          numColumnsOfTable += numRepetitions.to_i-1
+    def get_table_width(table)
+      die "current table does not contain table:table-column" unless table.elements["table:table-column"]
+      table_name = table.attributes["table:name"]
+      die "Could not extract table_name" if table_name.empty?
+      num_columns_of_table = 0
+      table.elements.each "table:table-column" do |table_column|
+        num_columns_of_table += 1
+        num_repetitions = table_column.attributes["table:number-columns-repeated"]
+        if(num_repetitions)
+          num_columns_of_table += num_repetitions.to_i-1
         end
-      }
-      tell("getTableWidth: width of '#{tableName}': #{numColumnsOfTable}")
-      return numColumnsOfTable
+      end
+      num_columns_of_table
     end
     ##########################################################################
     # internal: Adapts the number of columns in the headers of all tables 
@@ -627,7 +619,7 @@ module Rods
       @tables.each{ |tableName,tableHash|
         table = tableHash[NODE]
         width = tableHash[WIDTH]
-        numColumnsOfTable = getTableWidth(table)
+        numColumnsOfTable = get_table_width(table)
         if(tableHash[WIDTHEXCEEDED])
           die("padTables: current table does not contain table:table-column") unless(table.elements["table:table-column"])
           #--------------------------------------------------------------
@@ -910,8 +902,8 @@ module Rods
       #-------------------------------------
       metaDocumentStatistic = @office_meta.elements["meta:document-statistic"]
       die("finalize: Could not extract meta:document-statistic") unless (metaDocumentStatistic)
-      metaDocumentStatistic.attributes["meta:table-count"] = @numTables.to_s
-      tell("finalize: num of tables: #{@numTables}")
+      metaDocumentStatistic.attributes["meta:table-count"] = @num_tables.to_s
+      tell("finalize: num of tables: #{@num_tables}")
       #-------------------------------------
       tell("finalize: writing meta.xml ...")
       zipfile.file.open("meta.xml","w") { |outfile|
@@ -2357,7 +2349,7 @@ module Rods
       @country = default[:country]
       @currencySymbol = default[:external_currency]
       @currencySymbolInternal = default[:internal_currency]
-      @spreadSheet
+      @spread_sheet
       @styles_text
       @meta_text
       @office_meta
@@ -2367,7 +2359,7 @@ module Rods
       @office_settings
       @currentTableName
       @tables = Hash.new
-      @numTables
+      @num_tables
       @office_styles
       @auto_styles
       @floatStyle = "float_style"
@@ -2497,7 +2489,7 @@ module Rods
       #----------------------------------------------------------------
       # Alle Text-Nodes suchen
       #----------------------------------------------------------------
-      @spreadSheet.elements.each("//table:table-cell/text:p"){ |textNode|
+      @spread_sheet.elements.each("//table:table-cell/text:p"){ |textNode|
         text = textNode.text
         #---------------------------------------------------------
         # Zelle gefunden ?
@@ -3141,7 +3133,7 @@ module Rods
            :deleteColumn, :deleteRow2, :deleteCell2
 
     private :tell, :die, :createCell, :createRow, :getChildByIndex, :createElement, :setRepetition, :init_house_keeping,
-            :getTableWidth, :padTables, :padRow, :time2TimeVal, :percent2PercentVal, :date2DateVal,
+            :get_table_width, :padTables, :padRow, :time2TimeVal, :percent2PercentVal, :date2DateVal,
             :finalize, :init, :normalizeText, :normStyleHash, :getStyle, :getIndex,
             :getNumberOfSiblings, :getIndexAndOrNumber, :createColumn,
             :getAppropriateStyle, :checkStyleAttributes, :insertStyleAttributes, :cloneNode,
