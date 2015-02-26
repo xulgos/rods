@@ -993,15 +993,15 @@ module Rods
       #-------------------------------------------------------
       tell("init: parsing styles.xml ...")
       @stylesText = REXML::Document.new zipfile.file.read("styles.xml")
-      @officeStyles = @stylesText.elements["/office:document-styles/office:styles"]
-      die("init: Could not extract office:document-styles") unless (@officeStyles)
+      @office_styles = @stylesText.elements["/office:document-styles/office:styles"]
+      die("init: Could not extract office:document-styles") unless (@office_styles)
       #--------------------------------------------------------------
       # content.xml
       #--------------------------------------------------------------
       tell("init: parsing content.xml ...")
       @contentText = REXML::Document.new zipfile.file.read("content.xml")
-      @autoStyles = @contentText.elements["/office:document-content/office:automatic-styles"]
-      die("init: Could not extract office:automatic-styles") unless (@autoStyles)
+      @auto_styles = @contentText.elements["/office:document-content/office:automatic-styles"]
+      die("init: Could not extract office:automatic-styles") unless (@auto_styles)
       #--------------------------------------------------------
       # Tabellendaten ermitteln und Initialwerte setzen
       #--------------------------------------------------------
@@ -1236,11 +1236,11 @@ module Rods
     # styles.xml along with the indicator of the corresponding file.
     #-------------------------------------------------------------------------
     def getStyle(styleName)
-      style = @autoStyles.elements["*[@style:name = '#{styleName}']"]
+      style = @auto_styles.elements["*[@style:name = '#{styleName}']"]
       if(style)
         file = CONTENT
       else
-        style = @officeStyles.elements["*[@style:name = '#{styleName}']"]
+        style = @office_styles.elements["*[@style:name = '#{styleName}']"]
         die("getStyle: Could not find style \'#{styleName}\' in content.xml or styles.xml") unless (style)
         file = STYLES
       end
@@ -1417,12 +1417,12 @@ module Rods
       #----------------------------------------------------------
       # Neuer style bereits in Archiv vorhanden ?
       #----------------------------------------------------------
-      if(@styleArchive.has_key?(hashKey))
+      if(@style_archive.has_key?(hashKey))
         #-------------------------------------------------------
         # Zelle style aus Archiv zuweisen
         # @styleCounter dekrementieren und neuen style verwerfen
         #-------------------------------------------------------
-        archiveStyleName = @styleArchive[hashKey]
+        archiveStyleName = @style_archive[hashKey]
         cell.attributes["table:style-name"] = archiveStyleName
         @styleCounter -= 1
         newStyle = nil
@@ -1431,9 +1431,9 @@ module Rods
         #-------------------------------------------------------
         # Neuen style in Hash aufnehmen, Zelle zuweisen und schreiben (!)
         #-------------------------------------------------------
-        @styleArchive[hashKey] = newStyleName # archivieren
+        @style_archive[hashKey] = newStyleName # archivieren
         cell.attributes["table:style-name"] = newStyleName # Zelle zuweisen
-        @autoStyles.elements << newStyle # in content.xml schreiben
+        @auto_styles.elements << newStyle # in content.xml schreiben
         tell("getAppropriateStyle: adding/archiving style '#{newStyleName}' (hash: #{hashKey})")
       end
     end
@@ -1724,56 +1724,35 @@ module Rods
     #                   "style:parent-style-name" => "Default",
     #                   "style:data-style-name" => "date_format_style"})
     #------------------------------------------------------------------------
-    def write_style_xml(file,styleHash)
-      topNode = @autoStyles # Default
-      #----------------------------------------------------------
-      # In welche Ausgabedatei ?
-      #----------------------------------------------------------
+    def write_style_xml file, style_hash
+      #-----------------------------------------------------------
+      # Style with this name already exists? -> Delete,
+      # If no default style of RODS, and from style-archive remove them.
+      # Cave: style is only in the files of the two
+      # Content.xml OR styles.xml wanted!
+      #-----------------------------------------------------------
+      top_node = @auto_styles
       case file
-        when STYLES then topNode = @officeStyles
-        when CONTENT then topNode = @autoStyles
-        else die("write_style_xml: wrong file-parameter #{file}")
+        when STYLES then top_node = @office_styles
+        when CONTENT then top_node = @auto_styles
+        else die "write_style_xml: wrong file-parameter #{file}"
       end
-      die("write_style_xml: Style-Hash #{styleHash} is not a Hash") unless (styleHash.class.to_s == "Hash")
-      die("write_style_xml: Missing attribute style:name") unless (styleHash.has_key?("style:name"))
-      styleName = styleHash["style:name"]
-      #-----------------------------------------------------------
-      # Style dieses Namens bereits vorhanden ? -> Loeschen,
-      # sofern kein Default-Style von RODS, und aus style-Archiv ggf. entfernen.
-      # Cave: style wird nur in der angegebenen der beiden Dateien
-      # content.xml ODER styles.xml gesucht !
-      #-----------------------------------------------------------
-      isFixedStyle = @fixedStyles.index(styleName)
-      styleNode = topNode.elements["*[@style:name = '#{styleName}']"]
-      if(styleNode && !isFixedStyle)
-        tell("write_style_xml: Deleting previous style with style:name '#{styleName}'")
-        topNode.elements.delete(styleNode)
-        #------------------------------------------
-        # In Archiv loeschen
-        #------------------------------------------
-        @styleArchive.each{ |key,value|
-          if(value == styleName)
-            @styleArchive.delete(key)
-            tell("write_style_xml: deleting style #{value} from archive")
+      die "Missing attribute style:name" unless style_hash.has_key? "style:name"
+      style_name = style_hash["style:name"]
+      is_rods_style = @rods_styles.index style_name
+      style_node = top_node.elements["*[@style:name = '#{style_name}']"]
+      if style_node && !is_rods_style
+        top_node.elements.delete style_node
+        @style_archive.each do |key,value|
+          if value == style_name
+            @style_archive.delete key
             break
           end
-        }
-      end
-      #-----------------------------------------------------------
-      # und schreiben, sofern nicht Default-Style
-      #-----------------------------------------------------------
-      unless(styleNode && isFixedStyle)
-        nodeWritten = write_xml(topNode,styleHash)
-        #-----------------------------------------------------------
-        # geschriebenen Knoten verhashen
-        #-----------------------------------------------------------
-        hashKey = style2Hash(nodeWritten)
-        if(@styleArchive.has_key?(hashKey))
-          tell("write_style_xml: style is already in archive")
-        else
-          @styleArchive[hashKey] = styleName
         end
-        tell("write_style_xml: adding/archiving style '#{styleName}' (hash: #{hashKey})")
+      end
+      unless style_node && is_rods_style
+        hashKey = style2Hash write_xml top_node, style_hash
+        @style_archive[hashKey] = style_name unless @style_archive.has_key? hashKey
       end
     end
     ##########################################################################
@@ -2138,7 +2117,7 @@ module Rods
     #       A: fo:padding-bottom => "0.1cm"
     #-------------------------------------------------------------------------
     def printOfficeStyles()
-      printStyles(@officeStyles,"  ")
+      printStyles(@office_styles,"  ")
     end
     ##########################################################################
     # Helper-Tool: Prints all styles of content.xml in indented ASCII-notation
@@ -2160,7 +2139,7 @@ module Rods
     #     E: number:year
     #-------------------------------------------------------------------------
     def printAutoStyles()
-      printStyles(@autoStyles,"  ")
+      printStyles(@auto_styles,"  ")
     end
     ##########################################################################
     # internal: Helper-Tool: Prints out all styles of given node in an indented ASCII-notation
@@ -2274,7 +2253,7 @@ module Rods
       #-----------------------------------------------------------------------
       # Ist Style gueltig, d.h. in content.xml vorhanden ?
       #-----------------------------------------------------------------------
-      die("setStyle: style \'#{styleName}\' does not exist") unless (@autoStyles.elements["*[@style:name = '#{styleName}']"])
+      die("setStyle: style \'#{styleName}\' does not exist") unless (@auto_styles.elements["*[@style:name = '#{styleName}']"])
       cell.attributes['table:style-name'] = styleName
     end
     ##########################################################################
@@ -2419,8 +2398,8 @@ module Rods
       @currentTableName
       @tables = Hash.new
       @numTables
-      @officeStyles
-      @autoStyles
+      @office_styles
+      @auto_styles
       @floatStyle = "float_style"
       @dateStyle = "date_style"  
       @stringStyle = "string_style"
@@ -2432,11 +2411,11 @@ module Rods
       #---------------------------------------------------------------
       # Hash-Tabelle der geschriebenen Styles
       #---------------------------------------------------------------
-      @styleArchive = Hash.new()
+      @style_archive = Hash.new
       #---------------------------------------------------------------
       # Farbpalette
       #---------------------------------------------------------------
-      @fixedStyles = [
+      @rods_styles = [
         "table_style",
         "row_style",
         "column_style",
