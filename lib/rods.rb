@@ -22,6 +22,7 @@ require 'zip/zipfilesystem'
 require 'rexml/document'
 require 'helpers'
 require 'color'
+require 'exceptions'
 
 module Rods
   ROW = "row"
@@ -72,8 +73,8 @@ module Rods
     ##########################################################################
     # internal: Error-routine for displaying fatal error-message and exiting
     #-------------------------------------------------------------------------
-    def die(message)
-      raise message
+    def die message
+      raise RodsError message
     end
     ##########################################################################
     # internal: Returns a new REXML::Element of type 'cell' with repetition-attribute set to 'n'
