@@ -3109,15 +3109,12 @@ module Rods
     ##########################################################################
     # internal: Opens zip-file
     #-------------------------------------------------------------------------
-    def open(file)
-      if(File.exists?(file))
-        tell("open: found file #{file}")
-        Zip::ZipFile.open(file){ |zipfile|
-          init(zipfile)
-        }
+    def open file
+      if File.exists? file
+        Zip::ZipFile.open(file) { |zipfile| init zipfile }
         @file = file
       else
-        die("open: file #{file} does not exist")
+        die "file #{file} does not exist"
       end
     end
 
