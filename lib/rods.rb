@@ -409,31 +409,27 @@ module Rods
     # table-administration via Hashes and sets the current default-table for
     # all subsequent operations (first table of spreadsheet).
     #-------------------------------------------------------------------------
-    def initHousekeeping()
-      @spreadSheet = @contentText.elements["/office:document-content/office:body/office:spreadsheet"]
-      die("initHousekeeping: Could not extract office:spreadsheet") unless (@spreadSheet)
-      #------------------------------------------------------------
-      # Fuer alle Tabelleneintraege
-      #------------------------------------------------------------
+    def init_house_keeping
+      @spreadSheet = @content_text.elements["/office:document-content/office:body/office:spreadsheet"]
+      die "Could not extract office:spreadsheet" unless @spreadSheet
       @numTables = 0
-      @spreadSheet.elements.each("table:table"){ |table|
+      @spreadSheet.elements.each "table:table" do |table|
         tableName = table.attributes["table:name"]
-        die("initHouskeeping: Could not extract tableName") if (tableName.empty?())
-        @tables[tableName] = Hash.new()
+        die "Could not extract tableName" if tableName.empty?
+        @tables[tableName] = Hash.new
         @tables[tableName][NODE] = table
-        @tables[tableName][WIDTH] = getTableWidth(table)
+        @tables[tableName][WIDTH] = getTableWidth table
         @tables[tableName][WIDTHEXCEEDED] = false
         @numTables += 1
-      }
+      end
       #----------------------------------------------------------------
       # Nun noch aktuelle, i.e. Default-Tabelle setzen
       #----------------------------------------------------------------
       if @numTables == 0
-        insertTable("Table 1")
+        insertTable "Table 1"
       end
       firstTable = @spreadSheet.elements["table:table[1]"]
       @currentTableName = firstTable.attributes["table:name"]
-      tell("initHousekeeping: number of tables: #{@numTables} ... defaulting to '#{@currentTableName}'")
     end
     ##########################################################################
     # returns the list of table names
@@ -895,15 +891,15 @@ module Rods
       #-------------------------------------
       # Autor (ich :-)
       #-------------------------------------
-      initialCreator = @officeMeta.elements["meta:initial-creator"]
-      initialCreator = @officeMeta.add_element(REXML::Element.new("meta:initial-creator"))
+      initialCreator = @office_meta.elements["meta:initial-creator"]
+      initialCreator = @office_meta.add_element(REXML::Element.new("meta:initial-creator"))
       die("finalize: Could not extract meta:initial-creator") unless (initialCreator)
       initialCreator.text = "Dr. Heinz Breinlinger"
       tell("finalize: automator: Dr. Heinz Breinlinger")
       #-------------------------------------
       # Datum/Zeit
       #-------------------------------------
-      metaCreationDate = @officeMeta.elements["meta:creation-date"]
+      metaCreationDate = @office_meta.elements["meta:creation-date"]
       die("finalize: could not extract meta:creation-date") unless (metaCreationDate)
       now = Time.new()
       time = now.year.to_s+"-"+now.month.to_s+"-"+now.day.to_s+"T"+now.hour.to_s+":"+now.min.to_s+":"+now.sec.to_s
@@ -912,21 +908,21 @@ module Rods
       #-------------------------------------
       # Anzahl der Tabellen
       #-------------------------------------
-      metaDocumentStatistic = @officeMeta.elements["meta:document-statistic"]
+      metaDocumentStatistic = @office_meta.elements["meta:document-statistic"]
       die("finalize: Could not extract meta:document-statistic") unless (metaDocumentStatistic)
       metaDocumentStatistic.attributes["meta:table-count"] = @numTables.to_s
       tell("finalize: num of tables: #{@numTables}")
       #-------------------------------------
       tell("finalize: writing meta.xml ...")
       zipfile.file.open("meta.xml","w") { |outfile|
-        outfile.puts @metaText.to_s
+        outfile.puts @meta_text.to_s
       }
       #------------------------
       # manifest.xml
       #------------------------
       tell("finalize: writing manifest.xml ...")
       zipfile.file.open("META-INF/manifest.xml","w") { |outfile|
-        outfile.puts @manifestText.to_s
+        outfile.puts @manifest_text.to_s
       }
       #------------------------
       # mimetype
@@ -941,14 +937,14 @@ module Rods
       #------------------------
       tell("finalize: writing settings.xml ...")
       zipfile.file.open("settings.xml","w") { |outfile|
-        outfile.puts @settingsText.to_s
+        outfile.puts @settings_text.to_s
       }
       #------------------------
       # styles.xml
       #------------------------
       tell("finalize: writing styles.xml ...")
       zipfile.file.open("styles.xml","w") { |outfile|
-        outfile.puts @stylesText.to_s
+        outfile.puts @styles_text.to_s
       }
       #------------------------
       # content.xml
@@ -956,7 +952,7 @@ module Rods
       padTables() 
       tell("finalize: writing content.xml ...")
       zipfile.file.open("content.xml","w") { |outfile|
-        outfile.puts @contentText.to_s
+        outfile.puts @content_text.to_s
       }
     end
     ##########################################################################
@@ -966,50 +962,24 @@ module Rods
     # all tables and creates default-styles and default-data-styles for all
     # data-types.
     #-------------------------------------------------------------------
-    def init(zipfile)
-      #-------------------------------------------------------
-      # meta.xml
-      #-------------------------------------------------------
-      tell("init: parsing meta.xml ...")
-      @metaText = REXML::Document.new zipfile.file.read("meta.xml")
-      @officeMeta = @metaText.elements["/office:document-meta/office:meta"]
-      die("init: Could not extract office:document-meta") unless (@officeMeta)
-      #-------------------------------------------------------
-      # manifest.xml
-      #-------------------------------------------------------
-      tell("init: parsing manifest.xml ...")
-      @manifestText = REXML::Document.new zipfile.file.read("META-INF/manifest.xml")
-      @manifestRoot = @manifestText.elements["/manifest:manifest"]
-      die("init: Could not extract manifest:manifest") unless (@manifestRoot)
-      #-------------------------------------------------------
-      # settings.xml
-      #-------------------------------------------------------
-      tell("init: parsing settings.xml ...")
-      @settingsText = REXML::Document.new zipfile.file.read("settings.xml")
-      @officeSettings = @settingsText.elements["/office:document-settings/office:settings"]
-      die("init: Could not extract office:-settings") unless (@officeSettings)
-      #-------------------------------------------------------
-      # styles.xml
-      #-------------------------------------------------------
-      tell("init: parsing styles.xml ...")
-      @stylesText = REXML::Document.new zipfile.file.read("styles.xml")
-      @office_styles = @stylesText.elements["/office:document-styles/office:styles"]
-      die("init: Could not extract office:document-styles") unless (@office_styles)
-      #--------------------------------------------------------------
-      # content.xml
-      #--------------------------------------------------------------
-      tell("init: parsing content.xml ...")
-      @contentText = REXML::Document.new zipfile.file.read("content.xml")
-      @auto_styles = @contentText.elements["/office:document-content/office:automatic-styles"]
-      die("init: Could not extract office:automatic-styles") unless (@auto_styles)
-      #--------------------------------------------------------
-      # Tabellendaten ermitteln und Initialwerte setzen
-      #--------------------------------------------------------
-      initHousekeeping()
-      #------------------------------------------------------------
-      # Default-Styles und Default-Data-Styles anlegen
-      #------------------------------------------------------------
-      writeDefaultStyles
+    def init zipfile
+      @meta_text = REXML::Document.new zipfile.file.read "meta.xml"
+      @office_meta = @meta_text.elements["/office:document-meta/office:meta"]
+      die"Could not extract office:document-meta" unless @office_meta
+      @manifest_text = REXML::Document.new zipfile.file.read "META-INF/manifest.xml"
+      @manifest_root = @manifest_text.elements["/manifest:manifest"]
+      die "Could not extract manifest:manifest" unless @manifest_root
+      @settings_text = REXML::Document.new zipfile.file.read "settings.xml"
+      @office_settings = @settings_text.elements["/office:document-settings/office:settings"]
+      die "Could not extract office:-settings" unless @office_settings
+      @styles_text = REXML::Document.new zipfile.file.read "styles.xml"
+      @office_styles = @styles_text.elements["/office:document-styles/office:styles"]
+      die "Could not extract office:document-styles" unless @office_styles
+      @content_text = REXML::Document.new zipfile.file.read "content.xml"
+      @auto_styles = @content_text.elements["/office:document-content/office:automatic-styles"]
+      die "Could not extract office:automatic-styles" unless @auto_styles
+      init_house_keeping
+      write_default_styles
     end
     ##########################################################################
     # internal: Converts the given string (of type 'float' or 'currency') to
@@ -1778,7 +1748,7 @@ module Rods
     ##########################################################################
     # internal: write initial default styles into content.xml and styles.xml
     #------------------------------------------------------------------------
-    def writeDefaultStyles()
+    def write_default_styles
       #------------------------------------------------------------------------
       # Formate fuer die Anlage von Tabellen
       #------------------------------------------------------------------------
@@ -1835,7 +1805,7 @@ module Rods
       # Zeit-Style Teil 1 (Format)
       #--------------------------------------------------------
       write_style_xml(STYLES,{TAG => "number:time-style",
-                            "style:name" => "time_format_styleSeconds",
+                            "style:name" => "time_format_style_seconds",
                             "child1" => {TAG => "number:hours",
                                          "number:style" => "long"},
                             "child2" => {TAG => "number:text",
@@ -1853,7 +1823,7 @@ module Rods
                      "style:name" => "time_seconds_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default",
-                     "style:data-style-name" => "time_format_styleSeconds"})
+                     "style:data-style-name" => "time_format_style_seconds"})
       #------------------------------------------------------------------------
       # Zeit
       #------------------------------------------------------------------------
@@ -2297,7 +2267,7 @@ module Rods
       #------------------------------------------------
       # Automatic-Styles aus content.xml
       #------------------------------------------------
-      styles = @contentText.elements["/office:document-content/office:automatic-styles"]
+      styles = @content_text.elements["/office:document-content/office:automatic-styles"]
       currentTable = @tables[@currentTableName][NODE]
       currentTable.elements.each("//table:table-cell"){ |cell|
         textElement = cell.elements["text:p"]
@@ -2382,19 +2352,19 @@ module Rods
     def initialize options = {}
       default = { language: :de, country: :DE, external_currency: :€, internal_currency: :EUR }
       default.merge! options
-      @contentText
+      @content_text
       @language = default[:language]
       @country = default[:country]
       @currencySymbol = default[:external_currency]
       @currencySymbolInternal = default[:internal_currency]
       @spreadSheet
-      @stylesText
-      @metaText
-      @officeMeta
-      @manifestText
-      @manifestRoot
-      @settingsText
-      @officeSettings
+      @styles_text
+      @meta_text
+      @office_meta
+      @manifest_text
+      @manifest_root
+      @settings_text
+      @office_settings
       @currentTableName
       @tables = Hash.new
       @numTables
@@ -3170,12 +3140,12 @@ module Rods
            :deleteCell, :deleteCellFromRow, :deleteRowAbove, :deleteRowBelow, :deleteRow,
            :deleteColumn, :deleteRow2, :deleteCell2
 
-    private :tell, :die, :createCell, :createRow, :getChildByIndex, :createElement, :setRepetition, :initHousekeeping,
+    private :tell, :die, :createCell, :createRow, :getChildByIndex, :createElement, :setRepetition, :init_house_keeping,
             :getTableWidth, :padTables, :padRow, :time2TimeVal, :percent2PercentVal, :date2DateVal,
             :finalize, :init, :normalizeText, :normStyleHash, :getStyle, :getIndex,
             :getNumberOfSiblings, :getIndexAndOrNumber, :createColumn,
             :getAppropriateStyle, :checkStyleAttributes, :insertStyleAttributes, :cloneNode,
-            :writeStyle, :write_style_xml, :style2Hash, :writeDefaultStyles, :write_xml,
+            :writeStyle, :write_style_xml, :style2Hash, :write_default_styles, :write_xml,
             :internalizeFormula, :getColorPalette, :open, :printStyles, :insertTableBeforeAfter,
             :insertColumnBeforeInHeader, :getElementIfExists, :getRowIfExists, :getCellFromRowIfExists
   end
