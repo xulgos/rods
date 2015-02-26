@@ -1688,7 +1688,7 @@ module Rods
       if (tableCellProperties.length > 1) then styleAttributes["child1"] = tableCellProperties end
       if (textProperties.length > 1) then styleAttributes["child2"] = textProperties end
       if (paragraphProperties.length > 1) then styleAttributes["child3"] = paragraphProperties end
-      writeStyleXml(CONTENT,styleAttributes)
+      write_style_xml(CONTENT,styleAttributes)
     end
     ##########################################################################
     # internal: write a style-XML-tree to content.xml or styles.xml. The given hash
@@ -1704,7 +1704,7 @@ module Rods
     #    #------------------------------------------------------------------------
     #    # date-Style part 1 (format)
     #    #--------------------------------------------------------
-    #    writeStyleXml(STYLES,{TAG => "number:date-style",
+    #    write_style_xml(STYLES,{TAG => "number:date-style",
     #                   "style:name" => "date_format_style",
     #                   "number:automatic-order" => "true",
     #                   "number:format-source" => "language",
@@ -1718,13 +1718,13 @@ module Rods
     #    #--------------------------------------------------------
     #    # date-Style part 2 (referencing format above)
     #    #--------------------------------------------------------
-    #    writeStyleXml(CONTENT,{TAG => "style:style",
+    #    write_style_xml(CONTENT,{TAG => "style:style",
     #                   "style:name" => "date_style",
     #                   "style:family" => "table-cell",
     #                   "style:parent-style-name" => "Default",
     #                   "style:data-style-name" => "date_format_style"})
     #------------------------------------------------------------------------
-    def writeStyleXml(file,styleHash)
+    def write_style_xml(file,styleHash)
       topNode = @autoStyles # Default
       #----------------------------------------------------------
       # In welche Ausgabedatei ?
@@ -1732,10 +1732,10 @@ module Rods
       case file
         when STYLES then topNode = @officeStyles
         when CONTENT then topNode = @autoStyles
-        else die("writeStyleXml: wrong file-parameter #{file}")
+        else die("write_style_xml: wrong file-parameter #{file}")
       end
-      die("writeStyleXml: Style-Hash #{styleHash} is not a Hash") unless (styleHash.class.to_s == "Hash")
-      die("writeStyleXml: Missing attribute style:name") unless (styleHash.has_key?("style:name"))
+      die("write_style_xml: Style-Hash #{styleHash} is not a Hash") unless (styleHash.class.to_s == "Hash")
+      die("write_style_xml: Missing attribute style:name") unless (styleHash.has_key?("style:name"))
       styleName = styleHash["style:name"]
       #-----------------------------------------------------------
       # Style dieses Namens bereits vorhanden ? -> Loeschen,
@@ -1746,7 +1746,7 @@ module Rods
       isFixedStyle = @fixedStyles.index(styleName)
       styleNode = topNode.elements["*[@style:name = '#{styleName}']"]
       if(styleNode && !isFixedStyle)
-        tell("writeStyleXml: Deleting previous style with style:name '#{styleName}'")
+        tell("write_style_xml: Deleting previous style with style:name '#{styleName}'")
         topNode.elements.delete(styleNode)
         #------------------------------------------
         # In Archiv loeschen
@@ -1754,7 +1754,7 @@ module Rods
         @styleArchive.each{ |key,value|
           if(value == styleName)
             @styleArchive.delete(key)
-            tell("writeStyleXml: deleting style #{value} from archive")
+            tell("write_style_xml: deleting style #{value} from archive")
             break
           end
         }
@@ -1769,11 +1769,11 @@ module Rods
         #-----------------------------------------------------------
         hashKey = style2Hash(nodeWritten)
         if(@styleArchive.has_key?(hashKey))
-          tell("writeStyleXml: style is already in archive")
+          tell("write_style_xml: style is already in archive")
         else
           @styleArchive[hashKey] = styleName
         end
-        tell("writeStyleXml: adding/archiving style '#{styleName}' (hash: #{hashKey})")
+        tell("write_style_xml: adding/archiving style '#{styleName}' (hash: #{hashKey})")
       end
     end
     ##########################################################################
@@ -1805,7 +1805,7 @@ module Rods
       #------------------------------------------------------------------------
       # Tabellenformat selbst
       #------------------------------------------------------------------------
-      writeStyleXml(CONTENT,{TAG => "style:style",
+      write_style_xml(CONTENT,{TAG => "style:style",
                              "style:name" => "table_style",
                              "style:family" => "table",
                              "style:master-page-name" => "Default",
@@ -1815,7 +1815,7 @@ module Rods
       #------------------------------------------------------------------------
       # Zeilenformat 
       #------------------------------------------------------------------------
-      writeStyleXml(CONTENT,{TAG => "style:style",
+      write_style_xml(CONTENT,{TAG => "style:style",
                              "style:name" => "row_style",
                              "style:family" => "table-row",
                              CHILD => {TAG => "style:table-row-properties",
@@ -1825,7 +1825,7 @@ module Rods
       #------------------------------------------------------------------------
       # Spaltenformat 
       #------------------------------------------------------------------------
-      writeStyleXml(CONTENT,{TAG => "style:style",
+      write_style_xml(CONTENT,{TAG => "style:style",
                              "style:name" => "column_style",
                              "style:family" => "table-column",
                              CHILD => {TAG => "style:table-column-properties",
@@ -1837,7 +1837,7 @@ module Rods
       #------------------------------------------------------------------------
       # Float-Style Teil 1 (Format)
       #--------------------------------------------------------
-      writeStyleXml(STYLES,{TAG => "number:number-style",
+      write_style_xml(STYLES,{TAG => "number:number-style",
                      "style:name" => "float_format_style",
                      CHILD => {TAG => "number:number",
                                "number:decimal-places" => "2",
@@ -1845,7 +1845,7 @@ module Rods
       #--------------------------------------------------------
       # Float-Style Teil 2 (Referenz zu Format oben)
       #--------------------------------------------------------
-      writeStyleXml(CONTENT,{TAG => "style:style",
+      write_style_xml(CONTENT,{TAG => "style:style",
                      "style:name" => "float_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default",
@@ -1855,7 +1855,7 @@ module Rods
       #------------------------------------------------------------------------
       # Zeit-Style Teil 1 (Format)
       #--------------------------------------------------------
-      writeStyleXml(STYLES,{TAG => "number:time-style",
+      write_style_xml(STYLES,{TAG => "number:time-style",
                             "style:name" => "time_format_styleSeconds",
                             "child1" => {TAG => "number:hours",
                                          "number:style" => "long"},
@@ -1870,7 +1870,7 @@ module Rods
       #--------------------------------------------------------
       # Zeit-Style Teil 2 (Referenz zu Format oben)
       #--------------------------------------------------------
-      writeStyleXml(CONTENT,{TAG => "style:style",
+      write_style_xml(CONTENT,{TAG => "style:style",
                      "style:name" => "time_seconds_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default",
@@ -1880,7 +1880,7 @@ module Rods
       #------------------------------------------------------------------------
       # Zeit-Style Teil 1 (Format)
       #--------------------------------------------------------
-      writeStyleXml(STYLES,{TAG => "number:time-style",
+      write_style_xml(STYLES,{TAG => "number:time-style",
                             "style:name" => "time_format_style",
                             "child1" => {TAG => "number:hours",
                                          "number:style" => "long"},
@@ -1891,7 +1891,7 @@ module Rods
       #--------------------------------------------------------
       # Zeit-Style Teil 2 (Referenz zu Format oben)
       #--------------------------------------------------------
-      writeStyleXml(CONTENT,{TAG => "style:style",
+      write_style_xml(CONTENT,{TAG => "style:style",
                      "style:name" => "time_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default",
@@ -1901,7 +1901,7 @@ module Rods
       #------------------------------------------------------------------------
       # Prozent-Style Teil 1 (Format)
       #--------------------------------------------------------
-      writeStyleXml(STYLES,{TAG => "number:percent-style",
+      write_style_xml(STYLES,{TAG => "number:percent-style",
                      "style:name" => "percent_format_style",
                      "child1" => {TAG => "number:number",
                                   "number:decimal-places" => "2",
@@ -1911,7 +1911,7 @@ module Rods
       #--------------------------------------------------------
       # Prozent-Style Teil 2 (Referenz zu Format oben)
       #--------------------------------------------------------
-      writeStyleXml(CONTENT,{TAG => "style:style",
+      write_style_xml(CONTENT,{TAG => "style:style",
                      "style:name" => "percent_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default",
@@ -1919,7 +1919,7 @@ module Rods
       #------------------------------------------------------------------------
       # String
       #------------------------------------------------------------------------
-      writeStyleXml(CONTENT,{TAG => "style:style",
+      write_style_xml(CONTENT,{TAG => "style:style",
                      "style:name" => "string_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default"})
@@ -1928,7 +1928,7 @@ module Rods
       #------------------------------------------------------------------------
       # Date-Style Teil 1 (Format)
       #--------------------------------------------------------
-      writeStyleXml(STYLES,{TAG => "number:date-style",
+      write_style_xml(STYLES,{TAG => "number:date-style",
                      "style:name" => "date_format_style",
                      "number:automatic-order" => "true",
                      "number:format-source" => "language",
@@ -1942,7 +1942,7 @@ module Rods
       #--------------------------------------------------------
       # Date-Style Teil 2 (Referenz zu Format oben)
       #--------------------------------------------------------
-      writeStyleXml(CONTENT,{TAG => "style:style",
+      write_style_xml(CONTENT,{TAG => "style:style",
                      "style:name" => "date_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default",
@@ -1952,13 +1952,13 @@ module Rods
       #------------------------------------------------------------------------
       # Date-Style Teil 1 (Format)
       #--------------------------------------------------------
-      writeStyleXml(STYLES,{TAG => "number:date-style",
+      write_style_xml(STYLES,{TAG => "number:date-style",
                             "style:name" => "date_format_day_style",
                             CHILD => {TAG => "number:day-of-week"}})
       #--------------------------------------------------------
       # Date-Style Teil 2 (Referenz zu Format oben)
       #--------------------------------------------------------
-      writeStyleXml(CONTENT,{TAG => "style:style",
+      write_style_xml(CONTENT,{TAG => "style:style",
                      "style:name" => "date_day_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default",
@@ -1968,7 +1968,7 @@ module Rods
       #------------------------------------------------------------------------
       # Currency-Style Teil 1 (Mapping bei positiver Zahl)
       #--------------------------------------------------------
-      writeStyleXml(STYLES,{TAG => "number:currency-style",
+      write_style_xml(STYLES,{TAG => "number:currency-style",
                      "style:name" => "currency_format_positive_style",
                      "child1" => {TAG => "number:number",
                                   "number:decimal-places" => "2",
@@ -1983,7 +1983,7 @@ module Rods
       #--------------------------------------------------------
       # Currency-Style Teil 2 (Format mit Referenz zu Mapping)
       #--------------------------------------------------------
-      writeStyleXml(STYLES,{TAG => "number:currency-style",
+      write_style_xml(STYLES,{TAG => "number:currency-style",
                      "style:name" => "currency_format_style",
                      "child1" => {TAG => "style:text-properties",
                                   "fo:color" => "#ff0000"},
@@ -2005,7 +2005,7 @@ module Rods
       #--------------------------------------------------------
       # Currency-Style Teil 3 (Referenz zu Format oben)
       #--------------------------------------------------------
-      writeStyleXml(CONTENT,{TAG => "style:style",
+      write_style_xml(CONTENT,{TAG => "style:style",
                      "style:name" => "currency_style",
                      "style:family" => "table-cell",
                      "style:parent-style-name" => "Default",
@@ -2013,7 +2013,7 @@ module Rods
       #--------------------------------------------------------
       # Annotation-Styles Teil 1
       #--------------------------------------------------------
-      writeStyleXml(STYLES,{TAG => "style:style",
+      write_style_xml(STYLES,{TAG => "style:style",
                      "style:name" => "comment_paragraph_style",
                      "style:family" => "paragraph",
                      "child1" => {TAG => "style:paragraph-properties",
@@ -2054,7 +2054,7 @@ module Rods
       #--------------------------------------------------------
       # Annotation-Styles Teil 2
       #--------------------------------------------------------
-      writeStyleXml(STYLES,{TAG => "style:style",
+      write_style_xml(STYLES,{TAG => "style:style",
                      "style:name" => "comment_text_style",
                      "style:family" => "text",
                      "child" => {TAG => "style:text-properties",
@@ -2090,7 +2090,7 @@ module Rods
       #--------------------------------------------------------
       # Annotation-Styles Teil 3
       #--------------------------------------------------------
-      writeStyleXml(CONTENT,{TAG => "style:style",
+      write_style_xml(CONTENT,{TAG => "style:style",
                      "style:name" => "comment_graphics_style",
                      "style:family" => "graphic",
                      CHILD => {TAG => "style:graphic-properties",
@@ -3179,11 +3179,11 @@ module Rods
         die("open: file #{file} does not exist")
       end
     end
-    #-------------------------------------------------------------------------
-    public :setDateFormat, :writeGetCell, :writeCell, :writeGetCellFromRow, :writeCellFromRow, 
-           :getCellFromRow, :getCell, :getRow, :renameTable, :setCurrentTable, 
-           :insertTable, :deleteTable, :readCellFromRow, :readCell, :setAttributes, :writeStyleAbbr, 
-           :setStyle, :printOfficeStyles, :printAutoStyles, :getNextExistentRow, :getPreviousExistentRow, 
+
+    public :setDateFormat, :writeGetCell, :writeCell, :writeGetCellFromRow, :writeCellFromRow,
+           :getCellFromRow, :getCell, :getRow, :renameTable, :setCurrentTable,
+           :insertTable, :deleteTable, :readCellFromRow, :readCell, :setAttributes, :writeStyleAbbr,
+           :setStyle, :printOfficeStyles, :printAutoStyles, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insertTableAfter, :insertTableBefore,
            :writeComment, :save, :saveAs, :initialize, :writeText, :getCellsAndIndicesFor,
            :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insertColumn,
@@ -3191,13 +3191,13 @@ module Rods
            :deleteCell, :deleteCellFromRow, :deleteRowAbove, :deleteRowBelow, :deleteRow,
            :deleteColumn, :deleteRow2, :deleteCell2
 
-    private :tell, :die, :createCell, :createRow, :getChildByIndex, :createElement, :setRepetition, :initHousekeeping, 
-            :getTableWidth, :padTables, :padRow, :time2TimeVal, :percent2PercentVal, :date2DateVal, 
+    private :tell, :die, :createCell, :createRow, :getChildByIndex, :createElement, :setRepetition, :initHousekeeping,
+            :getTableWidth, :padTables, :padRow, :time2TimeVal, :percent2PercentVal, :date2DateVal,
             :finalize, :init, :normalizeText, :normStyleHash, :getStyle, :getIndex,
             :getNumberOfSiblings, :getIndexAndOrNumber, :createColumn,
-            :getAppropriateStyle, :checkStyleAttributes, :insertStyleAttributes, :cloneNode, 
-            :writeStyle, :writeStyleXml, :style2Hash, :writeDefaultStyles, :write_xml, 
-            :internalizeFormula, :getColorPalette, :open, :printStyles, :insertTableBeforeAfter, 
+            :getAppropriateStyle, :checkStyleAttributes, :insertStyleAttributes, :cloneNode,
+            :writeStyle, :write_style_xml, :style2Hash, :writeDefaultStyles, :write_xml,
+            :internalizeFormula, :getColorPalette, :open, :printStyles, :insertTableBeforeAfter,
             :insertColumnBeforeInHeader, :getElementIfExists, :getRowIfExists, :getCellFromRowIfExists
-  end # Klassenende
+  end
 end
