@@ -1,0 +1,52 @@
+ * 0.9.1
+   * bug fixes
+     * methods readCellFromRow and readCell did not return value, if this value was identical with previous cell's value and therefore repeated (in the XML-tree)
+ * 0.9.0 
+   * added new methods 
+     * insertRow, insertCell, insertCellFromRow, deleteCellBefore, deleteCellAfter, deleteCell, deleteCellFromRow,
+       deleteRowAbove, deleteRowBelow, deleteRow, deleteColumn, deleteRow2, deleteCell2
+   cf. Examples 0.9.0 a-e and read chapter "Caveat" below for performance-considerations !
+ * 0.8.1
+   * Bug-Fix: methods insertRowBelow and insertCellAfter did not consider repetitions of previous element
+ * 0.8.0
+   * new function
+     * insertColumn
+   cf. Example 0.8.0 below
+ * 0.7.5
+   * new functions
+     * insertRowAbove, insertRowBelow, insertCellBefore, insertCellAfter
+   cf. Example 0.7.5 below
+ * 0.7.0 
+   * added new function
+     * getCellsAndIndicesFor(expression)
+     This function returns all cells and their indices for which 
+     the external representation matches the given expression.
+   cf. Example 0.7.0 below
+ * 0.6.2
+   * added style-attributes
+     * text-underline-style
+     * text-underline-width
+     * text-underline-color
+   cf. Example 0.6.2 below
+ * 0.6.1
+   * added new functions
+     * insertTableBefore()
+     * insertTableAfter()
+   cf. Example 0.6.1 below
+ * 0.6.0
+   * changed interface from
+     * getNextRow, getPreviousRow, getNextCell, getPreviousCell to
+     * getNextExistentRow, getPreviousExistentRow, getNextExistentCell, getPreviousExistentCell
+   See explanation below
+ * 0.5.1 
+   * made readCellFromRow() more user-friendly by returning defaults for text and type where 
+     till recently error-messages were thrown due to missing values
+ * 0.5.0
+   * new performance-boosters for reading lots of rows (cf. chapter and second example-script below)
+     * getNextRow, getPreviousRow, getNextCell, getPreviousCell
+ * 0.1.1 
+   * Bug-Fix: readCellFromRow() did not return value in some cases
+ * 0.1.0 
+   * improved support for compound-formulas 
+       (=SUMME(WENN((A$12:A$985="x")*(I$12:I$983="Hauskonto");G$12:G$983)))
+   * logging set as default

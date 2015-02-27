@@ -1,0 +1,28 @@
+write_style_xml:
+  * Extract this method into it own class Style
+  * Extract all the persistace logic into another class which knows how to turn a style object to xml
+  * A style should have all it properties
+  * This method takes a file parameter to know if its writing to content.xml or styles.xml.
+    Content.xml and styles.xml should be intances of the same class which would remove the ambiguity.
+
+class Table:
+  get_table_width:
+    * The name of this method sugest there should be a class named Table with an attribute width.
+  rename_table:
+    * The name of this method sugest there should be a class named Table with a method rename or an attribute 
+      name that can be set.
+
+insert_table: 
+  * For once a method is sort of where it should be but it does too much.
+  * Creating a Table should not be here.
+  * Creating Xml Nodes for an empty table shouldn't be here.
+  * Mixes persistance with busness logic
+
+class Formula:
+  * From the README a formula seem like a good candidate for a class
+
+class Row:
+  * There are a lot of methods working with rows which have cells and persisting them
+
+class Cell
+  * This class should come in many types, based on the type of content it will store.
