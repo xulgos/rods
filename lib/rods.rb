@@ -246,7 +246,7 @@ module Rods
     #      1.upto(500){ |i|
     #        row = getRow(i) 
     #        text1,type1 = readCellFromRow(row,3)  
-    #        text2,type2 = readCellFromRow(row,4) # XML-Parser can start from row-node instead of root-node !
+    #        text2,type2 = readCellFromRow(row,4) # XML-Parser can start from row-node instead of root-node
     #        puts("Read #{text1} of #{type1} and #{text2} of #{type2}
     #      }
     #-------------------------------------------------------------------------
@@ -604,7 +604,7 @@ module Rods
           if(lastTableColumn.attributes["table:number-columns-repeated"])
             numRepetitions = (lastTableColumn.attributes["table:number-columns-repeated"]).to_i+width-numColumnsOfTable
           else
-            numRepetitions = width-numColumnsOfTable+1 # '+1' da Spalte selbst als Wiederholung zaehlt !
+            numRepetitions = width-numColumnsOfTable+1 # '+1' da Spalte selbst als Wiederholung zaehlt
           end
           lastTableColumn.attributes["table:number-columns-repeated"] = numRepetitions.to_s
           tableHash[WIDTHEXCEEDED] = false
@@ -742,7 +742,7 @@ module Rods
     # Type is one of the following office:value-types
     # * string, float, currency, time, date, percent, formula
     # The content of a formula is it's last calculated result or 0 in case of a
-    # newly created cell ! The text is internally cleaned from currency-symbols and
+    # newly created cell. The text is internally cleaned from currency-symbols and
     # converted to a valid (English) float representation (but remains a string)
     # in case of type "currency" or "float".
     #   amount = 0.0
@@ -892,7 +892,7 @@ module Rods
       }
       #------------------------
       # mimetype
-      # Cave: Darf KEIN Newline am Ende beinhalten -> print anstelle puts !!!
+      # Cave: Darf KEIN Newline am Ende beinhalten -> print anstelle puts
       #------------------------
       tell("finalize: writing mimetype ...")
       zipfile.file.open("mimetype","w") { |outfile|
@@ -976,7 +976,7 @@ module Rods
     ##########################################################################
     # Writes the given text-string to given cell and sets style of
     # cell to corresponding type. Keep in mind: All values of tables are
-    # passed and retrieved as strings !
+    # passed and retrieved as strings
     #   sheet.writeText(sheet.getCell(17,39),"currency","14,37")
     # The example can of course be simplified by
     #   sheet.writeCell(17,39,"currency","14,37")
@@ -1012,7 +1012,7 @@ module Rods
       # Cave: Zahlformat 1,25 muss geaendert werden in 1.25
       #   In der reinen Textdarstellung der Zellenformel verwendet
       #   OpenOffice das laenderspezifische Trennzeichen; im Attributwert
-      #   der Formel muss jedoch das englische Format mit '.' stehen !
+      #   der Formel muss jedoch das englische Format mit '.' stehen
       #   Waehrend dies bei interaktiver Eingabe der Formel transparent
       #   gewandelt (jedoch stets mit laenderspezifischem Trennzeichen angezeigt) wird,
       #   muss hier explizit "Hand angelegt" werden. Der Unterschied ist dann lediglich
@@ -1127,7 +1127,7 @@ module Rods
           # Cave: Matcht auf Audruecke der Art
           # "0.1cm solid red7" und berueksichtigt auch, dass
           # zwischen 0.1 und cm Leerzeichen sein koennen, da nur
-          # auf die letzten 3 Ausdrucke gematcht wird !
+          # auf die letzten 3 Ausdrucke gematcht wird
           #---------------------------------------------
           match = value.match(/\S+\s\S+\s(\S+)\s*$/) 
           color = match[1]
@@ -1231,7 +1231,7 @@ module Rods
         # Falls auch nur ein Attribut nicht oder nicht mit dem richtigen Wert
         # vorhanden ist, muss ein neuer style erstellt werden.
         # Grundannahme: Ein Open-Document-Style-Attribut kann per se immer nur in einem bestimmten Typ
-        # Knoten vorkommen und muss daher nicht naeher qualifiziert werden !
+        # Knoten vorkommen und muss daher nicht naeher qualifiziert werden
         #-----------------------------------------------------------------------
         attributes.each{ |attribute,value|
           currentValue = currentStyle.attributes[attribute]
@@ -1365,7 +1365,7 @@ module Rods
         tell("getAppropriateStyle: archived style #{archiveStyleName} matches new attributes")
       else
         #-------------------------------------------------------
-        # Neuen style in Hash aufnehmen, Zelle zuweisen und schreiben (!)
+        # Neuen style in Hash aufnehmen, Zelle zuweisen und schreiben
         #-------------------------------------------------------
         @style_archive[hashKey] = newStyleName # archivieren
         cell.attributes["table:style-name"] = newStyleName # Zelle zuweisen
@@ -1399,7 +1399,7 @@ module Rods
         end
       end
       #-------------------------------------------------------------
-      # style:text-underline-style ist Pflicht !
+      # style:text-underline-style ist Pflicht
       #-------------------------------------------------------------
       if((attributes.has_key?("style:text-underline-width") || attributes.has_key?("style:text-underline-color")) && (! attributes.has_key?("style:text-underline-style")))
         die("checkStyleAttributes: missing (style:)text-underline-style ... please specify")
@@ -1484,10 +1484,10 @@ module Rods
           tableCellProperties = style.add_element("style:table-cell-properties") unless (tableCellProperties)
           #--------------------------------------------------------------------------
           # Cave: fo:border-(bottom|top|left|right) und fo:border duerfen NICHT 
-          # gleichzeitig vorhanden sein !
+          # gleichzeitig vorhanden sein
           # Zwar wurde fo:border in diesem Fall bereits durch checkStyleAttributes aus
           # Attributliste geloescht, das Attribut ist aber ggf. auch noch aus bestehendem style
-          # zu loeschen !
+          # zu loeschen
           #--------------------------------------------------------------------------
           if(key.match(/^fo:border-/)) # Falls Border-Seitenangabe (bottom|top|left|right)
             tableCellProperties.attributes.delete("fo:border") # fo:border selbst loeschen
@@ -1632,7 +1632,7 @@ module Rods
     # style is archived in a hash-pool of styles. Prior to that the 'style:name' 
     # is replaced by a dummy-value to ensure comparability.
     # 
-    # Caveat: RODS' default-styles cannot be overwritten !
+    # Caveat: RODS' default-styles cannot be overwritten
     # 
     # Example (internal setting of default date-style upon object creation)
     #    #------------------------------------------------------------------------
@@ -1665,7 +1665,7 @@ module Rods
       # Style with this name already exists? -> Delete,
       # If no default style of RODS, and from style-archive remove them.
       # Cave: style is only in the files of the two
-      # Content.xml OR styles.xml wanted!
+      # Content.xml OR styles.xml wanted
       #-----------------------------------------------------------
       top_node = @auto_styles
       case file
@@ -1701,8 +1701,8 @@ module Rods
       # - Stringwandlung
       # - style:name auf Dummy-Wert setzen (da variabel)
       # - White-Space entfernen
-      # - UND: Zeichen sortieren !!!
-      #     notwendig, da die Attributreihenfolge von XML-Knoten variiert !
+      # - UND: Zeichen sortieren
+      #     notwendig, da die Attributreihenfolge von XML-Knoten variiert
       #     (z.B. bei/nach Klonung)
       #------------------------------------------------------------------
       styleNodeString = styleNode.to_s
@@ -2178,12 +2178,12 @@ module Rods
     end
     ##########################################################################
     # Applies style of given name to given cell and overwrites all previous style-settings
-    # of the latter including the former data-style !
+    # of the latter including the former data-style
     #   sheet.writeStyleAbbr({"name" => "strange_style",
     #                           "text-align" => "right",
-    #                           "data-style-name" => "currency_format_style" <- don't forget data-style !
+    #                           "data-style-name" => "currency_format_style" <- don't forget data-style
     #                           "border-left" => "0.01cm solid grey4"})
-    #   sheet.setStyle(cell,"strange_style") # <- style-name has to exist !
+    #   sheet.setStyle(cell,"strange_style") # <- style-name has to exist
     #-------------------------------------------------------------------------
     def setStyle(cell,styleName)
       #-----------------------------------------------------------------------
@@ -2378,14 +2378,14 @@ module Rods
     end
     ##########################################################################
     # Fast Routine to get the previous row, because XML-Parser does not have
-    # to start from top-node of document to find row ! 
+    # to start from top-node of document to find row
     # Returns previous row as a REXML::Element or nil if no element exists.
-    # Cf. explanation in README !
+    # Cf. explanation in README
     #
     #------------------------------------------------------------------------
     def getPreviousExistentRow(row)
       #----------------------------------------------------------------------
-      # Cave: table:table-row und table:table-column sind Siblings !!!!
+      # Cave: table:table-row und table:table-column sind Siblings
       # Letztere duerfen jedoch NICHT zurueckgegeben werden
       #----------------------------------------------------------------------
       previousSibling = row.previous_sibling
@@ -2397,27 +2397,27 @@ module Rods
     end
     ##########################################################################
     # Fast Routine to get the next cell, because XML-Parser does not have
-    # to start from top-node of row to find cell ! 
+    # to start from top-node of row to find cell
     # Returns next cell as a REXML::Element or nil if no element exists.
-    # Cf. explanation in README !
+    # Cf. explanation in README
     #------------------------------------------------------------------------
     def getNextExistentCell(cell)
       return cell.next_sibling
     end
     ##########################################################################
     # Fast Routine to get the previous cell, because XML-Parser does not have
-    # to start from top-node of row to find cell ! 
+    # to start from top-node of row to find cell
     # Returns previous cell as a REXML::Element or nil if no element exists.
-    # Cf. explanation in README !
+    # Cf. explanation in README
     #------------------------------------------------------------------------
     def getPreviousExistentCell(cell)
       return cell.previous_sibling
     end
     ##########################################################################
     # Fast Routine to get the next row, because XML-Parser does not have
-    # to start from top-node of document to find row ! 
+    # to start from top-node of document to find row
     # Returns next row as a REXML::Element or nil if no element exists.
-    # Cf. explanation in README !
+    # Cf. explanation in README
     #------------------------------------------------------------------------
     def getNextExistentRow(row)
       return row.next_sibling
@@ -2433,7 +2433,7 @@ module Rods
     #     :col  => colIndex}]
     #  
     # Regular expressions for 'content' are allowed but must be enclosed in 
-    # single (not double) quotes !
+    # single (not double) quotes
     #
     # In case of no matches at all, an empty array is returned.
     # 
@@ -2526,7 +2526,7 @@ module Rods
     # corresponding parent-element (table or row) or the number of siblings
     # of the same kind or both - depending on the flag given.
     #
-    # Cave: In case of flag 'BOTH' the method returns TWO values !
+    # Cave: In case of flag 'BOTH' the method returns TWO values
     #
     # index = getIndexAndOrNumber(row,INDEX) # -> Line-number within table
     # numColumns = getIndexAndOrNumber(column,NUMBER) # number of columns
