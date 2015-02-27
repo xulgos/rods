@@ -423,7 +423,7 @@ module Rods
         @num_tables += 1
       end
       if @num_tables == 0
-        insertTable "Table 1"
+        insert_table "Table 1"
       end
       firstTable = @spread_sheet.elements["table:table[1]"]
       @current_table_name = firstTable.attributes["table:name"]
@@ -447,18 +447,21 @@ module Rods
       @current_table_name = new_name if old_name == @current_table_name
     end
 
+    def table_count
+      @tables.length
+    end
+
     def current_table
       @current_table_name
     end
     ##########################################################################
     # Sets the table of the given name as the default-table for all subsequent
     # operations.
-    #   sheet.setCurrentTable("example")
+    #   sheet.set_current_table "example"
     #-------------------------------------------------------------------------
-    def setCurrentTable(tableName)
-      die("setCurrentTable: table '#{tableName}' does not exist") unless (@tables.has_key?(tableName))
-      @current_table_name = tableName
-      tell("setCurrentTable: setting #{tableName} as current table")
+    def set_current_table table_name
+      die "table '#{table_name}' does not exist" unless @tables.has_key? table_name
+      @current_table_name = table_name
     end
     ##########################################################################
     # Inserts a table of the given name before the given spreadsheet and updates
@@ -526,30 +529,25 @@ module Rods
     ##########################################################################
     # Inserts a table of the given name at the end of the spreadsheet and updates
     # the internal table-administration.
-    #   sheet.insertTable("example") 
+    #   sheet.insert_table "example"
     #-------------------------------------------------------------------------
-    def insertTable(tableName)
-      die("insertTable: table '#{tableName}' already exists") if (@tables.has_key?(tableName))
-      #---------------------------------------------------------------------------
-      # XML-Tree schreiben
-      #---------------------------------------------------------------------------
-      newTable = write_xml(@spread_sheet,{TAG => "table:table",
-                                      "table:name" => tableName,
-                                      "table:print" => "false",
-                                      "table:style-name" => "table_style",
-                                      "child1" => {TAG => "table:table-column",
-                                                   "table:style" => "column_style",
-                                                   "table:default-cell-style-name" => "Default"},
-                                      "child2" => {TAG => "table:table-row",
-                                                   "table:style-name" => "row_style",
-                                                   "child3" => {TAG => "table:table-cell"}}})
-      #---------------------------------------------------------------------------
-      # Tabellen-Hash aktualisieren
-      #---------------------------------------------------------------------------
-      @tables[tableName] = Hash.new()
-      @tables[tableName][NODE] = newTable
-      @tables[tableName][WIDTH] = get_table_width(newTable)
-      @tables[tableName][WIDTHEXCEEDED] = false
+    def insert_table(table_name)
+      die "table '#{table_name}' already exists" if @tables.has_key? table_name
+      new_table = write_xml @spread_sheet, {
+        TAG => "table:table",
+        "table:name" => table_name,
+        "table:print" => "false",
+        "table:style-name" => "table_style",
+        "child1" => { TAG => "table:table-column",
+                      "table:style" => "column_style",
+                      "table:default-cell-style-name" => "Default" },
+        "child2" => { TAG => "table:table-row",
+                      "table:style-name" => "row_style",
+                      "child3" => { TAG => "table:table-cell" }}}
+      @tables[table_name] = Hash.new
+      @tables[table_name][NODE] = new_table
+      @tables[table_name][WIDTH] = get_table_width new_table
+      @tables[table_name][WIDTHEXCEEDED] = false
       @num_tables += 1
     end
     ##########################################################################
@@ -3108,8 +3106,8 @@ module Rods
     end
 
     public :setDateFormat, :writeGetCell, :writeCell, :writeGetCellFromRow, :writeCellFromRow,
-           :getCellFromRow, :getCell, :getRow, :rename_table, :setCurrentTable,
-           :insertTable, :deleteTable, :readCellFromRow, :readCell, :setAttributes, :writeStyleAbbr,
+           :getCellFromRow, :getCell, :getRow, :rename_table, :set_current_table,
+           :insert_table, :deleteTable, :readCellFromRow, :readCell, :setAttributes, :writeStyleAbbr,
            :setStyle, :printOfficeStyles, :printAutoStyles, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insertTableAfter, :insertTableBefore,
            :writeComment, :save, :saveAs, :initialize, :writeText, :getCellsAndIndicesFor,
