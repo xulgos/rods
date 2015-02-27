@@ -251,7 +251,7 @@ module Rods
     #      }
     #-------------------------------------------------------------------------
     def getRow(rowInd)
-      currentTable = @tables[@currentTableName][NODE]
+      currentTable = @tables[@current_table_name][NODE]
       return getChildByIndex(currentTable,ROW,rowInd)
     end
     ##########################################################################
@@ -287,9 +287,9 @@ module Rods
       # und typabhaengig vorbelegen
       #---------------------------------------------------------------------
       elsif((type == CELL) || (type == COLUMN))
-        if(index > @tables[@currentTableName][WIDTH])
-          @tables[@currentTableName][WIDTH] = index
-          @tables[@currentTableName][WIDTHEXCEEDED] = true
+        if(index > @tables[@current_table_name][WIDTH])
+          @tables[@current_table_name][WIDTH] = index
+          @tables[@current_table_name][WIDTHEXCEEDED] = true
         end
         kindOfRepetition = "table:number-columns-repeated"
         case type
@@ -426,7 +426,7 @@ module Rods
         insertTable "Table 1"
       end
       firstTable = @spread_sheet.elements["table:table[1]"]
-      @currentTableName = firstTable.attributes["table:name"]
+      @current_table_name = firstTable.attributes["table:name"]
     end
     ##########################################################################
     # returns the list of table names
@@ -436,30 +436,19 @@ module Rods
     end
     ##########################################################################
     # Renames the table of the given name and updates the internal table-administration.
-    #   sheet.renameTable("Tabelle1","not needed") # 'Tabelle1' is the default in a German environment
+    #   sheet.rename_table "Tabelle1","not needed"
     #-------------------------------------------------------------------------
-    def renameTable(oldName,newName)
-      die("renameTable: table '#{oldName}' does not exist") unless (@tables.has_key?(oldName))
-      #------------------------------------------------------
-      # XML-Tree anpassen
-      #------------------------------------------------------
-      node = @tables[oldName][NODE]
-      node.attributes["table:name"] = newName
-      #------------------------------------------------------
-      # Tabellen-Hash anpassen
-      #------------------------------------------------------
-      @tables[newName] = @tables[oldName]
-      @tables.delete(oldName)
-      if(oldName == @currentTableName)
-        @currentTableName = newName
-        tell("renameTable: renaming table (which is current table !) '#{oldName}' to '#{newName}'")
-      else
-        tell("renameTable: renaming table '#{oldName}' to '#{newName}'")
-      end
+    def rename_table old_name, new_name
+      die "table '#{old_name}' does not exist" unless @tables.has_key? old_name
+      node = @tables[old_name][NODE]
+      node.attributes["table:name"] = new_name
+      @tables[new_name] = @tables[old_name]
+      @tables.delete old_name
+      @current_table_name = new_name if old_name == @current_table_name
     end
 
     def current_table
-      @currentTableName
+      @current_table_name
     end
     ##########################################################################
     # Sets the table of the given name as the default-table for all subsequent
@@ -468,7 +457,7 @@ module Rods
     #-------------------------------------------------------------------------
     def setCurrentTable(tableName)
       die("setCurrentTable: table '#{tableName}' does not exist") unless (@tables.has_key?(tableName))
-      @currentTableName = tableName
+      @current_table_name = tableName
       tell("setCurrentTable: setting #{tableName} as current table")
     end
     ##########################################################################
@@ -569,7 +558,7 @@ module Rods
     #   sheet.deleteTable("Tabelle2")
     #-------------------------------------------------------------------------
     def deleteTable(tableName)
-      die("deleteTable: table '#{tableName}' cannot be deleted as it is the current table !") if (tableName == @currentTableName)
+      die("deleteTable: table '#{tableName}' cannot be deleted as it is the current table !") if (tableName == @current_table_name)
       #----------------------------------------------------
       # Tabellenname gueltig ?
       #----------------------------------------------------
@@ -848,7 +837,7 @@ module Rods
       #------------------------------------------------------------------
       # Zelle mit Indizes suchen
       #------------------------------------------------------------------
-      currentTable = @tables[@currentTableName][NODE]
+      currentTable = @tables[@current_table_name][NODE]
       currentTable.elements.each("table:table-row"){ |row|
         i = i+1  
         j = 0
@@ -2260,7 +2249,7 @@ module Rods
       # Automatic-Styles aus content.xml
       #------------------------------------------------
       styles = @content_text.elements["/office:document-content/office:automatic-styles"]
-      currentTable = @tables[@currentTableName][NODE]
+      currentTable = @tables[@current_table_name][NODE]
       currentTable.elements.each("//table:table-cell"){ |cell|
         textElement = cell.elements["text:p"]
         #-----------------------------
@@ -2357,7 +2346,7 @@ module Rods
       @manifest_root
       @settings_text
       @office_settings
-      @currentTableName
+      @current_table_name
       @tables = Hash.new
       @num_tables
       @office_styles
@@ -2634,9 +2623,9 @@ module Rods
       # bisherige Tabellenbreite überschritten ?
       #-----------------------------------------
       lengthOfHeader = getNumberOfSiblings(column)
-      if(lengthOfHeader > @tables[@currentTableName][WIDTH])
-        @tables[@currentTableName][WIDTH] = lengthOfHeader
-        @tables[@currentTableName][WIDTHEXCEEDED] = true
+      if(lengthOfHeader > @tables[@current_table_name][WIDTH])
+        @tables[@current_table_name][WIDTH] = lengthOfHeader
+        @tables[@current_table_name][WIDTHEXCEEDED] = true
       end
       return newColumn
     end
@@ -2859,9 +2848,9 @@ module Rods
       # bisherige Tabellenbreite überschritten ?
       #-----------------------------------------
       lengthOfRow = getNumberOfSiblings(cell)
-      if(lengthOfRow > @tables[@currentTableName][WIDTH])
-        @tables[@currentTableName][WIDTH] = lengthOfRow
-        @tables[@currentTableName][WIDTHEXCEEDED] = true
+      if(lengthOfRow > @tables[@current_table_name][WIDTH])
+        @tables[@current_table_name][WIDTH] = lengthOfRow
+        @tables[@current_table_name][WIDTHEXCEEDED] = true
         tell("insertCellBefore: new table width: #{lengthOfRow}")
       end
       return newCell
@@ -2887,9 +2876,9 @@ module Rods
       # bisherige Tabellenbreite ueberschritten ?
       #-----------------------------------------
       lengthOfRow = getNumberOfSiblings(cell)
-      if(lengthOfRow > @tables[@currentTableName][WIDTH])
-        @tables[@currentTableName][WIDTH] = lengthOfRow
-        @tables[@currentTableName][WIDTHEXCEEDED] = true
+      if(lengthOfRow > @tables[@current_table_name][WIDTH])
+        @tables[@current_table_name][WIDTH] = lengthOfRow
+        @tables[@current_table_name][WIDTHEXCEEDED] = true
         tell("insertCellAfter: new table width: #{lengthOfRow}")
       end
       return newCell
@@ -2970,13 +2959,13 @@ module Rods
     def deleteColumn(colInd)
       die("deleteColumn: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("deleteColumn: invalid index #{colInd}") unless (colInd > 0)
-      currentWidth = @tables[@currentTableName][WIDTH]
+      currentWidth = @tables[@current_table_name][WIDTH]
       die("deleteColumn: column-index #{colInd} is outside valid range/current table width") if (colInd > currentWidth)
       #-------------------------------------------------------------------
       # Entweder Wiederholungsattribut der fraglichen Spalte dekrementieren
       # oder selbige loeschen
       #-------------------------------------------------------------------
-      currentTable = @tables[@currentTableName][NODE]
+      currentTable = @tables[@current_table_name][NODE]
       column = getChildByIndex(currentTable,COLUMN,colInd)
       repetitions = column.attributes["table:number-columns-repeated"]
       if(repetitions && repetitions.to_i > 1)
@@ -3009,7 +2998,7 @@ module Rods
       die("insertColumn: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("insertColumn: invalid index #{colInd}") unless (colInd > 0)
       tell("insertColumn: inserting new column")
-      currentTable = @tables[@currentTableName][NODE]
+      currentTable = @tables[@current_table_name][NODE]
       #-----------------------------------------------
       # Neuer Spalteneintrag im Header mit impliziter
       # Aktualisierung der Tabellenbreite
@@ -3049,7 +3038,7 @@ module Rods
     #   end
     #-------------------------------------------------------------------------
     def getRowIfExists(rowInd)
-      currentTable = @tables[@currentTableName][NODE]
+      currentTable = @tables[@current_table_name][NODE]
       return getElementIfExists(currentTable,ROW,rowInd)
     end
     ##########################################################################
@@ -3119,7 +3108,7 @@ module Rods
     end
 
     public :setDateFormat, :writeGetCell, :writeCell, :writeGetCellFromRow, :writeCellFromRow,
-           :getCellFromRow, :getCell, :getRow, :renameTable, :setCurrentTable,
+           :getCellFromRow, :getCell, :getRow, :rename_table, :setCurrentTable,
            :insertTable, :deleteTable, :readCellFromRow, :readCell, :setAttributes, :writeStyleAbbr,
            :setStyle, :printOfficeStyles, :printAutoStyles, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insertTableAfter, :insertTableBefore,

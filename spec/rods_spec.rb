@@ -22,4 +22,14 @@ describe Rods::Document do
 
   end
 
+  describe 'rename_table' do
+
+    it 'should be able to change the name of the current table' do
+      doc = Rods::Document.new file: "#{File.dirname __FILE__}/empty.ods"
+      doc.rename_table 'Sheet1', 'New'
+      doc.current_table.must_equal 'New'
+    end
+
+  end
+
 end
