@@ -169,34 +169,34 @@ module Rods
     #   sheet.setAttributes(cell,{ "background-color" => "yellow3"})
     #-------------------------------------------------------------------------
     def writeGetCell(rowInd,colInd,type,text)
-      cell = getCell(rowInd,colInd)
-      writeText(cell,type,text)
+      cell = get_cell(rowInd,colInd)
+      write_text(cell,type,text)
       return cell
     end
     ##########################################################################
     # Writes the given text to the cell with the given indices.
     # Creates the cell if not existing.
     # Formats the cell according to type.
-    #   sheet.writeCell(1,1,"date","31.12.2010") # 1st row, 1st column
-    #   sheet.writeCell(2,1,"formula:date"," = A1+1") 
-    #   sheet.writeCell(1,3,"time","13:37") # German time-format
-    #   sheet.writeCell(1,4,"currency","19,99") # you could also use '.' as a decimal separator
+    #   sheet.write_cell 1,1,"date","31.12.2010" # 1st row, 1st column
+    #   sheet.write_cell 2,1,"formula:date"," = A1+1"
+    #   sheet.write_cell 1,3,"time","13:37" # German time-format
+    #   sheet.write_cell 1,4,"currency","19,99" # you could also use '.' as a decimal separator
     #-------------------------------------------------------------------------
-    def writeCell(rowInd,colInd,type,text)
-      cell = getCell(rowInd,colInd)
-      writeText(cell,type,text)
+    def write_cell row, col, type, text
+      cell = get_cell row, col
+      write_text cell, type, text
     end
     ##########################################################################
     # Writes the given text to the cell with the given index in the given row.
     # Row is a REXML::Element.
     # Creates the cell if not existing.
     # Formats the cell according to type and returns the cell.
-    #   row = sheet.getRow(17)
+    #   row = sheet.get_row(17)
     #   cell = sheet.writeGetCellFromRow(row,4,"formula:currency"," = B5*1,19")
     #-------------------------------------------------------------------------
     def writeGetCellFromRow(row,colInd,type,text)
       cell = getCellFromRow(row,colInd)
-      writeText(cell,type,text)
+      write_text(cell,type,text)
       return cell
     end
     ##########################################################################
@@ -204,77 +204,77 @@ module Rods
     # Row is a REXML::Element.
     # Creates the cell if it does not exist.
     # Formats the cell according to type.
-    #   row = sheet.getRow(3)
+    #   row = sheet.get_row(3)
     #   sheet.writeCellFromRow(row,1,"date","28.12.2010")
     #   sheet.writeCellFromRow(row,2,"formula:date"," = A1+3")
     #-------------------------------------------------------------------------
     def writeCellFromRow(row,colInd,type,text)
       cell = getCellFromRow(row,colInd)
-      writeText(cell,type,text)
+      write_text(cell,type,text)
     end
     ##########################################################################
     # Returns the cell at the given index in the given row.
     # Cell and row are REXML::Elements.
     # The cell is created if it does not exist.
-    #   row = sheet.getRow(15)
+    #   row = sheet.get_row(15)
     #   cell = sheet.getCellFromRow(row,17) # 17th cell of 15th row
     # Looks a bit strange compared to
-    #   cell = sheet.getCell(15,17)
+    #   cell = sheet.get_cell(15,17)
     # but is considerably faster if you are operating on several cells of the
     # same row as after locating the first cell of the row the XML-Parser can start 
     # from the node of the already found row instead of having to locate the
     # row over and over again.
     #-------------------------------------------------------------------------
     def getCellFromRow(row,colInd)
-      return getChildByIndex(row,CELL,colInd)
+      return get_child_by_index(row,CELL,colInd)
     end
     ##########################################################################
     # Returns the cell at the given indices.
     # Cell is a REXML::Element.
     # The cell is created if it does not exist.
-    #   cell = sheet.getCell(14,37)
+    #   cell = sheet.get_cell(14,37)
     #-------------------------------------------------------------------------
-    def getCell(rowInd,colInd)
-      row = getRow(rowInd)
-      return getChildByIndex(row,CELL,colInd)
+    def get_cell row_index, col_index
+      row = get_row row_index
+      get_child_by_index row, CELL, col_index
     end
     ##########################################################################
     # Returns the row at the given index.
     # Row is a REXML::Element.
     # The row is created if it does not exist.
-    #      row = getRow(1)
-    #      1.upto(500){ |i|
-    #        row = getRow(i) 
-    #        text1,type1 = readCellFromRow(row,3)  
-    #        text2,type2 = readCellFromRow(row,4) # XML-Parser can start from row-node instead of root-node
-    #        puts("Read #{text1} of #{type1} and #{text2} of #{type2}
-    #      }
+    #      row = get_row 1
+    #      1.upto 500 do |i|
+    #        row = get_row i 
+    #        text1,type1 = read_cell_from_row row,3  
+    #        text2,type2 = read_cell_from_row row,4 # XML-Parser can start from row-node instead of root-node
+    #        puts "Read #{text1} of #{type1} and #{text2} of #{type2}
+    #      end
     #-------------------------------------------------------------------------
-    def getRow(rowInd)
-      currentTable = @tables[@current_table_name][NODE]
-      return getChildByIndex(currentTable,ROW,rowInd)
+    def get_row row_index
+      current_table = @tables[@current_table_name][NODE]
+      get_child_by_index current_table, ROW, row_index
     end
     ##########################################################################
     # internal: returns the child REXML::Element of the given type 
     # ('row', 'cell' or 'column') and index within the parent-element.
     # The child is created if it does not exist.
     #------------------------------------------------------------------------
-    def getChildByIndex(parent,type,index)
-      die("getChildByIndex: 'parent' #{parent} is not a node") unless (parent.class.to_s == "REXML::Element")
-      die("getChildByIndex: 'index' #{index} is not a Fixnum") unless (index.class.to_s == "Fixnum")
+    def get_child_by_index parent, type, index
+      die("'parent' #{parent} is not a node") unless (parent.class.to_s == "REXML::Element")
+      die("'index' #{index} is not a Fixnum") unless (index.class.to_s == "Fixnum")
       i = 0
       lastElement = nil
       #----------------------------------------------------------------------
       # Validierung
       #----------------------------------------------------------------------
       if((type != ROW) && (type != CELL) && (type != COLUMN))
-        die("getChildByIndex: wrong type #{type}")
+        die("wrong type #{type}")
       end
       if(index < 1)
-        die("getChildByIndex: invalid index #{index}")
+        die("invalid index #{index}")
       end
       if(! parent)
-        die("getChildByIndex: parent-element does not exist")
+        die("parent-element does not exist")
       end
       #----------------------------------------------------------------------
       # Typabhaengige Vorbelegungen
@@ -295,10 +295,10 @@ module Rods
         case type
           when CELL then kindOfElement = "table:table-cell"
           when COLUMN then kindOfElement = "table:table-column"
-          else die("getChildByIndex: internal error: when-clause-failure for type #{type}")
+          else die("internal error: when-clause-failure for type #{type}")
         end
       else
-        die("getChildByIndex: wrong type #{type}")
+        die("wrong type #{type}")
       end
       #----------------------------------------------------------------------
       # Durchlauf
@@ -320,7 +320,7 @@ module Rods
           if(repetition = element.attributes[kindOfRepetition])
             numEmptyElementsAfter = repetition.to_i-1
             if(numEmptyElementsAfter < 1)
-              die("getChildByIndex: new repetition < 1")
+              die("new repetition < 1")
             end
             setRepetition(element,type,1)
             element.next_sibling = createElement(type,numEmptyElementsAfter)
@@ -709,10 +709,7 @@ module Rods
       minute = time[2]
       seconds = time[4]
       seconds = "00" if seconds.nil?
-      internalValue = "PT"+hour+"H"+minute+"M"+seconds+"S"
-      tell("time2TimeVal: mapping: #{text} -> #{internalValue}")
-      return internalValue
-      exit
+      "PT"+hour+"H"+minute+"M"+seconds+"S"
     end
 
     ##########################################################################
@@ -728,12 +725,10 @@ module Rods
     # representation '2010-01-01'.
     #----------------------------------------------------------------------
     def date2DateVal(text)
-      if(! text.match(/^\d{2}\.\d{2}\.\d{4}$/))
-        die("date2DateVal: Date #{text} does not comply with format dd.mm.yyyy")
-      else
-        text.match(/(^\d{2})\.(\d{2})\.(\d{4})$/)
-        return $3+"-"+$2+"-"+$1 
-      end
+      return text if text =~ /(^\d{2})-(\d{2})-(\d{4})$/
+      die "Date #{text} does not comply with format dd.mm.yyyy" unless text.match /^\d{2}\.\d{2}\.\d{4}$/
+      text =~ /(^\d{2})\.(\d{2})\.(\d{4})$/
+      $3+"-"+$2+"-"+$1 
     end
     ##########################################################################
     # Returns the content and type of the cell at the index in the given row
@@ -747,7 +742,7 @@ module Rods
     # in case of type "currency" or "float".
     #   amount = 0.0
     #   5.upto(8){ |i|
-    #     row = sheet.getRow(i)
+    #     row = sheet.get_row(i)
     #     text,type = sheet.readCellFromRow(row,i)
     #     sheet.writeCellFromRow(row,9,type,(-1.0*text.to_f).to_s)
     #     if(type == "currency")
@@ -810,7 +805,7 @@ module Rods
     # newly created cell. See annotations at 'readCellFromRow'.
     #   1.upto(10){ |i|
     #      text,type = readCell(i,i)
-    #      writeCell(i,10-i,type,text)
+    #      write_cell(i,10-i,type,text)
     #   }
     #-------------------------------------------------------------------------
     def readCell(rowInd,colInd)
@@ -977,58 +972,21 @@ module Rods
     # Writes the given text-string to given cell and sets style of
     # cell to corresponding type. Keep in mind: All values of tables are
     # passed and retrieved as strings
-    #   sheet.writeText(sheet.getCell(17,39),"currency","14,37")
+    #   sheet.write_text(sheet.get_cell(17,39),"currency","14,37")
     # The example can of course be simplified by
-    #   sheet.writeCell(17,39,"currency","14,37")
+    #   sheet.write_cell 17,39,"currency","14,37"
     #-----------------------------------------------------------
-    def writeText(cell,type,text)
-      #------------------------------------------
-      # Zunaechst ggf. stoerende Attribute löschen
-      #------------------------------------------
-      cell.attributes.each{ |attribute,value|
-        cell.attributes.delete(attribute)
-      }
-      #-------------------------------------------
-      # Typabhaengig diverse Attribute der Zelle setzen
-      #-------------------------------------------
-      # String
-      #-------------------------------------------
-      if(type == "string")
+    def write_text cell, type, text
+      cell.attributes.each { |attribute,value| cell.attributes.delete attribute }
+      if type == "string"
         cell.attributes["office:value-type"] = "string"
         cell.attributes["table:style-name"] = @stringStyle
-      #-------------------------------------------
-      # Float
-      #-------------------------------------------
-      elsif(type == "float")
+      elsif type == "float"
         cell.attributes["office:value-type"] = "float"
-        #-----------------------------------------------------
-        # Dezimaltrenner von "," in "." aendern 
-        #-----------------------------------------------------
-        internalText = text.sub(/,/,".")   
-        cell.attributes["office:value"] = internalText
+        cell.attributes["office:value"] = text
         cell.attributes["table:style-name"] = @floatStyle
-      #-------------------------------------------
-      # Formula
-      # Cave: Zahlformat 1,25 muss geaendert werden in 1.25
-      #   In der reinen Textdarstellung der Zellenformel verwendet
-      #   OpenOffice das laenderspezifische Trennzeichen; im Attributwert
-      #   der Formel muss jedoch das englische Format mit '.' stehen
-      #   Waehrend dies bei interaktiver Eingabe der Formel transparent
-      #   gewandelt (jedoch stets mit laenderspezifischem Trennzeichen angezeigt) wird,
-      #   muss hier explizit "Hand angelegt" werden. Der Unterschied ist dann lediglich
-      #   in der XML-Darstellung (des Attributwertes) zu sehen, NICHT in der interaktiven
-      #   Anzeige unter OpenOffice.
-      #   Als Fuellwert wird stehts "0" gesetzt; beim Oeffnen der Datei mit OpenOffice
-      #   wird dann der richtige Wert errechnet und geschrieben.
-      #-------------------------------------------
-      elsif(type.match(/^formula/))
-        #---------------------------------------------
-        # Formel fuer interne Darstellung aufbereiten
-        #---------------------------------------------
-        cell.attributes["table:formula"] = internalizeFormula(text) 
-        #---------------------------------------------
-        # Zellformatierung bestimmen
-        #---------------------------------------------
+      elsif type.match /^formula/
+        cell.attributes["table:formula"] = internalizeFormula text 
         case type
           when "formula","formula:float"
             cell.attributes["office:value-type"] = "float"
@@ -1038,72 +996,42 @@ module Rods
             cell.attributes["office:value-type"] = "time"
             cell.attributes["office:time-value"] = "PT00H00M00S"
             cell.attributes["table:style-name"] = @timeStyle
-            # cell.attributes["table:style-name"] = ""
           when "formula:date"
             cell.attributes["office:value-type"] = "date"
             cell.attributes["office:date-value"] = "0"
             cell.attributes["table:style-name"] = @dateStyle
           when "formula:currency"
             cell.attributes["office:value-type"] = "currency"
-            #-----------------------------------------------------
-            # Dezimaltrenner von "," in "." aendern
-            #-----------------------------------------------------
-            internalText = "0.0"   
-            cell.attributes["office:value"] = internalText
+            cell.attributes["office:value"] = "0.0" # Recalculated when the file is opened
             cell.attributes["office:currency"] = @currencySymbolInternal
             cell.attributes["table:style-name"] = @currencyStyle
-          else die("writeText: invalid type of formula #{type}")
+          else die("write_text: invalid type of formula #{type}")
         end
         text = "0"
-      #-------------------------------------------
-      # Percent
-      #-------------------------------------------
       elsif(type == "percent")
         cell.attributes["office:value-type"] = "percentage"
         cell.attributes["office:value"] = percent2PercentVal(text)
         cell.attributes["table:style-name"] = @percentStyle
         text = text+" %"
-      #-------------------------------------------
-      # Currency
-      #-------------------------------------------
       elsif(type == "currency")
         cell.attributes["office:value-type"] = "currency"
-        #-----------------------------------------------------
-        # Dezimaltrenner von "," in "." aendern und
-        # Waehrungs-Symbol hintanstellen
-        #-----------------------------------------------------
-        internalText = text.sub(/,/,".")   
-        text = text+" "+@currencySymbol
-        cell.attributes["office:value"] = internalText
+        cell.attributes["office:value"] = text
+        text = "#{text} #{@currencySymbol}"
         cell.attributes["office:currency"] = @currencySymbolInternal
         cell.attributes["table:style-name"] = @currencyStyle
-      #-------------------------------------------
-      # Date
-      #-------------------------------------------
       elsif(type == "date")
         cell.attributes["office:value-type"] = "date"
         cell.attributes["table:style-name"] = @dateStyle
         cell.attributes["office:date-value"] = date2DateVal(text)
-      #-------------------------------------------
-      # Time (im Format 13:37)
-      #-------------------------------------------
       elsif(type == "time")
         cell.attributes["office:value-type"] = "time"
         cell.attributes["table:style-name"] = @timeStyle
         cell.attributes["office:time-value"] = time2TimeVal(text)
       else
-        puts("Wrong type #{type}: Doing nothing")
+        die "Wrong type #{type}"
       end
-      #-------------------------------------------
-      # Text setzen
-      #-------------------------------------------
-      # Textelement bereits vorhanden ?
-      #-------------------------------------------
-      if(cell.elements["text:p"])
+      if cell.elements["text:p"]
         cell.elements["text:p"].text = text
-      #-------------------------------------------
-      # nicht vorhanden (Leerzelle) -> neu anlegen
-      #-------------------------------------------
       else
         newElement = cell.add_element("text:p")
         newElement.text = text
@@ -1198,7 +1126,7 @@ module Rods
     #                                "background-color" => "yellow2",      # background-color
     #                                "color" => "blue"})                   # font-color
     #   1.upto(7){ |row|
-    #     cell = sheet.getCell(row,5)
+    #     cell = sheet.get_cell(row,5)
     #     sheet.setAttributes(cell,{ "border-right" => "0.07cm solid green6" }) 
     #   }
     #-------------------------------------------------------------------------
@@ -2141,8 +2069,8 @@ module Rods
     # Example: " = E6-E5+0,27" => "of: = [.E6]+[.E5]+0.27"
     #------------------------------------------------------------------------
     def internalizeFormula(formulaIn)
-      if(!formulaIn.match(/^ = /))
-        die("internalizeFormula: Formula #{formulaIn} does not begin with \' = \'")
+      if !formulaIn.match /^ = /
+        die "internalizeFormula: Formula #{formulaIn} does not begin with \' = \'"
       end
       formulaOut = String.new(formulaIn)
       #---------------------------------------------
@@ -2157,8 +2085,6 @@ module Rods
       # Zellbezeichnerformat AABC3421 in [.AABC3421] wandeln
       #---------------------------------------------
       formulaOut.gsub!(/((\$?[A-Ta-z'.0-9][A-Ta-z' .0-9]*)\.)?(\$?[A-Za-z]+\$?\d+(:\$?[A-Za-z]+\$?\d+)?)/,"[\\2.\\3]")
-      tell("internalizeFormula: #{formulaIn} -> #{formulaOut}")
-      return formulaOut
     end
     ##########################################################################
     # convert column number to letters for usage in formulas
@@ -2316,7 +2242,7 @@ module Rods
     # currency-values and annotations (the latter though not visibly).
     #-------------------------------------------------------------------------
     def initialize options = {}
-      default = { language: :de, country: :DE, external_currency: :€, internal_currency: :EUR }
+      default = { language: :us, country: :US, external_currency: :'$', internal_currency: :DOLLAR }
       default.merge! options
       @content_text
       @language = default[:language]
@@ -2648,7 +2574,7 @@ module Rods
     ##########################################################################
     # Delets the row below the given row
     #
-    #   row = sheet.getRow(11)
+    #   row = sheet.get_row(11)
     #   sheet.deleteRowBelow(row)
     #-------------------------------------------------------------------------
     def deleteRowBelow(row)
@@ -2679,7 +2605,7 @@ module Rods
     ##########################################################################
     # Delets the cell at the given index in the given row
     #
-    #   row = sheet.getRow(8)
+    #   row = sheet.get_row(8)
     #   sheet.deleteCell(row,9)
     #-------------------------------------------------------------------------
     def deleteCellFromRow(row,colInd)
@@ -2692,9 +2618,9 @@ module Rods
     ##########################################################################
     # Delets the given cell.
     #
-    # 'cell' is a REXML::Element as returned by getCell(cellInd).
+    # 'cell' is a REXML::Element as returned by get_cell(cellInd).
     #
-    # startCell = sheet.getCell(34,1)
+    # startCell = sheet.get_cell(34,1)
     # while(cell = sheet.getNextExistentCell(startCell))
     #   sheet.deleteCell2(cell)
     # end
@@ -2720,9 +2646,9 @@ module Rods
     ##########################################################################
     # Delets the given row.
     #
-    # 'row' is a REXML::Element as returned by getRow(rowInd).
+    # 'row' is a REXML::Element as returned by get_row(rowInd).
     #
-    # startRow = sheet.getRow(12)
+    # startRow = sheet.get_row(12)
     # while(row = sheet.getNextExistentRow(startRow))
     #   sheet.deleteRow2(row)
     # end
@@ -2753,7 +2679,7 @@ module Rods
     def deleteRow(rowInd)
       die("deleteRow: index #{rowInd} is not a Fixnum/Integer") unless (rowInd.class.to_s == "Fixnum")
       die("deleteRow: invalid index #{rowInd}") unless (rowInd > 0)
-      row = getRow(rowInd+1)
+      row = get_row(rowInd+1)
       deleteRowAbove(row)
     end
     ##########################################################################
@@ -2767,13 +2693,13 @@ module Rods
       die("deleteCell: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("deleteCell: invalid index #{colInd}") unless (colInd > 0)
       tell("deleteCell: deleting cell at #{rowInd}:#{colInd}")
-      row = getRow(rowInd)
+      row = get_row(rowInd)
       deleteCellFromRow(row,colInd)
     end
     ##########################################################################
     # Delets the row above the given row
     #
-    #   row = sheet.getRow(5)
+    #   row = sheet.get_row(5)
     #   sheet.deleteRowAbove(row)
     #-------------------------------------------------------------------------
     def deleteRowAbove(row)
@@ -2822,7 +2748,7 @@ module Rods
     end
     ##########################################################################
     # Inserts a new cell before the given cell thereby shifting existing cells
-    #   cell = sheet.getCell(5,1)
+    #   cell = sheet.get_cell(5,1)
     #   sheet.insertCellBefore(cell) # adds cell at beginning of row 5
     #-------------------------------------------------------------------------
     def insertCellBefore(cell)
@@ -2842,7 +2768,7 @@ module Rods
     end
     ##########################################################################
     # Inserts a new cell after the given cell thereby shifting existing cells
-    #   cell = sheet.getCell(4,7)
+    #   cell = sheet.get_cell(4,7)
     #   sheet.insertCellAfter(cell)
     #-------------------------------------------------------------------------
     def insertCellAfter(cell)
@@ -2872,7 +2798,7 @@ module Rods
     # Inserts and returns a cell at the given index in the given row, 
     # thereby shifting existing cells.
     #
-    #   row = sheet.getRow(5)
+    #   row = sheet.get_row(5)
     #   cell = sheet.insertCellFromRow(row,17) 
     #-------------------------------------------------------------------------
     def insertCellFromRow(row,colInd)
@@ -2894,7 +2820,7 @@ module Rods
       die("insertCell: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("insertCell: invalid index #{colInd}") unless (colInd > 0)
       tell("insertCell: inserting new cell at #{rowInd}:#{colInd}")
-      cell = getCell(rowInd,colInd)
+      cell = get_cell(rowInd,colInd)
       return insertCellBefore(cell)
     end
     ##########################################################################
@@ -2905,12 +2831,12 @@ module Rods
       die("insertRow: invalid rowInd #{rowInd}") unless (rowInd > 0)
       die("insertRow: rowInd #{rowInd} is not a Fixnum/Integer") unless (rowInd.class.to_s == "Fixnum")
       tell("insertRow: inserting new row")
-      row = getRow(rowInd)
+      row = get_row(rowInd)
       return insertRowAbove(row)
     end
     ##########################################################################
     # Inserts a new row above the given row thereby shifting existing rows
-    #   row = sheet.getRow(1)
+    #   row = sheet.get_row(1)
     #   sheet.insertRowAbove(row)
     #-------------------------------------------------------------------------
     def insertRowAbove(row)
@@ -2920,7 +2846,7 @@ module Rods
     end
     ##########################################################################
     # Inserts a new row below the given row thereby shifting existing rows
-    #   row = sheet.getRow(8)
+    #   row = sheet.get_row(8)
     #   sheet.insertRowBelow(row)
     #-------------------------------------------------------------------------
     def insertRowBelow(row)
@@ -2951,7 +2877,7 @@ module Rods
       # oder selbige loeschen
       #-------------------------------------------------------------------
       currentTable = @tables[@current_table_name][NODE]
-      column = getChildByIndex(currentTable,COLUMN,colInd)
+      column = get_child_by_index(currentTable,COLUMN,colInd)
       repetitions = column.attributes["table:number-columns-repeated"]
       if(repetitions && repetitions.to_i > 1)
         column.attributes["table:number-columns-repeated"] = (repetitions.to_i-1).to_s
@@ -2967,7 +2893,7 @@ module Rods
       # Spaltenposition einfuegen und dabei implizit
       # Tabellenbreite aktualisieren
       #-----------------------------------------------
-      row = getRow(1)
+      row = get_row(1)
       deleteCellFromRow(row,colInd)
       i = 1
       while(row = getNextExistentRow(row)) # fuer alle Zeilen ab der zweiten
@@ -2988,19 +2914,19 @@ module Rods
       # Neuer Spalteneintrag im Header mit impliziter
       # Aktualisierung der Tabellenbreite
       #-----------------------------------------------
-      column = getChildByIndex(currentTable,COLUMN,colInd)
+      column = get_child_by_index(currentTable,COLUMN,colInd)
       insertColumnBeforeInHeader(column)
       #-----------------------------------------------
       # Fuer alle existierenden Zeilen neue Zelle an
       # Spaltenposition einfuegen und dabei implizit
       # Tabellenbreite aktualisieren
       #-----------------------------------------------
-      row = getRow(1)
-      cell = getChildByIndex(row,CELL,colInd)
+      row = get_row(1)
+      cell = get_child_by_index(row,CELL,colInd)
       insertCellBefore(cell)
       i = 1
       while(row = getNextExistentRow(row)) # fuer alle Zeilen ab der zweiten
-        cell = getChildByIndex(row,CELL,colInd)
+        cell = get_child_by_index(row,CELL,colInd)
         insertCellBefore(cell)
         i += 1
       end 
@@ -3084,26 +3010,23 @@ module Rods
     # internal: Opens zip-file
     #-------------------------------------------------------------------------
     def open file
-      if File.exists? file
-        Zip::ZipFile.open(file) { |zipfile| init zipfile }
-        @file = file
-      else
-        die "file #{file} does not exist"
-      end
+      die "file #{file} does not exist" unless File.exists? file
+      Zip::ZipFile.open(file) { |zipfile| init zipfile }
+      @file = file
     end
 
-    public :setDateFormat, :writeGetCell, :writeCell, :writeGetCellFromRow, :writeCellFromRow,
-           :getCellFromRow, :getCell, :getRow, :rename_table, :set_current_table,
+    public :setDateFormat, :writeGetCell, :write_cell, :writeGetCellFromRow, :writeCellFromRow,
+           :getCellFromRow, :get_cell, :get_row, :rename_table, :set_current_table,
            :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :writeStyleAbbr,
            :setStyle, :printOfficeStyles, :printAutoStyles, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insertTableAfter, :insertTableBefore,
-           :writeComment, :save, :saveAs, :initialize, :writeText, :getCellsAndIndicesFor,
+           :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
            :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insertColumn,
            :insertRow, :insertCell, :insertCellFromRow, :deleteCellBefore, :deleteCellAfter,
            :deleteCell, :deleteCellFromRow, :deleteRowAbove, :deleteRowBelow, :deleteRow,
            :deleteColumn, :deleteRow2, :deleteCell2
 
-    private :tell, :die, :createCell, :createRow, :getChildByIndex, :createElement, :setRepetition, :init_house_keeping,
+    private :tell, :die, :createCell, :createRow, :get_child_by_index, :createElement, :setRepetition, :init_house_keeping,
             :get_table_width, :padTables, :padRow, :time2TimeVal, :percent2PercentVal, :date2DateVal,
             :finalize, :init, :normalizeText, :normStyleHash, :getStyle, :getIndex,
             :getNumberOfSiblings, :getIndexAndOrNumber, :createColumn,

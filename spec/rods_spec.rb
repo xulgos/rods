@@ -83,4 +83,42 @@ describe Rods::Document do
 
   end
 
+  describe 'get_cell' do
+
+    it 'should find a cell with its index' do
+      doc = create_document_from_empty_sheet
+      cell = doc.get_cell 1,1
+      cell.wont_be_nil
+    end
+
+  end
+
+  describe 'write_cell' do
+
+    it 'should write a cell the value given' do
+      doc = create_document_from_empty_sheet
+      doc.write_cell 1,1, "string", "blah"
+    end
+
+    it 'should write to a cell diffrent types of values' do
+      doc = create_document_from_empty_sheet
+      doc.write_cell 1,1, "time", "13:37"
+      doc.write_cell 1,2, "date", "12.01.2015"
+      doc.write_cell 1,3, "float", "1.5"
+      doc.write_cell 1,4, "currency", "24.20"
+      doc.write_cell 1,5, "percent", "20"
+      doc.write_cell 2,1, "formula", " = A3 + 1.2"
+      doc.write_cell 2,1, "formula:time", " = A1 + 1"
+      doc.write_cell 2,1, "formula:date", " = A2 + 1"
+      doc.write_cell 2,1, "formula:float", " = A3 + 1.2"
+      doc.write_cell 2,1, "formula:currency", " = A4 + 1.1"
+    end
+
+    it 'when given a type it does not recognize it raises an exception' do
+      doc = create_document_from_empty_sheet
+      lambda { doc.write_cell 1, 1, "blah", "something" }.must_raise Rods::RodsError
+    end
+
+  end
+
 end
