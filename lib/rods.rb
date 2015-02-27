@@ -436,7 +436,7 @@ module Rods
     end
     ##########################################################################
     # Renames the table of the given name and updates the internal table-administration.
-    #   sheet.rename_table "Tabelle1","not needed"
+    #   sheet.rename_table "Table1","not needed"
     #-------------------------------------------------------------------------
     def rename_table old_name, new_name
       die "table '#{old_name}' does not exist" unless @tables.has_key? old_name
@@ -531,7 +531,7 @@ module Rods
     # the internal table-administration.
     #   sheet.insert_table "example"
     #-------------------------------------------------------------------------
-    def insert_table(table_name)
+    def insert_table table_name
       die "table '#{table_name}' already exists" if @tables.has_key? table_name
       new_table = write_xml @spread_sheet, {
         TAG => "table:table",
@@ -553,28 +553,15 @@ module Rods
     ##########################################################################
     # Deletes the table of the given name and updates the internal 
     # table-administration.
-    #   sheet.deleteTable("Tabelle2")
+    #   sheet.delete_table "Table2"
     #-------------------------------------------------------------------------
-    def deleteTable(tableName)
-      die("deleteTable: table '#{tableName}' cannot be deleted as it is the current table !") if (tableName == @current_table_name)
-      #----------------------------------------------------
-      # Tabellenname gueltig ?
-      #----------------------------------------------------
-      if(@tables.has_key?(tableName))
-        #--------------------------------------------------
-        # Loeschung in XML-Tree
-        #--------------------------------------------------
-        node = @tables[tableName][NODE]
-        @spread_sheet.elements.delete(node)
-        #--------------------------------------------------
-        # Loeschung in Tabellen-Hash
-        #--------------------------------------------------
-        @tables.delete(tableName)
-        @num_tables -= 1
-        tell("deleteTable: deleting table #{tableName}")
-      else
-        die("deleteTable: invalid table-name/not existing table: '#{tableName}'")
-      end
+    def delete_table table_name
+      die "table '#{table_name}' cannot be deleted as it is the current table" if table_name == @current_table_name
+      die "invalid table-name/not existing table: '#{table_name}'" unless @tables.has_key? table_name
+      node = @tables[table_name][NODE]
+      @spread_sheet.elements.delete node
+      @tables.delete table_name
+      @num_tables -= 1
     end
     ##########################################################################
     # internal: Calculates the current width of the current table.
@@ -3107,7 +3094,7 @@ module Rods
 
     public :setDateFormat, :writeGetCell, :writeCell, :writeGetCellFromRow, :writeCellFromRow,
            :getCellFromRow, :getCell, :getRow, :rename_table, :set_current_table,
-           :insert_table, :deleteTable, :readCellFromRow, :readCell, :setAttributes, :writeStyleAbbr,
+           :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :writeStyleAbbr,
            :setStyle, :printOfficeStyles, :printAutoStyles, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insertTableAfter, :insertTableBefore,
            :writeComment, :save, :saveAs, :initialize, :writeText, :getCellsAndIndicesFor,

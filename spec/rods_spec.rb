@@ -57,7 +57,28 @@ describe Rods::Document do
         end
 
       end
+    end
+  end
 
+  describe 'delete_table' do
+
+    it 'should raise an exception if trying to delete current_table' do
+      doc = create_document_from_empty_sheet
+      doc.current_table.must_equal 'Sheet1'
+      lambda { doc.delete_table 'Sheet1' }.must_raise Rods::RodsError
+    end
+
+    it 'should raise an exception if trying to delete a table that does not exists' do
+      doc = create_document_from_empty_sheet
+      lambda { doc.delete_table 'new' }.must_raise Rods::RodsError
+    end
+
+    it 'should remove a table' do
+      doc = create_document_from_empty_sheet
+      doc.insert_table 'new'
+      doc.table_count.must_equal 2
+      doc.delete_table 'new'
+      doc.table_count.must_equal 1
     end
 
   end
