@@ -47,17 +47,17 @@ module Rods
     # Builtin valid values are
     # * 'date_style'
     #   * -> "02.01.2011" (German formatting)
-    # * 'dateDay' 
+    # * 'date_day_style' 
     #   * -> "Su"
     # Example
-    #   sheet.setDateFormat("dateDay")  # RODS' default format for display of weekday
-    #   sheet.setDateFormat("date_style")     # RODS' default format for date ("12.01.2011" German format)
+    #   sheet.set_date_format "date_day_style"  # RODS' default format for display of weekday
+    #   sheet.set_date_format "date_style"     # RODS' default format for date  "12.01.2011" German format
     #-------------------------------------------------------------------------
-    def setDateFormat(formatName)
-      case formatName
-        when "date_style" then @dateStyle = "date_style"
-        when "date_day_style" then @dateStyle = "date_day_style"
-        else die("setDateFormat: invalid format-name #{format}")
+    def set_date_format format_name
+      case format_name
+        when "date_style" then @date_style = "date_style"
+        when "date_day_style" then @date_style = "date_day_style"
+        else die "invalid format-name #{format}"
       end
     end
     ##########################################################################
@@ -999,7 +999,7 @@ module Rods
           when "formula:date"
             cell.attributes["office:value-type"] = "date"
             cell.attributes["office:date-value"] = "0"
-            cell.attributes["table:style-name"] = @dateStyle
+            cell.attributes["table:style-name"] = @date_style
           when "formula:currency"
             cell.attributes["office:value-type"] = "currency"
             cell.attributes["office:value"] = "0.0" # Recalculated when the file is opened
@@ -1021,7 +1021,7 @@ module Rods
         cell.attributes["table:style-name"] = @currencyStyle
       elsif(type == "date")
         cell.attributes["office:value-type"] = "date"
-        cell.attributes["table:style-name"] = @dateStyle
+        cell.attributes["table:style-name"] = @date_style
         cell.attributes["office:date-value"] = date2DateVal(text)
       elsif(type == "time")
         cell.attributes["office:value-type"] = "time"
@@ -2263,7 +2263,7 @@ module Rods
       @office_styles
       @auto_styles
       @floatStyle = "float_style"
-      @dateStyle = "date_style"  
+      @date_style = "date_style"  
       @stringStyle = "string_style"
       @currencyStyle = "currency_style"
       @percentStyle = "percent_style"
@@ -3015,7 +3015,7 @@ module Rods
       @file = file
     end
 
-    public :setDateFormat, :writeGetCell, :write_cell, :writeGetCellFromRow, :writeCellFromRow,
+    public :set_date_format, :writeGetCell, :write_cell, :writeGetCellFromRow, :writeCellFromRow,
            :getCellFromRow, :get_cell, :get_row, :rename_table, :set_current_table,
            :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :writeStyleAbbr,
            :setStyle, :printOfficeStyles, :printAutoStyles, :getNextExistentRow, :getPreviousExistentRow,
