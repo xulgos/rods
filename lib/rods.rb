@@ -61,12 +61,6 @@ module Rods
       end
     end
     ##########################################################################
-    # internal: Wrapper around 'puts' to display "all or nothing" according to debug-switch
-    #-------------------------------------------------------------------------
-    def tell(message)
-      puts("INFO: #{message}")
-    end
-    ##########################################################################
     # internal: Error-routine for displaying fatal error-message and exiting
     #-------------------------------------------------------------------------
     def die message
@@ -608,9 +602,6 @@ module Rods
           end
           lastTableColumn.attributes["table:number-columns-repeated"] = numRepetitions.to_s
           tableHash[WIDTHEXCEEDED] = false
-          tell("padTables: adjusted columns: #{numColumnsOfTable} -> #{width}")
-        else
-          tell("padTables: equal: #{numColumnsOfTable} <-> #{width}")
         end
       }
     end
@@ -855,8 +846,6 @@ module Rods
       initialCreator = @office_meta.elements["meta:initial-creator"]
       initialCreator = @office_meta.add_element(REXML::Element.new("meta:initial-creator"))
       die("finalize: Could not extract meta:initial-creator") unless (initialCreator)
-      initialCreator.text = "Dr. Heinz Breinlinger"
-      tell("finalize: automator: Dr. Heinz Breinlinger")
       #-------------------------------------
       # Datum/Zeit
       #-------------------------------------
@@ -865,23 +854,19 @@ module Rods
       now = Time.new()
       time = now.year.to_s+"-"+now.month.to_s+"-"+now.day.to_s+"T"+now.hour.to_s+":"+now.min.to_s+":"+now.sec.to_s
       metaCreationDate.text = time
-      tell("finalize: time: #{time}")
       #-------------------------------------
       # Anzahl der Tabellen
       #-------------------------------------
       metaDocumentStatistic = @office_meta.elements["meta:document-statistic"]
       die("finalize: Could not extract meta:document-statistic") unless (metaDocumentStatistic)
       metaDocumentStatistic.attributes["meta:table-count"] = @num_tables.to_s
-      tell("finalize: num of tables: #{@num_tables}")
       #-------------------------------------
-      tell("finalize: writing meta.xml ...")
       zipfile.file.open("meta.xml","w") { |outfile|
         outfile.puts @meta_text.to_s
       }
       #------------------------
       # manifest.xml
       #------------------------
-      tell("finalize: writing manifest.xml ...")
       zipfile.file.open("META-INF/manifest.xml","w") { |outfile|
         outfile.puts @manifest_text.to_s
       }
@@ -889,21 +874,18 @@ module Rods
       # mimetype
       # Cave: Darf KEIN Newline am Ende beinhalten -> print anstelle puts
       #------------------------
-      tell("finalize: writing mimetype ...")
       zipfile.file.open("mimetype","w") { |outfile|
         outfile.print("application/vnd.oasis.opendocument.spreadsheet")
       }
       #------------------------
       # settings.xml
       #------------------------
-      tell("finalize: writing settings.xml ...")
       zipfile.file.open("settings.xml","w") { |outfile|
         outfile.puts @settings_text.to_s
       }
       #------------------------
       # styles.xml
       #------------------------
-      tell("finalize: writing styles.xml ...")
       zipfile.file.open("styles.xml","w") { |outfile|
         outfile.puts @styles_text.to_s
       }
@@ -911,7 +893,6 @@ module Rods
       # content.xml
       #------------------------
       padTables() 
-      tell("finalize: writing content.xml ...")
       zipfile.file.open("content.xml","w") { |outfile|
         outfile.puts @content_text.to_s
       }
@@ -1108,7 +1089,6 @@ module Rods
         die("getStyle: Could not find style \'#{styleName}\' in content.xml or styles.xml") unless (style)
         file = STYLES
       end
-      tell("getStyle: found style '#{styleName}'")
       return file,style
     end
     ##########################################################################
@@ -1167,18 +1147,18 @@ module Rods
           # Attribut in Context-Node nicht gefunden ?
           #-------------------------------------------------
           if(! currentValue)  # nilClass
-            tell("setAttributes: #{currentStyleName}: #{attribute} not in Top-Node")
+            # tell("setAttributes: #{currentStyleName}: #{attribute} not in Top-Node")
             #-----------------------------------------------------------
             # Attribut mit passendem Wert dann in Kind-Element vorhanden ?
             #-----------------------------------------------------------
             if(currentStyle.elements["*[@#{attribute} = '#{value}']"])
-              tell("setAttributes: #{currentStyleName}: #{attribute}/#{value} matching in Sub-Node")
+              # tell("setAttributes: #{currentStyleName}: #{attribute}/#{value} matching in Sub-Node")
             #-----------------------------------------------------------
             # andernfalls Komplettabbruch der Pruefschleife aller Attribute und Flag setzen
             # => neuer style muss erzeugt werden
             #-----------------------------------------------------------
             else
-              tell("setAttributes: #{currentStyleName}: #{attribute}/#{value} not matching in Sub-Node")
+              # tell("setAttributes: #{currentStyleName}: #{attribute}/#{value} not matching in Sub-Node")
               containsMatchingAttributes = FALSE
               break
             end
@@ -1190,12 +1170,12 @@ module Rods
             # Passt der Wert des gefundenen Attributes bereits ?
             #--------------------------------------------------
             if (currentValue == value)
-              tell("setAttributes: #{currentStyleName}: #{attribute}/#{value} matching in Top-Node")
+              # tell("setAttributes: #{currentStyleName}: #{attribute}/#{value} matching in Top-Node")
             #-------------------------------------------------
             # bei unpassendem Wert Flag setzen
             #-------------------------------------------------
             else
-              tell("setAttributes: #{currentStyleName}: #{attribute}/#{value} not matching with #{currentValue} in Top-Node")
+              # tell("setAttributes: #{currentStyleName}: #{attribute}/#{value} not matching with #{currentValue} in Top-Node")
               containsMatchingAttributes = FALSE
             end
           end
@@ -1205,7 +1185,6 @@ module Rods
         # bisheriger style weiterverwendet werden ?
         #--------------------------------------------------------
         if(containsMatchingAttributes)
-          tell("setAttributes: #{currentStyleName}: all attributes/values matching -> keeping current style")
         #-------------------------------------------------------
         # nein => passenden Style in Archiv suchen oder klonen und anpassen
         #-------------------------------------------------------
@@ -1290,7 +1269,6 @@ module Rods
         cell.attributes["table:style-name"] = archiveStyleName
         @styleCounter -= 1
         newStyle = nil
-        tell("getAppropriateStyle: archived style #{archiveStyleName} matches new attributes")
       else
         #-------------------------------------------------------
         # Neuen style in Hash aufnehmen, Zelle zuweisen und schreiben
@@ -1298,7 +1276,6 @@ module Rods
         @style_archive[hashKey] = newStyleName # archivieren
         cell.attributes["table:style-name"] = newStyleName # Zelle zuweisen
         @auto_styles.elements << newStyle # in content.xml schreiben
-        tell("getAppropriateStyle: adding/archiving style '#{newStyleName}' (hash: #{hashKey})")
       end
     end
     ##########################################################################
@@ -1338,7 +1315,7 @@ module Rods
       fontStyle = attributes["fo:font-style"]
       if(fontStyle)
         if(attributes.has_key?("fo:font-style-asian") || attributes.has_key?("fo:font-style-complex"))
-          tell("checkStyleAttributes: automatically overwritten fo:font-style-asian/complex with value of fo:font-style")
+          # tell("checkStyleAttributes: automatically overwritten fo:font-style-asian/complex with value of fo:font-style")
         end
         attributes["fo:font-style-asian"] = attributes["fo:font-style-complex"] = fontStyle
       end
@@ -1346,7 +1323,7 @@ module Rods
       fontWeight = attributes["fo:font-weight"]
       if(fontWeight)
         if(attributes.has_key?("fo:font-weight-asian") || attributes.has_key?("fo:font-weight-complex"))
-          tell("checkStyleAttributes: automatically overwritten fo:font-weight-asian/complex with value of fo:font-weight")
+          # tell("checkStyleAttributes: automatically overwritten fo:font-weight-asian/complex with value of fo:font-weight")
         end
         attributes["fo:font-weight-asian"] = attributes["fo:font-weight-complex"] = fontWeight
       end
@@ -1358,7 +1335,7 @@ module Rods
              || attributes.has_key?("fo:border-top") \
              || attributes.has_key?("fo:border-left") \
              || attributes.has_key?("fo:border-right")))
-        tell("checkStyleAttributes: automatically deleted fo:border as one or more sides were specified'")
+        # tell("checkStyleAttributes: automatically deleted fo:border as one or more sides were specified'")
         attributes.delete("fo:border")
       end
       #-----------------------------------------------------------------------
@@ -1371,13 +1348,13 @@ module Rods
       # Mittig oder rechtsbuendig impliziert aeusserst linken Rand
       #----------------------------------------------------------------------
       if(leftMargin && textAlign && (textAlign != "start") && (leftMargin != "0"))
-        tell("checkStyleAttributes: automatically corrected: fo:text-align \'#{attributes['fo:text-align']}\' does not match fo:margin-left \'#{attributes['fo:margin-left']}\'")
+        # tell("checkStyleAttributes: automatically corrected: fo:text-align \'#{attributes['fo:text-align']}\' does not match fo:margin-left \'#{attributes['fo:margin-left']}\'")
         attributes["fo:margin-left"] = "0" 
       #----------------------------------------------------------------------
       # Einrueckung bedingt Linksbuendigkeit
       #----------------------------------------------------------------------
       elsif(leftMargin && (leftMargin != "0") && !textAlign)
-        tell("checkStyleAttributes: automatically corrected: fo:margin-left \'#{attributes['fo:margin-left']}\' needs fo:text-align \'start\' to work")
+        # tell("checkStyleAttributes: automatically corrected: fo:margin-left \'#{attributes['fo:margin-left']}\' needs fo:text-align \'start\' to work")
         attributes["fo:text-align"] = "start" 
       end 
     end
@@ -2199,7 +2176,6 @@ module Rods
     def save()
       die("save: internal error: @file is not set -> cannot save file") unless (@file && (! @file.empty?))
       die("save: this should not happen: file #{@file} is missing") unless (File.exists?(@file))
-      tell("save: saving as file #{@file}")
       Zip::ZipFile.open(@file){ |zipfile|
         finalize(zipfile) 
       } 
@@ -2211,13 +2187,11 @@ module Rods
     #-------------------------------------------------------------------------
     def saveAs(newFile)
       if(File.exists?(newFile))
-        tell("saveAs: file #{newFile} exists -> deleting")
         File.delete(newFile)
       end
       #--------------------------------------------------------
       # Datei anlegen
       #--------------------------------------------------------
-      tell("saveAs: saving as file #{newFile}")
       Zip::ZipFile.open(newFile,true){ |zipfile|
         ["Configurations2","META-INF","Thumbnails"].each{ |dir|
           zipfile.mkdir(dir)
@@ -2385,7 +2359,6 @@ module Rods
       die("getCellsAndIndicesFor: 'content' is not of typ String") unless (content.class.to_s == "String")
       result = Array.new()
       i = 0
-      tell("getCellsAndIndicesFor: Searching for cells with content '#{content}'")
       #----------------------------------------------------------------
       # Alle Text-Nodes suchen
       #----------------------------------------------------------------
@@ -2399,7 +2372,6 @@ module Rods
         #---------------------------------------------------------
         if(text && (text.match(/#{content}/)))
           result[i] = Hash.new() 
-          tell("getCellsAndIndicesFor: '#{content}' matched '#{text}'")
           #-----------------------------------------------------
           # Zelle und Zellenindex ermitteln
           #-----------------------------------------------------
@@ -2419,7 +2391,6 @@ module Rods
           result[i][:cell] = cell
           result[i][:row] = rowIndex
           result[i][:col] = colIndex
-          tell("getCellsAndIndicesFor: Indices #{rowIndex} #{colIndex}")
           i += 1
         end
       }
@@ -2633,14 +2604,14 @@ module Rods
       repetitions = cell.attributes["table:number-columuns-repeated"]
       if(repetitions && repetitions.to_i > 1)
         cell.attributes["table:number-columns-repeated"] = (repetitions.to_i-1).to_s
-        tell("deleteCell2: decrementing empty cells")
+        # tell("deleteCell2: decrementing empty cells")
       else
         row = cell.elements["ancestor::table:table-row"]
         unless (row)
           die("deleteCell2: internal error: Could not extract parent-row of cell #{cell}") 
         end
         row.elements.delete(cell)
-        tell("deleteCell2: deleting non-empty cell")
+        # tell("deleteCell2: deleting non-empty cell")
       end
     end
     ##########################################################################
@@ -2661,14 +2632,14 @@ module Rods
       repetitions = row.attributes["table:number-rows-repeated"]
       if(repetitions && repetitions.to_i > 1)
         row.attributes["table:number-rows-repeated"] = (repetitions.to_i-1).to_s
-        tell("deleteRow2: decrementing empty rows")
+        # tell("deleteRow2: decrementing empty rows")
       else
         table = row.elements["ancestor::table:table"]
         unless (table)
           die("deleteRow2: internal error: Could not extract parent-table of row #{row}") 
         end
         table.elements.delete(row)
-        tell("deleteRow2: deleting non-empty row")
+        # tell("deleteRow2: deleting non-empty row")
       end
     end
     ##########################################################################
@@ -2692,7 +2663,6 @@ module Rods
       die("deleteCell: invalid index #{rowInd}") unless (rowInd > 0)
       die("deleteCell: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("deleteCell: invalid index #{colInd}") unless (colInd > 0)
-      tell("deleteCell: deleting cell at #{rowInd}:#{colInd}")
       row = get_row(rowInd)
       deleteCellFromRow(row,colInd)
     end
@@ -2762,7 +2732,6 @@ module Rods
       if(lengthOfRow > @tables[@current_table_name][WIDTH])
         @tables[@current_table_name][WIDTH] = lengthOfRow
         @tables[@current_table_name][WIDTHEXCEEDED] = true
-        tell("insertCellBefore: new table width: #{lengthOfRow}")
       end
       return newCell
     end
@@ -2790,7 +2759,6 @@ module Rods
       if(lengthOfRow > @tables[@current_table_name][WIDTH])
         @tables[@current_table_name][WIDTH] = lengthOfRow
         @tables[@current_table_name][WIDTHEXCEEDED] = true
-        tell("insertCellAfter: new table width: #{lengthOfRow}")
       end
       return newCell
     end
@@ -2805,7 +2773,6 @@ module Rods
       die("insertCell: row #{row} is not a REXML::Element") unless (row.class.to_s == "REXML::Element")
       die("insertCell: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("insertCell: invalid index #{colInd}") unless (colInd > 0)
-      tell("insertCell: inserting new cell in column:#{colInd}")
       cell = getCellFromRow(row,colInd)
       return insertCellBefore(cell)
     end
@@ -2819,7 +2786,6 @@ module Rods
       die("insertCell: invalid index #{rowInd}") unless (rowInd > 0)
       die("insertCell: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("insertCell: invalid index #{colInd}") unless (colInd > 0)
-      tell("insertCell: inserting new cell at #{rowInd}:#{colInd}")
       cell = get_cell(rowInd,colInd)
       return insertCellBefore(cell)
     end
@@ -2830,7 +2796,6 @@ module Rods
     def insertRow(rowInd)
       die("insertRow: invalid rowInd #{rowInd}") unless (rowInd > 0)
       die("insertRow: rowInd #{rowInd} is not a Fixnum/Integer") unless (rowInd.class.to_s == "Fixnum")
-      tell("insertRow: inserting new row")
       row = get_row(rowInd)
       return insertRowAbove(row)
     end
@@ -2908,7 +2873,6 @@ module Rods
     def insertColumn(colInd)
       die("insertColumn: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("insertColumn: invalid index #{colInd}") unless (colInd > 0)
-      tell("insertColumn: inserting new column")
       currentTable = @tables[@current_table_name][NODE]
       #-----------------------------------------------
       # Neuer Spalteneintrag im Header mit impliziter
@@ -2995,7 +2959,6 @@ module Rods
         if (i > index)
           return nil
         elsif(i == index)
-          tell("getElementIfExists: Found element #{type} at index #{index}")
           return child
         elsif(repetition = child.attributes[kindOfRepetition])
           index += repetition.to_i-1 # '-1', da aktuelles Element ebenfalls als Wiederholung zaehlt
@@ -3026,7 +2989,7 @@ module Rods
            :deleteCell, :deleteCellFromRow, :deleteRowAbove, :deleteRowBelow, :deleteRow,
            :deleteColumn, :deleteRow2, :deleteCell2
 
-    private :tell, :die, :createCell, :createRow, :get_child_by_index, :createElement, :setRepetition, :init_house_keeping,
+    private :die, :createCell, :createRow, :get_child_by_index, :createElement, :setRepetition, :init_house_keeping,
             :get_table_width, :padTables, :padRow, :time2TimeVal, :percent2PercentVal, :date2DateVal,
             :finalize, :init, :normalizeText, :normStyleHash, :getStyle, :getIndex,
             :getNumberOfSiblings, :getIndexAndOrNumber, :createColumn,
