@@ -61,7 +61,7 @@ module Rods
       end
     end
     ##########################################################################
-    # internal: Error-routine for displaying fatal error-message and exiting
+    # internal: Error-routine for displaying fatal error-message
     #-------------------------------------------------------------------------
     def die message
       raise RodsError, message
@@ -69,60 +69,51 @@ module Rods
     ##########################################################################
     # internal: Returns a new REXML::Element of type 'cell' with repetition-attribute set to 'n'
     #-------------------------------------------------------------------------
-    def createCell(repetition)
-      return createElement(CELL,repetition)
+    def create_cell repetition
+      return create_element CELL,repetition
     end
     ##########################################################################
     # internal: Returns a new REXML::Element of type 'row' with repetition-attribute set to 'n'
     #-------------------------------------------------------------------------
-    def createRow(repetition)
-      return createElement(ROW,repetition)
+    def create_row repetition
+      return create_element ROW,repetition
     end
     ##########################################################################
     # internal: Returns a new REXML::Element of type 'column' with repetition-attribute set to 'n'
     #-------------------------------------------------------------------------
-    def createColumn(repetition)
-      return createElement(COLUMN,repetition)
+    def create_column repetition
+      return create_element COLUMN,repetition
     end
     ##########################################################################
     # internal: Returns a new REXML::Element of type 'row', 'cell' or 'column'
     # with repetition-attribute set to 'n'
     #-------------------------------------------------------------------------
-    def createElement(type,repetition)
-      if(repetition < 1)
-        die("createElement: invalid value for repetition #{repetition}")
+    def create_element type, repetition
+      if repetition < 1
+        die "invalid value for repetition #{repetition}"
       end
-      #----------------------------------------------
-      # Zeile
-      #----------------------------------------------
-      if(type == ROW)
-        row = REXML::Element.new("table:table-row")
-        if(repetition > 1)
+      if type == ROW
+        row = REXML::Element.new "table:table-row"
+        if repetition > 1
           row.attributes["table:number-rows-repeated"] = repetition.to_s
         end
         return row
-      #----------------------------------------------
-      # Zelle
-      #----------------------------------------------
-      elsif(type == CELL)
-        cell = REXML::Element.new("table:table-cell")
-        if(repetition > 1)
+      elsif type == CELL
+        cell = REXML::Element.new "table:table-cell"
+        if repetition > 1
           cell.attributes["table:number-columns-repeated"] = repetition.to_s
         end
         return cell
-      #----------------------------------------------
-      # Spalte (als Tabellen-Header)
-      #----------------------------------------------
-        elsif(type == COLUMN)
-        column = REXML::Element.new("table:table-column")
-        if(repetition > 1)
+        elsif type == COLUMN
+        column = REXML::Element.new "table:table-column"
+        if repetition > 1
           column.attributes["table:number-columns-repeated"] = repetition.to_s
         end
         column.attributes["table:default-cell-style-name"] = "Default"
         return column
       #----------------------------------------------
       else
-        die("createElement: Invalid Type: #{type}")
+        die "Invalid Type: #{type}"
       end
     end
     ##########################################################################
@@ -317,7 +308,7 @@ module Rods
               die("new repetition < 1")
             end
             setRepetition(element,type,1)
-            element.next_sibling = createElement(type,numEmptyElementsAfter)
+            element.next_sibling = create_element(type,numEmptyElementsAfter)
           end
           return element 
         #--------------------------------------------------------------------
@@ -347,12 +338,12 @@ module Rods
               #-------------------------------------------------
               # Neues, zurueckzugebendes Element einfuegen
               #-------------------------------------------------
-              element.next_sibling = createElement(type,1)
+              element.next_sibling = create_element(type,1)
               #-------------------------------------------------
               # ggf. weitere Leerelemente anhaengen
               #-------------------------------------------------
               if(numEmptyElementsAfter > 0)
-                element.next_sibling.next_sibling = createElement(type,numEmptyElementsAfter)
+                element.next_sibling.next_sibling = create_element(type,numEmptyElementsAfter)
               end
               #-------------------------------------------------
               # => Rueckgabe des Elementes mit Suchindex
@@ -371,10 +362,10 @@ module Rods
       #----------------------------------------------------------------------
       if(i > 0) # => lastElement != nil
         if(numEmptyElementsBefore > 0)
-          lastElement.next_sibling = createElement(type,numEmptyElementsBefore)
-          return (lastElement.next_sibling.next_sibling = createElement(type,1))
+          lastElement.next_sibling = create_element(type,numEmptyElementsBefore)
+          return (lastElement.next_sibling.next_sibling = create_element(type,1))
         else
-          return(lastElement.next_sibling = createElement(type,1))
+          return(lastElement.next_sibling = create_element(type,1))
         end
       #----------------------------------------------------------------------
       # Nein, neues Kind ist erstes Kind
@@ -384,16 +375,16 @@ module Rods
         # Hat das neue Kind Index 1 ?
         #-----------------------------------------------
         if(index == 1)
-          newElement = createElement(type,1)
+          newElement = create_element(type,1)
           parent.add(newElement)
           return newElement
         #-----------------------------------------------
         # Nein, Kind benoetigt "Leergeschwister" vorneweg
         #-----------------------------------------------
         else
-          newElement = createElement(type,numEmptyElementsBefore)
+          newElement = create_element(type,numEmptyElementsBefore)
           parent.add(newElement)
-          newElement.next_sibling = createElement(type,1)
+          newElement.next_sibling = create_element(type,1)
           return newElement.next_sibling
         end
       end
@@ -660,7 +651,7 @@ module Rods
           # keine Leerzelle -> Leerzelle(n) anhaengen
           #-------------------------------
           else
-            cell.next_sibling = createElement(CELL,numPaddings)
+            cell.next_sibling = create_element(CELL,numPaddings)
           end
         #------------------------------------------------------
         # bei negativem Wert -> Fehler
@@ -672,7 +663,7 @@ module Rods
       # Falls keine Spaltenobjekte vorhanden sind
       #--------------------------------------------------------
       else
-        row.add_element(createElement(CELL,width))
+        row.add_element(create_element(CELL,width))
       end
     end
     ##########################################################################
@@ -2499,7 +2490,7 @@ module Rods
     #-------------------------------------------------------------------------
     def insertColumnBeforeInHeader(column)
       die("insertColumnBeforeInHeader: column #{column} is not a REXML::Element") unless (column.class.to_s == "REXML::Element")
-      newColumn = createColumn(1)
+      newColumn = create_column(1)
       column.previous_sibling = newColumn
       #-----------------------------------------
       # bisherige Tabellenbreite überschritten ?
@@ -2723,7 +2714,7 @@ module Rods
     #-------------------------------------------------------------------------
     def insertCellBefore(cell)
       die("insertCellBefore: cell #{cell} is not a REXML::Element") unless (cell.class.to_s == "REXML::Element")
-      newCell = createCell(1)
+      newCell = create_cell(1)
       cell.previous_sibling = newCell
       #-----------------------------------------
       # bisherige Tabellenbreite überschritten ?
@@ -2742,7 +2733,7 @@ module Rods
     #-------------------------------------------------------------------------
     def insertCellAfter(cell)
       die("insertCellAfter: cell #{cell} is not a REXML::Element") unless (cell.class.to_s == "REXML::Element")
-      newCell = createCell(1)
+      newCell = create_cell(1)
       cell.next_sibling = newCell
       #-----------------------------------------------------------------------
       # Cave: etwaige Wiederholungen uebertragen
@@ -2750,7 +2741,7 @@ module Rods
       repetitions = cell.attributes["table:number-columns-repeated"]
       if(repetitions)
         cell.attributes.delete("table:number-columns-repeated")
-        newCell.next_sibling = createCell(repetitions.to_i)
+        newCell.next_sibling = create_cell(repetitions.to_i)
       end
       #-----------------------------------------
       # bisherige Tabellenbreite ueberschritten ?
@@ -2805,7 +2796,7 @@ module Rods
     #   sheet.insertRowAbove(row)
     #-------------------------------------------------------------------------
     def insertRowAbove(row)
-      newRow = createRow(1)
+      newRow = create_row(1)
       row.previous_sibling = newRow
       return newRow
     end
@@ -2815,7 +2806,7 @@ module Rods
     #   sheet.insertRowBelow(row)
     #-------------------------------------------------------------------------
     def insertRowBelow(row)
-      newRow = createRow(1)
+      newRow = create_row(1)
       row.next_sibling = newRow
       #-----------------------------------------------------------------------
       # Cave: etwaige Wiederholungen uebertragen
@@ -2823,7 +2814,7 @@ module Rods
       repetitions = row.attributes["table:number-rows-repeated"]
       if(repetitions)
         row.attributes.delete("table:number-rows-repeated")
-        newRow.next_sibling = createRow(repetitions.to_i)
+        newRow.next_sibling = create_row(repetitions.to_i)
       end
       return newRow
     end
@@ -2989,10 +2980,10 @@ module Rods
            :deleteCell, :deleteCellFromRow, :deleteRowAbove, :deleteRowBelow, :deleteRow,
            :deleteColumn, :deleteRow2, :deleteCell2
 
-    private :die, :createCell, :createRow, :get_child_by_index, :createElement, :setRepetition, :init_house_keeping,
+    private :die, :create_cell, :create_row, :get_child_by_index, :create_element, :setRepetition, :init_house_keeping,
             :get_table_width, :padTables, :padRow, :time2TimeVal, :percent2PercentVal, :date2DateVal,
             :finalize, :init, :normalizeText, :normStyleHash, :getStyle, :getIndex,
-            :getNumberOfSiblings, :getIndexAndOrNumber, :createColumn,
+            :getNumberOfSiblings, :getIndexAndOrNumber, :create_column,
             :getAppropriateStyle, :checkStyleAttributes, :insertStyleAttributes, :cloneNode,
             :writeStyle, :write_style_xml, :style2Hash, :write_default_styles, :write_xml,
             :internalizeFormula, :getColorPalette, :open, :printStyles, :insertTableBeforeAfter,
