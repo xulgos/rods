@@ -1,4 +1,4 @@
-# coding: UTF-8
+# coding: utf-8UTF-8
 #
 # = RODS - Ruby Open Document Spreadsheet
 # This class provides a convenient interface for fast reading and writing 
@@ -186,9 +186,9 @@ module Rods
     # Creates the cell if not existing.
     # Formats the cell according to type and returns the cell.
     #   row = sheet.get_row(17)
-    #   cell = sheet.writeGetCellFromRow(row,4,"formula:currency"," = B5*1,19")
+    #   cell = sheet.write_get_cell_from_row(row,4,"formula:currency"," = B5*1,19")
     #-------------------------------------------------------------------------
-    def writeGetCellFromRow(row,colInd,type,text)
+    def write_get_cell_from_row(row,colInd,type,text)
       cell = getCellFromRow(row,colInd)
       write_text(cell,type,text)
       return cell
@@ -199,10 +199,10 @@ module Rods
     # Creates the cell if it does not exist.
     # Formats the cell according to type.
     #   row = sheet.get_row(3)
-    #   sheet.writeCellFromRow(row,1,"date","28.12.2010")
-    #   sheet.writeCellFromRow(row,2,"formula:date"," = A1+3")
+    #   sheet.write_cell_from_row(row,1,"date","28.12.2010")
+    #   sheet.write_cell_from_row(row,2,"formula:date"," = A1+3")
     #-------------------------------------------------------------------------
-    def writeCellFromRow(row,colInd,type,text)
+    def write_cell_from_row(row,colInd,type,text)
       cell = getCellFromRow(row,colInd)
       write_text(cell,type,text)
     end
@@ -735,7 +735,7 @@ module Rods
     #   5.upto(8){ |i|
     #     row = sheet.get_row(i)
     #     text,type = sheet.readCellFromRow(row,i)
-    #     sheet.writeCellFromRow(row,9,type,(-1.0*text.to_f).to_s)
+    #     sheet.write_cell_from_row(row,9,type,(-1.0*text.to_f).to_s)
     #     if(type == "currency")
     #       amount += text.to_f
     #     end
@@ -2978,7 +2978,7 @@ module Rods
       @file = file
     end
 
-    public :set_date_format, :write_get_cell, :write_cell, :writeGetCellFromRow, :writeCellFromRow,
+    public :set_date_format, :write_get_cell, :write_cell, :write_get_cell_from_row, :write_cell_from_row,
            :getCellFromRow, :get_cell, :get_row, :rename_table, :set_current_table,
            :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :writeStyleAbbr,
            :setStyle, :printOfficeStyles, :printAutoStyles, :getNextExistentRow, :getPreviousExistentRow,
