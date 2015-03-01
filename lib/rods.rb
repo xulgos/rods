@@ -164,13 +164,13 @@ module Rods
     # Writes the given text to the cell with the given indices.
     # Creates the cell if not existing.
     # Formats the cell according to type and returns the cell.
-    #   cell = sheet.writeGetCell(3,3,"formula:time"," = C2-C1")
+    #   cell = sheet.write_get_cell 3,3,"formula:time"," = C2-C1"
     # This is useful for a subsequent call to 
     #   sheet.setAttributes(cell,{ "background-color" => "yellow3"})
     #-------------------------------------------------------------------------
-    def writeGetCell(rowInd,colInd,type,text)
-      cell = get_cell(rowInd,colInd)
-      write_text(cell,type,text)
+    def write_get_cell row_ind, col_ind, type, text
+      cell = get_cell rowInd, colInd
+      write_text cell, type, text
       return cell
     end
     ##########################################################################
@@ -2543,7 +2543,7 @@ module Rods
     ##########################################################################
     # Delets the cell to the right of the given cell
     #
-    #   cell = sheet.writeGetCell(4,7,"date","16.01.2011")
+    #   cell = sheet.write_get_cell 4,7,"date","16.01.2011"
     #   sheet.deleteCellAfter(cell)
     #-------------------------------------------------------------------------
     def deleteCellAfter(cell)
@@ -2724,7 +2724,7 @@ module Rods
     ##########################################################################
     # Delets the cell to the left of the given cell
     #
-    #   cell = sheet.writeGetCell(4,7,"formula:currency"," = A1+B2")
+    #   cell = sheet.write_get_cell 4,7,"formula:currency"," = A1+B2"
     #   sheet.deleteCellBefore(cell)
     #-------------------------------------------------------------------------
     def deleteCellBefore(cell)
@@ -3015,7 +3015,7 @@ module Rods
       @file = file
     end
 
-    public :set_date_format, :writeGetCell, :write_cell, :writeGetCellFromRow, :writeCellFromRow,
+    public :set_date_format, :write_get_cell, :write_cell, :writeGetCellFromRow, :writeCellFromRow,
            :getCellFromRow, :get_cell, :get_row, :rename_table, :set_current_table,
            :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :writeStyleAbbr,
            :setStyle, :printOfficeStyles, :printAutoStyles, :getNextExistentRow, :getPreviousExistentRow,
