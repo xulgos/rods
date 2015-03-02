@@ -597,7 +597,7 @@ module Rods
             if(! type)
               type = "string"
             end
-            text = normalizeText(text,type)
+            text = normalize_text text,type
             return text,type
           end
         end
@@ -708,25 +708,16 @@ module Rods
     # This changes the thousands-separator, the decimal-separator and prunes
     # the currency-symbol
     #----------------------------------------------------------
-    def normalizeText(text,type)
-      newText = String.new(text)
-      if((type == "currency") || (type == "float"))
-        #--------------------------------------
-        # Tausendertrennzeichen beseitigen
-        #--------------------------------------
-        newText.sub!(/\./,"")
-        #--------------------------------------
-        # Dezimaltrenner umwandeln
-        #--------------------------------------
-        newText.sub!(/,/,".")
-        if(type == "currency")
-          #--------------------------------------
-          # Waehrungssymbol am Ende abschneiden
-          #--------------------------------------
-          newText.sub!(/\s*\S+$/,"")
+    def normalize_text text, type
+      new_text = String.new text
+      if type == "currency" || type == "float"
+        new_text.sub! /\./, ""
+        new_text.sub! /,/, "."
+        if type == "currency"
+          new_text.sub! /\s*\S+$/, ""
         end
       end
-      return newText
+      new_text
     end
     ##########################################################################
     # Writes the given text-string to given cell and sets style of
@@ -803,57 +794,43 @@ module Rods
     # their hex-representations.
     # Unknown hash-keys are copied as is.
     #-------------------------------------------------------------------------
-    def normStyleHash(inHash)
-      outHash = Hash.new()
-      inHash.each{ |key,value|
-        #--------------------------------------------------------
-        # dito bei Farben fuer den Rand
-        #--------------------------------------------------------
+    def norm_style_hash in_hash
+      out_hash = Hash.new
+      in_hash.each do |key,value|
         if key.match /^(fo:)?border/
-          die("normStyleHash: wrong format for border '#{value}'") unless (value.match(/^\S+\s+\S+\s+\S+$/))
-          #---------------------------------------------
-          # Cave: Matcht auf Audruecke der Art
-          # "0.1cm solid red7" und berueksichtigt auch, dass
-          # zwischen 0.1 und cm Leerzeichen sein koennen, da nur
-          # auf die letzten 3 Ausdrucke gematcht wird
-          #---------------------------------------------
-          match = value.match(/\S+\s\S+\s(\S+)\s*$/) 
+          die "wrong format for border '#{value}'" unless value.match /^\S+\s+\S+\s+\S+$/
+          # should match color out of "0.1cm solid red7"
+          match = value.match /\S+\s\S+\s(\S+)\s*$/
           color = match[1]
-          #-------------------------------------------------
-          # Falls Farbwert nicht hexadezimal -> Ersetzen
-          #-------------------------------------------------
-          unless(color.match(/#[a-fA-F0-9]{6}/))
-            hexColor = Helpers.find_color_with_name color
-            value.sub!(color,hexColor)
+          unless color.match /#[a-fA-F0-9]{6}/
+            hex_color = Helpers.find_color_with_name color
+            value.sub! color,hex_color
           end
         end
         case key
-          when "name" then outHash["style:name"] = value
-          when "family" then outHash["style:family"] = value
-          when "parent-style-name" then outHash["style:parent-style-name"] = value
-          when "background-color" then outHash["fo:background-color"] = value
-          when "text-align-source" then outHash["style:text-align-source"] = value
-          when "text-align" then outHash["fo:text-align"] = value
-          when "margin-left" then outHash["fo:margin-left"] = value
-          when "color" then outHash["fo:color"] = value
-          when "border" then outHash["fo:border"] = value
-          when "border-bottom" then outHash["fo:border-bottom"] = value
-          when "border-top" then outHash["fo:border-top"] = value
-          when "border-left" then outHash["fo:border-left"] = value
-          when "border-right" then outHash["fo:border-right"] = value
-          when "font-style" then outHash["fo:font-style"] = value
-          when "font-weight" then outHash["fo:font-weight"] = value
-          when "data-style-name" then outHash["style:data-style-name"] = value
-          when "text-underline-style" then outHash["style:text-underline-style"] = value
-          when "text-underline-width" then outHash["style:text-underline-width"] = value
-          when "text-underline-color" then outHash["style:text-underline-color"] = value
-          #-------------------------------------
-          # andernfalls Key und Value kopieren
-          #-------------------------------------
-          else outHash[key] = value
+          when "name" then out_hash["style:name"] = value
+          when "family" then out_hash["style:family"] = value
+          when "parent-style-name" then out_hash["style:parent-style-name"] = value
+          when "background-color" then out_hash["fo:background-color"] = value
+          when "text-align-source" then out_hash["style:text-align-source"] = value
+          when "text-align" then out_hash["fo:text-align"] = value
+          when "margin-left" then out_hash["fo:margin-left"] = value
+          when "color" then out_hash["fo:color"] = value
+          when "border" then out_hash["fo:border"] = value
+          when "border-bottom" then out_hash["fo:border-bottom"] = value
+          when "border-top" then out_hash["fo:border-top"] = value
+          when "border-left" then out_hash["fo:border-left"] = value
+          when "border-right" then out_hash["fo:border-right"] = value
+          when "font-style" then out_hash["fo:font-style"] = value
+          when "font-weight" then out_hash["fo:font-weight"] = value
+          when "data-style-name" then out_hash["style:data-style-name"] = value
+          when "text-underline-style" then out_hash["style:text-underline-style"] = value
+          when "text-underline-width" then out_hash["style:text-underline-width"] = value
+          when "text-underline-color" then out_hash["style:text-underline-color"] = value
+          else out_hash[key] = value
         end
-      }
-      return outHash
+      end
+      out_hash
     end
     ##########################################################################
     # internal: Retrieves and returns the node of the style with the given name from content.xml or
@@ -901,7 +878,7 @@ module Rods
       # Attribut-Hash, welcher "convenience"-Werte enthalten kann (und wird ;-) 
       # zunaechst normieren
       #-----------------------------------------------------------------------
-      attributes = normStyleHash(attributes)
+      attributes = norm_style_hash(attributes)
       die("setAttributes: attribute style:name not allowed in attribute-list as automatically generated") if (attributes.has_key?("style:name"))
       #------------------------------------------------------------------
       # Falls Zelle bereits style zugewiesen hat
@@ -1239,7 +1216,7 @@ module Rods
     #                           "font-weight" => "bold"})
     #-------------------------------------------------------------------------
     def writeStyleAbbr(attributes)
-      writeStyle(normStyleHash(attributes))
+      writeStyle(norm_style_hash(attributes))
     end
     ##########################################################################
     # internal: creates a style in content.xml out of the given attribute-hash, which has to be
@@ -2764,7 +2741,7 @@ module Rods
 
     private :die, :create_cell, :create_row, :get_child_by_index, :create_element, :set_repetition, :init_house_keeping,
             :get_table_width, :pad_tables, :time_to_time_val, :percent_to_percent_val, :date_to_date_val,
-            :finalize, :init, :normalizeText, :normStyleHash, :getStyle, :getIndex,
+            :finalize, :init, :normalize_text, :norm_style_hash, :getStyle, :getIndex,
             :getNumberOfSiblings, :getIndexAndOrNumber, :create_column,
             :getAppropriateStyle, :checkStyleAttributes, :insertStyleAttributes, :cloneNode,
             :writeStyle, :write_style_xml, :style2Hash, :write_default_styles, :write_xml,
