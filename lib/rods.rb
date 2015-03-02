@@ -1127,38 +1127,38 @@ module Rods
     #-------------------------------------------------------------------------
     def write_style attributes
       die "Missing attribute style:name" unless attributes.has_key? "style:name"
-      tableCellProperties = Hash.new
-      tableCellProperties[TAG] = "style:table-cell-properties"
-      textProperties = Hash.new
-      textProperties[TAG] = "style:text-properties"
-      paragraphProperties = Hash.new
-      paragraphProperties[TAG] = "style:paragraph-properties"
-      styleAttributes = {TAG => "style:style",
+      table_cell_properties = Hash.new
+      table_cell_properties[TAG] = "style:table-cell-properties"
+      text_properties = Hash.new
+      text_properties[TAG] = "style:text-properties"
+      paragraph_properties = Hash.new
+      paragraph_properties[TAG] = "style:paragraph-properties"
+      style_attributes = {TAG => "style:style",
                        "style:family" => "table-cell",
                        "style:parent-style-name" => "Default"}
       check_style_attributes attributes 
       attributes.each do |key,value|
         case key
-          when "style:name" then styleAttributes["style:name"] = value
-          when "style:family" then styleAttributes["style:family"] = value
-          when "style:parent-style-name" then styleAttributes["style:parent-style-name"] = value
-          when "style:data-style-name" then styleAttributes["style:data-style-name"] = value
-          when "fo:background-color" then tableCellProperties["fo:background-color"] = value
-          when "style:text-align-source" then tableCellProperties["style:text-align-source"] = value
-          when "fo:border-bottom" then tableCellProperties["fo:border-bottom"] = value
-          when "fo:border-top" then tableCellProperties["fo:border-top"] = value
-          when "fo:border-left" then tableCellProperties["fo:border-left"] = value
-          when "fo:border-right" then tableCellProperties["fo:border-right"] = value
-          when "fo:border" then tableCellProperties["fo:border"] = value
-          when "fo:color" then textProperties["fo:color"] = value
-          when "fo:font-style" then textProperties["fo:font-style"] = value
-          when "fo:font-style-asian" then textProperties["fo:font-style-asian"] = value
-          when "fo:font-style-complex" then textProperties["fo:font-style-complex"] = value
-          when "fo:font-weight" then textProperties["fo:font-weight"] = value
-          when "fo:font-weight-asian" then textProperties["fo:font-weight-asian"] = value
-          when "fo:font-weight-complex" then textProperties["fo:font-weight-complex"] = value
-          when "fo:margin-left" then paragraphProperties["fo:margin-left"] = value
-          when "fo:text-align" then paragraphProperties["fo:text-align"] = value
+          when "style:name" then style_attributes["style:name"] = value
+          when "style:family" then style_attributes["style:family"] = value
+          when "style:parent-style-name" then style_attributes["style:parent-style-name"] = value
+          when "style:data-style-name" then style_attributes["style:data-style-name"] = value
+          when "fo:background-color" then table_cell_properties["fo:background-color"] = value
+          when "style:text-align-source" then table_cell_properties["style:text-align-source"] = value
+          when "fo:border-bottom" then table_cell_properties["fo:border-bottom"] = value
+          when "fo:border-top" then table_cell_properties["fo:border-top"] = value
+          when "fo:border-left" then table_cell_properties["fo:border-left"] = value
+          when "fo:border-right" then table_cell_properties["fo:border-right"] = value
+          when "fo:border" then table_cell_properties["fo:border"] = value
+          when "fo:color" then text_properties["fo:color"] = value
+          when "fo:font-style" then text_properties["fo:font-style"] = value
+          when "fo:font-style-asian" then text_properties["fo:font-style-asian"] = value
+          when "fo:font-style-complex" then text_properties["fo:font-style-complex"] = value
+          when "fo:font-weight" then text_properties["fo:font-weight"] = value
+          when "fo:font-weight-asian" then text_properties["fo:font-weight-asian"] = value
+          when "fo:font-weight-complex" then text_properties["fo:font-weight-complex"] = value
+          when "fo:margin-left" then paragraph_properties["fo:margin-left"] = value
+          when "fo:text-align" then paragraph_properties["fo:text-align"] = value
         else
           die "invalid or not implemented attribute #{key}"
         end
