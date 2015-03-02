@@ -836,16 +836,16 @@ module Rods
     # internal: Retrieves and returns the node of the style with the given name from content.xml or
     # styles.xml along with the indicator of the corresponding file.
     #-------------------------------------------------------------------------
-    def getStyle(styleName)
+    def get_style style_name
       style = @auto_styles.elements["*[@style:name = '#{styleName}']"]
-      if(style)
+      if style
         file = CONTENT
       else
         style = @office_styles.elements["*[@style:name = '#{styleName}']"]
-        die("getStyle: Could not find style \'#{styleName}\' in content.xml or styles.xml") unless (style)
+        die "Could not find style \'#{styleName}\' in content.xml or styles.xml" unless style
         file = STYLES
       end
-      return file,style
+      return file, style
     end
     ##########################################################################
     # Merges style-attributes of given attribute-hash with current style
@@ -888,7 +888,7 @@ module Rods
         #---------------------------------------------------------------
         # style suchen (lassen)
         #---------------------------------------------------------------
-        file,currentStyle = getStyle(currentStyleName)
+        file,currentStyle = get_style(currentStyleName)
         #-----------------------------------------------------------------------
         # Pruefung, ob oben gefundener style die neuen Attribute und deren Werte
         # bereits enthaelt.
@@ -975,7 +975,7 @@ module Rods
         #-------------------------------------------------------
         # passenden Style in Archiv suchen oder klonen und anpassen
         #-------------------------------------------------------
-        file,currentStyle = getStyle(currentStyleName)
+        file,currentStyle = get_style(currentStyleName)
         getAppropriateStyle(cell,currentStyle,attributes)
       end
     end
@@ -999,7 +999,7 @@ module Rods
       #------------------------------------------------------
       # Neuen style-Namen generieren und in Attributliste einfuegen
       # (oben wurde bereits geprueft, dass selbige keinen style-Namen enthaelt)
-      # Cave: Wird neuer style spaeter verworfen (da in Archiv vorhanden), wird
+      # Wird neuer style spaeter verworfen (da in Archiv vorhanden), wird
       # @style_counter wieder dekrementiert
       #------------------------------------------------------
       newStyleName = "auto_style"+(@style_counter += 1).to_s
@@ -1124,7 +1124,7 @@ module Rods
       die("insertStyleAttributes: hash #{attributes} is not a hash") unless (attributes.class.to_s == "Hash")
       die("insertStyleAttributes: Missing attribute style:name in node #{style}") unless (style.attributes["style:name"])
       #-----------------------------------------------------------------
-      # Cave: Sub-Nodes koennen, muessen aber nicht vorhanden sein
+      # Sub-Nodes koennen, muessen aber nicht vorhanden sein
       #   in diesem Fall werden sie spaeter angelegt
       #-----------------------------------------------------------------
       tableCellProperties = style.elements["style:table-cell-properties"]
@@ -1144,7 +1144,7 @@ module Rods
         if(key.match(/^fo:border/) || (key == "style:text-align-source") || key == ("fo:background-color"))
           tableCellProperties = style.add_element("style:table-cell-properties") unless (tableCellProperties)
           #--------------------------------------------------------------------------
-          # Cave: fo:border-(bottom|top|left|right) und fo:border duerfen NICHT 
+          # fo:border-(bottom|top|left|right) und fo:border duerfen NICHT 
           # gleichzeitig vorhanden sein
           # Zwar wurde fo:border in diesem Fall bereits durch checkStyleAttributes aus
           # Attributliste geloescht, das Attribut ist aber ggf. auch noch aus bestehendem style
@@ -1325,7 +1325,7 @@ module Rods
       #-----------------------------------------------------------
       # Style with this name already exists? -> Delete,
       # If no default style of RODS, and from style-archive remove them.
-      # Cave: style is only in the files of the two
+      # style is only in the files of the two
       # Content.xml OR styles.xml wanted
       #-----------------------------------------------------------
       top_node = @auto_styles
@@ -2035,7 +2035,7 @@ module Rods
     #------------------------------------------------------------------------
     def getPreviousExistentRow(row)
       #----------------------------------------------------------------------
-      # Cave: table:table-row und table:table-column sind Siblings
+      # table:table-row und table:table-column sind Siblings
       # Letztere duerfen jedoch NICHT zurueckgegeben werden
       #----------------------------------------------------------------------
       previousSibling = row.previous_sibling
@@ -2129,7 +2129,7 @@ module Rods
           unless (cell)
             die("getCellsAndIndicesFor: internal error: Could not extract parent-cell of textNode with #{content}") 
           end
-          colIndex = getIndex(cell)
+          colIndex = get_index(cell)
           #-----------------------------------------------------
           # Zeile und Zeilenindex ermitteln
           #-----------------------------------------------------
@@ -2137,7 +2137,7 @@ module Rods
           unless (row)
             die("getCellsAndIndicesFor: internal error: Could not extract parent-row of textNode with #{content}") 
           end
-          rowIndex = getIndex(row)
+          rowIndex = get_index(row)
           result[i][:cell] = cell
           result[i][:row] = rowIndex
           result[i][:col] = colIndex
@@ -2146,26 +2146,17 @@ module Rods
       }
       return result
     end
-    ##########################################################################
-    # internal: Wrapper for 
-    # getIndexAndOrNumber(node,NUMBER)
-    #-------------------------------------------------------------------------
-    def getNumberOfSiblings(node)
-      return getIndexAndOrNumber(node,NUMBER)
+
+    def get_number_of_siblings node
+      get_index_and_or_number node, NUMBER
     end
-    ##########################################################################
-    # internal: Wrapper for 
-    # getIndexAndOrNumber(node,INDEX)
-    #-------------------------------------------------------------------------
-    def getIndex(node)
-      return getIndexAndOrNumber(node,INDEX)
+
+    def get_index node
+      get_index_and_or_number node, INDEX
     end
-    ##########################################################################
-    # internal: Wrapper for 
-    # getIndexAndOrNumber(node,BOTH)
-    #-------------------------------------------------------------------------
-    def getIndexAndNumber(node)
-      return getIndexAndOrNumber(node,BOTH)
+
+    def get_index_and_number node
+      get_index_and_or_number node, BOTH
     end
     ##########################################################################
     # internal: Calculates index (in the sense of spreadsheet, NOT XML) of
@@ -2173,74 +2164,52 @@ module Rods
     # corresponding parent-element (table or row) or the number of siblings
     # of the same kind or both - depending on the flag given.
     #
-    # Cave: In case of flag 'BOTH' the method returns TWO values
+    # In case of flag 'BOTH' the method returns TWO values
     #
-    # index = getIndexAndOrNumber(row,INDEX) # -> Line-number within table
-    # numColumns = getIndexAndOrNumber(column,NUMBER) # number of columns
-    # index,numColumns = getIndexAndOrNumber(row,BOTH) # Line-number and total number of lines
+    # index = get_index_and_or_number row, INDEX # -> Line-number within table
+    # num_columns = get_index_and_or_number column, NUMBER # number of columns
+    # index, num_columns = get_index_and_or_number row, BOTH # Line-number and total number of lines
     #-------------------------------------------------------------------------
-    def getIndexAndOrNumber(node,flag)
-      die("getIndexAndOrNumber: passed node '#{node}' is not a REXML::Element") \
-        unless (node.class.to_s == "REXML::Element")
-      die("getIndexAndOrNumber: internal error: invalid flag '#{flag}'") \
-        unless (flag == NUMBER || flag == INDEX || flag == BOTH)
-      #--------------------------------------------------------------
-      # Typabhaengige Vorbelegungen
-      #--------------------------------------------------------------
-      if(node.elements["self::table:table-cell"])
-        kindOfSelf = "table:table-cell"
-        kindOfParent = "table:table-row"
-        kindOfRepetition = "table:number-columns-repeated"
-      elsif(node.elements["self::table:table-column"])
-        kindOfSelf = "table:table-column"
-        kindOfParent = "table:table"
-        kindOfRepetition = "table:number-columns-repeated"
-      elsif(node.elements["self::table:table-row"])
-        kindOfSelf = "table:table-row"
-        kindOfParent = "table:table"
-        kindOfRepetition = "table:number-rows-repeated"
+    def get_index_and_or_number node, flag
+      die "invalid flag '#{flag}'" unless flag == NUMBER || flag == INDEX || flag == BOTH
+      if node.elements["self::table:table-cell"]
+        kind_of_self = "table:table-cell"
+        kind_of_parent = "table:table-row"
+        kind_of_repetition = "table:number-columns-repeated"
+      elsif node.elements["self::table:table-column"]
+        kind_of_self = "table:table-column"
+        kind_of_parent = "table:table"
+        kind_of_repetition = "table:number-columns-repeated"
+      elsif node.elements["self::table:table-row"]
+        kind_of_self = "table:table-row"
+        kind_of_parent = "table:table"
+        kind_of_repetition = "table:number-rows-repeated"
       else
-        die("getIndexAndOrNumber: internal error: passed element '#{node}' is neither cell, nor row or column")
+        die "passed element '#{node}' is neither cell, nor row or column"
       end
-      #--------------------------------------------------------------
-      # Zugehoeriges Vater-Element ermitteln 
-      #--------------------------------------------------------------
-      parent = node.elements["ancestor::"+kindOfParent]
-      unless (parent)
-        die("getIndexAndOrNumber: internal error: Could not extract parent of #{node}") 
+      parent = node.elements["ancestor::#{kind_of_parent}"]
+      unless parent
+        die "Could not extract parent of #{node}" 
       end
-      #--------------------------------------------------------------
-      # Index des Kind-Elements innerhalb Vater-Element oder
-      # Gesamtzahl der Items ermitteln
-      #--------------------------------------------------------------
       index = number = 0
-      parent.elements.each(kindOfSelf){ |child|
+      parent.elements.each kind_of_self do |child|
         number += 1
-        #-----------------------------------------------
-        # Kind-Element gefunden ? -> Index festhalten, 
-        # je nach Flag Ruecksprung oder weiterzaehlen
-        #-----------------------------------------------
-        if(child == node)
-          if(flag == INDEX)
+        if child == node
+          if flag == INDEX
             return number
-    elsif(flag == BOTH)
-      index = number
-    end
-        #-----------------------------------------------
-        # Wiederholungen zaehlen
-        # Cave: Aktuelles Element selbst zaehlt ebenfalls als Wiederholung
-        # => um 1 dekrementieren
-        #-----------------------------------------------
-        elsif(repetition = child.attributes[kindOfRepetition])
-          number += repetition.to_i-1
+          elsif flag == BOTH
+            index = number
+          end
+        elsif repetition = child.attributes[kind_of_repetition]
+          number += repetition.to_i - 1
         end
-      }
-      if(flag == INDEX)
-        die("getIndexAndOrNumber: internal error: Could not calculate number of element #{node}")
-      elsif(flag == NUMBER)
+      end
+      if flag == INDEX
+        die "Could not calculate number of element #{node}"
+      elsif flag == NUMBER
         return number 
       else
-        return index,number
+        return index, number
       end
     end
     ##########################################################################
@@ -2254,7 +2223,7 @@ module Rods
       #-----------------------------------------
       # bisherige Tabellenbreite überschritten ?
       #-----------------------------------------
-      lengthOfHeader = getNumberOfSiblings(column)
+      lengthOfHeader = get_number_of_siblings(column)
       if(lengthOfHeader > @tables[@current_table_name][WIDTH])
         @tables[@current_table_name][WIDTH] = lengthOfHeader
         @tables[@current_table_name][WIDTHEXCEEDED] = true
@@ -2478,7 +2447,7 @@ module Rods
       #-----------------------------------------
       # bisherige Tabellenbreite überschritten ?
       #-----------------------------------------
-      lengthOfRow = getNumberOfSiblings(cell)
+      lengthOfRow = get_number_of_siblings(cell)
       if(lengthOfRow > @tables[@current_table_name][WIDTH])
         @tables[@current_table_name][WIDTH] = lengthOfRow
         @tables[@current_table_name][WIDTHEXCEEDED] = true
@@ -2495,7 +2464,7 @@ module Rods
       newCell = create_cell(1)
       cell.next_sibling = newCell
       #-----------------------------------------------------------------------
-      # Cave: etwaige Wiederholungen uebertragen
+      # etwaige Wiederholungen uebertragen
       #-----------------------------------------------------------------------
       repetitions = cell.attributes["table:number-columns-repeated"]
       if(repetitions)
@@ -2505,7 +2474,7 @@ module Rods
       #-----------------------------------------
       # bisherige Tabellenbreite ueberschritten ?
       #-----------------------------------------
-      lengthOfRow = getNumberOfSiblings(cell)
+      lengthOfRow = get_number_of_siblings(cell)
       if(lengthOfRow > @tables[@current_table_name][WIDTH])
         @tables[@current_table_name][WIDTH] = lengthOfRow
         @tables[@current_table_name][WIDTHEXCEEDED] = true
@@ -2568,7 +2537,7 @@ module Rods
       newRow = create_row(1)
       row.next_sibling = newRow
       #-----------------------------------------------------------------------
-      # Cave: etwaige Wiederholungen uebertragen
+      # etwaige Wiederholungen uebertragen
       #-----------------------------------------------------------------------
       repetitions = row.attributes["table:number-rows-repeated"]
       if(repetitions)
@@ -2741,8 +2710,8 @@ module Rods
 
     private :die, :create_cell, :create_row, :get_child_by_index, :create_element, :set_repetition, :init_house_keeping,
             :get_table_width, :pad_tables, :time_to_time_val, :percent_to_percent_val, :date_to_date_val,
-            :finalize, :init, :normalize_text, :norm_style_hash, :getStyle, :getIndex,
-            :getNumberOfSiblings, :getIndexAndOrNumber, :create_column,
+            :finalize, :init, :normalize_text, :norm_style_hash, :get_style, :get_index,
+            :get_number_of_siblings, :get_index_and_or_number, :create_column,
             :getAppropriateStyle, :checkStyleAttributes, :insertStyleAttributes, :cloneNode,
             :writeStyle, :write_style_xml, :style2Hash, :write_default_styles, :write_xml,
             :internalizeFormula, :getColorPalette, :open, :printStyles, :insertTableBeforeAfter,
