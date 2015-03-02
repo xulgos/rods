@@ -1938,19 +1938,15 @@ module Rods
     # internal: Inserts a new header-column before the given header-column thereby 
     # shifting existing header-columns
     #-------------------------------------------------------------------------
-    def insertColumnBeforeInHeader(column)
-      die("insertColumnBeforeInHeader: column #{column} is not a REXML::Element") unless (column.class.to_s == "REXML::Element")
-      newColumn = create_column(1)
+    def insert_column_before_in_header column
+      newColumn = create_column 1
       column.previous_sibling = newColumn
-      #-----------------------------------------
-      # bisherige Tabellenbreite überschritten ?
-      #-----------------------------------------
-      lengthOfHeader = get_number_of_siblings(column)
-      if(lengthOfHeader > @tables[@current_table_name][WIDTH])
-        @tables[@current_table_name][WIDTH] = lengthOfHeader
+      length_of_header = get_number_of_siblings column
+      if length_of_header > @tables[@current_table_name][WIDTH]
+        @tables[@current_table_name][WIDTH] = length_of_header
         @tables[@current_table_name][WIDTHEXCEEDED] = true
       end
-      return newColumn
+      new_column
     end
     ##########################################################################
     # Delets the cell to the right of the given cell
@@ -2320,7 +2316,7 @@ module Rods
       # Aktualisierung der Tabellenbreite
       #-----------------------------------------------
       column = get_child_by_index(currentTable,COLUMN,colInd)
-      insertColumnBeforeInHeader(column)
+      insert_column_before_in_header(column)
       #-----------------------------------------------
       # Fuer alle existierenden Zeilen neue Zelle an
       # Spaltenposition einfuegen und dabei implizit
@@ -2437,6 +2433,6 @@ module Rods
             :get_appropriate_style, :check_style_attributes, :insert_style_attributes, :clone_node,
             :write_style, :write_style_xml, :style_to_hash, :write_default_styles, :write_xml,
             :internalize_formula, :open, :insert_table_before_after,
-            :insertColumnBeforeInHeader, :getElementIfExists, :getRowIfExists, :getCellFromRowIfExists
+            :insert_column_before_in_header, :getElementIfExists, :getRowIfExists, :getCellFromRowIfExists
   end
 end
