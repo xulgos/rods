@@ -2333,80 +2333,6 @@ module Rods
       end 
     end
     ##########################################################################
-    # internal: returns cell at index if existent, nil otherwise
-    #   row = getRowIfExists(4)
-    #   if(row)
-    #     cell = getCellFromRowIfExists(row,7)
-    #     unless(cell) .....
-    #   end
-    #-------------------------------------------------------------------------
-    def getCellFromRowIfExists(row,colInd)
-      return getElementIfExists(row,CELL,colInd)
-    end
-    ##########################################################################
-    # internal: returns row at index if existent, nil otherwise
-    #   if(sheet.getRowIfExists(4))
-    #     ........
-    #   end
-    #-------------------------------------------------------------------------
-    def getRowIfExists(rowInd)
-      currentTable = @tables[@current_table_name][NODE]
-      return getElementIfExists(currentTable,ROW,rowInd)
-    end
-    ##########################################################################
-    # internal: examines, whether element of given type (row, cell, column) and index
-    # exists or not.
-    # Returns the element or nil if not existent.
-    #-------------------------------------------------------------------------
-    def getElementIfExists(parent,type,index)
-      die("getElementIfExists: invalid type #{type}")
-      die("getElementIfExists: parent is not a REXML::Element") unless (parent.class.to_s == "REXML::Element")
-      die("getElementIfExists: index #{index} is not a Fixnum/Integer") unless (index.class.to_s == "Fixnum")
-      die("getElementIfExists: invalid range for index #{index}") unless (index > 0)
-      #--------------------------------------------------------------
-      # Typabhaengige Vorbelegungen
-      #--------------------------------------------------------------
-      case type
-        when CELL
-          kindOfSelf = "table:table-cell"
-          kindOfParent = "table:table-row"
-          kindOfRepetition = "table:number-columns-repeated"
-        when COLUMN
-          kindOfSelf = "table:table-column"
-          kindOfParent = "table:table"
-          kindOfRepetition = "table:number-columns-repeated"
-        when ROW
-          kindOfSelf = "table:table-row"
-          kindOfParent = "table:table"
-          kindOfRepetition = "table:number-rows-repeated"
-        else
-          die("getElementIfExists: invalid type #{type}")
-      end
-      #--------------------------------------------------------------
-      # Ist Kind-Element mit Index in Vater-Element vorhanden ?
-      #--------------------------------------------------------------
-      i = 0
-      parent.elements.each(kindOfSelf){ |child|
-        i += 1
-        #----------------------------------------------------------
-        # Index ueberschritten ? -> Ruecksprung mit nil
-        # Index gefunden ? -> Rueckgabe des Elementes
-        # sonst: etwaige Wiederholungen zaehlen
-        #----------------------------------------------------------
-        if (i > index)
-          return nil
-        elsif(i == index)
-          return child
-        elsif(repetition = child.attributes[kindOfRepetition])
-          index += repetition.to_i-1 # '-1', da aktuelles Element ebenfalls als Wiederholung zaehlt
-        end
-      }
-      #-------------------------------------------------------
-      # Index liegt ausserhalb vorhandener Kind-Elemente
-      #-------------------------------------------------------
-      return nil
-    end
-    ##########################################################################
     # internal: Opens zip-file
     #-------------------------------------------------------------------------
     def open file
@@ -2433,6 +2359,6 @@ module Rods
             :get_appropriate_style, :check_style_attributes, :insert_style_attributes, :clone_node,
             :write_style, :write_style_xml, :style_to_hash, :write_default_styles, :write_xml,
             :internalize_formula, :open, :insert_table_before_after,
-            :insert_column_before_in_header, :getElementIfExists, :getRowIfExists, :getCellFromRowIfExists
+            :insert_column_before_in_header
   end
 end
