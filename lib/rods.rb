@@ -945,7 +945,7 @@ module Rods
         # nein => passenden Style in Archiv suchen oder klonen und anpassen
         #-------------------------------------------------------
         else
-          getAppropriateStyle(cell,currentStyle,attributes)
+          get_appropriate_style(cell,currentStyle,attributes)
         end
       #------------------------------------------------------------------------
       # Zelle hatte noch gar keinen style zugewiesen
@@ -976,7 +976,7 @@ module Rods
         # passenden Style in Archiv suchen oder klonen und anpassen
         #-------------------------------------------------------
         file,currentStyle = get_style(currentStyleName)
-        getAppropriateStyle(cell,currentStyle,attributes)
+        get_appropriate_style(cell,currentStyle,attributes)
       end
     end
     ##########################################################################
@@ -987,51 +987,24 @@ module Rods
     # in the pool of archived styles, retrieves an archived style or
     # writes the resulting new style, archives the latter and applies the effective style to cell.
     #-------------------------------------------------------------------------
-    def getAppropriateStyle(cell,currentStyle,attributes)
-      die("getAppropriateStyle: cell #{cell} is not a REXML::Element") unless (cell.class.to_s == "REXML::Element")
-      die("getAppropriateStyle: style #{currentStyle} is not a REXML::Element") unless (currentStyle.class.to_s == "REXML::Element")
-      die("getAppropriateStyle: hash #{attributes} is not a hash") unless (attributes.class.to_s == "Hash")
-      die("getAppropriateStyle: attribute style:name not allowed in attribute-list as automatically generated") if (attributes.has_key?("style:name"))
-      #------------------------------------------------------
-      # Klonen
-      #------------------------------------------------------
-      newStyle = cloneNode(currentStyle)
-      #------------------------------------------------------
-      # Neuen style-Namen generieren und in Attributliste einfuegen
-      # (oben wurde bereits geprueft, dass selbige keinen style-Namen enthaelt)
-      # Wird neuer style spaeter verworfen (da in Archiv vorhanden), wird
-      # @style_counter wieder dekrementiert
-      #------------------------------------------------------
-      newStyleName = "auto_style"+(@style_counter += 1).to_s
-      attributes["style:name"] = newStyleName
-      #------------------------------------------------------
-      # Attributliste in neuen style einfuegen
-      #------------------------------------------------------
-      insertStyleAttributes(newStyle,attributes)
-      #-----------------------------------------------------------
-      # noch nicht geschriebenen style verhashen
-      # (dabei wird auch style:name auf Dummy-Wert gesetzt)
-      #-----------------------------------------------------------
-      hashKey = style2Hash(newStyle)
-      #----------------------------------------------------------
-      # Neuer style bereits in Archiv vorhanden ?
-      #----------------------------------------------------------
-      if(@style_archive.has_key?(hashKey))
-        #-------------------------------------------------------
-        # Zelle style aus Archiv zuweisen
-        # @style_counter dekrementieren und neuen style verwerfen
-        #-------------------------------------------------------
-        archiveStyleName = @style_archive[hashKey]
-        cell.attributes["table:style-name"] = archiveStyleName
+    def get_appropriate_style cell, current_style, attributes
+      if attributes.has_key? "style:name"
+        die "attribute style:name not allowed in attribute-list as automatically generated"
+      end
+      new_style = clone_node current_style
+      new_style_name = "auto_style#{@style_counter += 1}"
+      attributes["style:name"] = new_style_name
+      insert_style_attributes new_style, attributes
+      hash_key = style_to_hash new_style
+      if @style_archive.has_key? hashKey
+        archive_style_name = @style_archive[hash_key]
+        cell.attributes["table:style-name"] = archive_style_name
         @style_counter -= 1
-        newStyle = nil
+        new_style = nil
       else
-        #-------------------------------------------------------
-        # Neuen style in Hash aufnehmen, Zelle zuweisen und schreiben
-        #-------------------------------------------------------
-        @style_archive[hashKey] = newStyleName # archivieren
-        cell.attributes["table:style-name"] = newStyleName # Zelle zuweisen
-        @auto_styles.elements << newStyle # in content.xml schreiben
+        @style_archive[hash_key] = new_style_name
+        cell.attributes["table:style-name"] = new_style_name
+        @auto_styles.elements << newStyle
       end
     end
     ##########################################################################
@@ -1119,90 +1092,51 @@ module Rods
     # the given style-node. The attributes have to be normed already. Existing
     # attributes of the style-node are overwritten.
     #-------------------------------------------------------------------------
-    def insertStyleAttributes(style,attributes)
-      die("insertStyleAttributes: style #{style} is not a REXML::Element") unless (style.class.to_s == "REXML::Element")
-      die("insertStyleAttributes: hash #{attributes} is not a hash") unless (attributes.class.to_s == "Hash")
-      die("insertStyleAttributes: Missing attribute style:name in node #{style}") unless (style.attributes["style:name"])
-      #-----------------------------------------------------------------
-      # Sub-Nodes koennen, muessen aber nicht vorhanden sein
-      #   in diesem Fall werden sie spaeter angelegt
-      #-----------------------------------------------------------------
-      tableCellProperties = style.elements["style:table-cell-properties"]
-      textProperties = style.elements["style:text-properties"]
-      paragraphProperties = style.elements["style:paragraph-properties"]
-      #-----------------------------------------------------------------
-      # Vorverarbeitung
-      #-----------------------------------------------------------------
-      checkStyleAttributes(attributes) 
-      #-----------------------------------------------------------------
-      # Attribute in entsprechende (Unter-)Knoten einfuegen
-      #-----------------------------------------------------------------
-      attributes.each{ |key,value|
-        #------------------------------------------------------------------------
-        # style:table-cell-properties
-        #------------------------------------------------------------------------
-        if(key.match(/^fo:border/) || (key == "style:text-align-source") || key == ("fo:background-color"))
-          tableCellProperties = style.add_element("style:table-cell-properties") unless (tableCellProperties)
-          #--------------------------------------------------------------------------
-          # fo:border-(bottom|top|left|right) und fo:border duerfen NICHT 
-          # gleichzeitig vorhanden sein
-          # Zwar wurde fo:border in diesem Fall bereits durch checkStyleAttributes aus
-          # Attributliste geloescht, das Attribut ist aber ggf. auch noch aus bestehendem style
-          # zu loeschen
-          #--------------------------------------------------------------------------
-          if(key.match(/^fo:border-/)) # Falls Border-Seitenangabe (bottom|top|left|right)
-            tableCellProperties.attributes.delete("fo:border") # fo:border selbst loeschen
+    def insert_style_attributes style, attributes
+      die "Missing attribute style:name in node #{style}" unless style.attributes["style:name"]
+      table_cell_properties = style.elements["style:table-cell-properties"]
+      text_properties = style.elements["style:text-properties"]
+      paragraph_properties = style.elements["style:paragraph-properties"]
+      check_style_attributes attributes 
+      attributes.each do |key,value|
+        if key.match /^fo:border/ ||  key == "style:text-align-source" || key ==  "fo:background-color"
+          table_cell_properties = style.add_element "style:table-cell-properties" unless table_cell_properties
+          if key.match /^fo:border-/
+            table_cell_properties.attributes.delete "fo:border"
           end
-          tableCellProperties.attributes[key] = value
+          table_cell_properties.attributes[key] = value
         else
           case key
-            #------------------------------------------------------------------------
-            # style:style 
-            #------------------------------------------------------------------------
-            when "style:name","style:family","style:parent-style-name","style:data-style-name"
+            when "style:name", "style:family", "style:parent-style-name", "style:data-style-name"
               style.attributes[key] = value
-            #------------------------------------------------------------------------
-            # style:text-properties
-            #------------------------------------------------------------------------
-            when "fo:color","fo:font-style","fo:font-style-asian","fo:font-style-complex",
-                 "fo:font-weight","fo:font-weight-asian","fo:font-weight-complex","style:text-underline-style",
-                 "style:text-underline-width","style:text-underline-color"
-              textProperties = style.add_element("style:text-properties") unless (textProperties)
-              textProperties.attributes[key] = value
-              #---------------------------------------------------------
-              # asiatische und komplexe Varianten nachziehen
-              #---------------------------------------------------------
-              if(key == "fo:font-style")
-                textProperties.attributes["fo:font-style-asian"] = textProperties.attributes["fo:font-style-complex"] = value
-              elsif(key == "fo:font-weight")
-                textProperties.attributes["fo:font-weight-asian"] = textProperties.attributes["fo:font-weight-complex"] = value
+            when "fo:color", "fo:font-style", "fo:font-style-asian", "fo:font-style-complex",
+                 "fo:font-weight", "fo:font-weight-asian", "fo:font-weight-complex", "style:text-underline-style",
+                 "style:text-underline-width", "style:text-underline-color"
+              text_properties = style.add_element "style:text-properties" unless text_properties
+              text_properties.attributes[key] = value
+              if key == "fo:font-style"
+                text_properties.attributes["fo:font-style-asian"] = text_properties.attributes["fo:font-style-complex"] = value
+              elsif key == "fo:font-weight"
+                text_properties.attributes["fo:font-weight-asian"] = text_properties.attributes["fo:font-weight-complex"] = value
               end
-            #------------------------------------------------------------------------
-            # style:paragraph-properties
-            #------------------------------------------------------------------------
             when "fo:margin-left","fo:text-align"
-              paragraphProperties = style.add_element("style:paragraph-properties") unless (paragraphProperties)
-              paragraphProperties.attributes[key] = value
+              paragraph_properties = style.add_element "style:paragraph-properties" unless paragraph_properties
+              paragraph_properties.attributes[key] = value
           else
-              die("insertStyleAttributes: invalid or not implemented attribute #{key}")
+              die "invalid or not implemented attribute #{key}"
           end
         end
-      }
+      end
     end
     ##########################################################################
-    # internal: Clones a given node recursively and returns the top-node as
-    # REXML::Element
+    # internal: Clones a given node recursively and returns the top-node as REXML::Element
     #-------------------------------------------------------------------------
-    def cloneNode(node)
-      die("cloneNode: node #{node} is not a REXML::Element") unless (node.class.to_s == "REXML::Element")
-      newNode = node.clone()
-      #-----------------------------------------------
-      # Rekursion fuer Kind-Elemente
-      #-----------------------------------------------
-      node.elements.each{ |child|
+    def clone_node node
+      newNode = node.clone
+      node.elements.each do |child|
         newNode.elements << cloneNode(child)
-      }
-      return newNode
+      end
+      newNode
     end
     ##########################################################################
     # Creates a new style out of the given attribute-hash with abbreviated and simplified syntax.
@@ -1348,7 +1282,7 @@ module Rods
         end
       end
       unless style_node && is_rods_style
-        hashKey = style2Hash write_xml top_node, style_hash
+        hashKey = style_to_hash write_xml top_node, style_hash
         @style_archive[hashKey] = style_name unless @style_archive.has_key? hashKey
       end
     end
@@ -1356,21 +1290,12 @@ module Rods
     # internal: converts XML-node of a style into a hash-value and returns
     # the string-representation of the latter.
     ##########################################################################
-    def style2Hash(styleNode)
-      #------------------------------------------------------------------
-      # Fuer Verhashung
-      # - Stringwandlung
-      # - style:name auf Dummy-Wert setzen (da variabel)
-      # - White-Space entfernen
-      # - UND: Zeichen sortieren
-      #     notwendig, da die Attributreihenfolge von XML-Knoten variiert
-      #     (z.B. bei/nach Klonung)
-      #------------------------------------------------------------------
-      styleNodeString = styleNode.to_s
-      styleNodeString.sub!(/style:name\s* = \s*('|")\S+('|")/,"style:name = "+DUMMY)
-      styleNodeString.gsub!(/\s+/,"")
-      sortedString = styleNodeString.split(//).sort.join
-      return sortedString.hash.to_s
+    def style_to_hash style_node
+      style_node_string = style_node.to_s
+      style_node_string.sub! /style:name\s* = \s*('|")\S+('|")/, "style:name = #{DUMMY}"
+      style_node_string.gsub! /\s+/, ""
+      sorted_string = style_node_string.split(//).sort.join
+      sorted_string.hash.to_s
     end
     ##########################################################################
     # internal: write initial default styles into content.xml and styles.xml
@@ -2712,8 +2637,8 @@ module Rods
             :get_table_width, :pad_tables, :time_to_time_val, :percent_to_percent_val, :date_to_date_val,
             :finalize, :init, :normalize_text, :norm_style_hash, :get_style, :get_index,
             :get_number_of_siblings, :get_index_and_or_number, :create_column,
-            :getAppropriateStyle, :checkStyleAttributes, :insertStyleAttributes, :cloneNode,
-            :writeStyle, :write_style_xml, :style2Hash, :write_default_styles, :write_xml,
+            :get_appropriate_style, :checkStyleAttributes, :insert_style_attributes, :clone_node,
+            :writeStyle, :write_style_xml, :style_to_hash, :write_default_styles, :write_xml,
             :internalizeFormula, :getColorPalette, :open, :printStyles, :insertTableBeforeAfter,
             :insertColumnBeforeInHeader, :getElementIfExists, :getRowIfExists, :getCellFromRowIfExists
   end
