@@ -1982,31 +1982,25 @@ module Rods
     ##########################################################################
     # Delets the row below the given row
     #
-    #   row = sheet.get_row(11)
-    #   sheet.deleteRowBelow(row)
+    #   row = sheet.get_row 11
+    #   sheet.delete_row_below row
     #-------------------------------------------------------------------------
-    def deleteRowBelow(row)
-      die("deleteRowBelow: row #{row} is not a REXML::Element") unless (row.class.to_s == "REXML::Element")
-      #--------------------------------------------------------
-      # Entweder Wiederholungsattribut der aktuellen Zeile
-      # dekrementieren oder ggf. Wiederholungsattribut der
-      # Folgezeile dekrementieren oder selbige loeschen
-      #--------------------------------------------------------
+    def delete_row_below row
       repetitions = row.attributes["table:number-rows-repeated"]
-      if(repetitions && repetitions.to_i > 1)
+      if repetitions && repetitions.to_i > 1
         row.attributes["table:number-rows-repeated"] = (repetitions.to_i-1).to_s
       else
-        nextRow = row.next_sibling
-        die("deleteRowBelow: row #{row} is already last row in table") unless (nextRow)
-        nextRepetitions = nextRow.attributes["table:number-rows-repeated"]
-        if(nextRepetitions && nextRepetitions.to_i > 1)
-          nextRow.attributes["table:number-rows-repeated"] = (nextRepetitions.to_i-1).to_s
+        next_row = row.next_sibling
+        die "row #{row} is already last row in table" unless next_row
+        next_repetitions = next_row.attributes["table:number-rows-repeated"]
+        if next_repetitions && next_repetitions.to_i > 1
+          next_row.attributes["table:number-rows-repeated"] = (next_repetitions.to_i-1).to_s
         else
           table = row.elements["ancestor::table:table"]
-          unless (table)
-            die("deleteRowBelow: internal error: Could not extract parent-table of row #{row}") 
+          unless table
+            die "Could not extract parent-table of row #{row}" 
           end
-          table.elements.delete(nextRow)
+          table.elements.delete next_row
         end
       end
     end
@@ -2319,7 +2313,7 @@ module Rods
            :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
            :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insertColumn,
            :insertRow, :insertCell, :insertCellFromRow, :deleteCellBefore, :deleteCellAfter,
-           :delete_cell, :deleteCellFromRow, :delete_row_above, :deleteRowBelow, :delete_row,
+           :delete_cell, :deleteCellFromRow, :delete_row_above, :delete_row_below, :delete_row,
            :delete_column, :delete_row_element, :delete_cell_element
 
     private :die, :create_cell, :create_row, :get_child_by_index, :create_element, :set_repetition, :init_house_keeping,
