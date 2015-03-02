@@ -1011,79 +1011,48 @@ module Rods
     # internal: verifies the validity of a hash of style-attributes.
     # The attributes have to be normed already.
     #-------------------------------------------------------------------------
-    def checkStyleAttributes(attributes)
-      die("checkStyleAttributes: hash #{attributes} is not a hash") unless (attributes.class.to_s == "Hash")
-      #-------------------------------------------------
-      # Normierungs-Check
-      #-------------------------------------------------
-      attributes.each{ |key,value|
-        die("checkStyleAttributes: internal error: found unnormed or invalid attribute #{key}") unless (key.match(/:/))
-      }
-      #--------------------------------------------------------
-      # Unterstrich ggf. mit Defaultwerten auffüllen
-      #--------------------------------------------------------
-      if(attributes.has_key?("style:text-underline-style"))
-        if(! attributes.has_key?("style:text-underline-width"))
-          attributes["style:text-underline-width"] = "auto"
-          puts("checkStyleAttributes: automatically set style:text-underline-width to 'auto'")
-        end
-        if(! attributes.has_key?("style:text-underline-color"))
-          attributes["style:text-underline-color"] = "#000000" # schwarz
-          puts("checkStyleAttributes: automatically set style:text-underline-color to 'black'")
+    def check_style_attributes attributes
+      attributes.each do |key,value|
+        unless  key.match /:/
+          die "found unnormed or invalid attribute #{key}"
         end
       end
-      #-------------------------------------------------------------
-      # style:text-underline-style ist Pflicht
-      #-------------------------------------------------------------
-      if((attributes.has_key?("style:text-underline-width") || attributes.has_key?("style:text-underline-color")) && (! attributes.has_key?("style:text-underline-style")))
-        die("checkStyleAttributes: missing (style:)text-underline-style ... please specify")
+      if attributes.has_key? "style:text-underline-style"
+        attributes["style:text-underline-width"] = "auto" unless attributes.has_key? "style:text-underline-width"
+        attributes["style:text-underline-color"] = "#000000" unless attributes.has_key? "style:text-underline-color"
       end
-      #--------------------------------------------------------
-      # fo:font-style und fo:font-weight vereinheitlichen (asiatisch/komplex)
-      #--------------------------------------------------------
-      fontStyle = attributes["fo:font-style"]
-      if(fontStyle)
-        if(attributes.has_key?("fo:font-style-asian") || attributes.has_key?("fo:font-style-complex"))
-          # tell("checkStyleAttributes: automatically overwritten fo:font-style-asian/complex with value of fo:font-style")
-        end
+      if (attributes.has_key?("style:text-underline-width") || attributes.has_key?("style:text-underline-color")) &&  ! attributes.has_key?("style:text-underline-style")
+        die "missing  style:text-underline-style ... please specify"
+      end
+      font_style = attributes["fo:font-style"]
+      if font_style
+        #if attributes.has_key?("fo:font-style-asian") || attributes.has_key?("fo:font-style-complex")
+          # tell("automatically overwritten fo:font-style-asian/complex with value of fo:font-style")
+        #end
         attributes["fo:font-style-asian"] = attributes["fo:font-style-complex"] = fontStyle
       end
-      #--------------------------------------------------------
-      fontWeight = attributes["fo:font-weight"]
-      if(fontWeight)
-        if(attributes.has_key?("fo:font-weight-asian") || attributes.has_key?("fo:font-weight-complex"))
-          # tell("checkStyleAttributes: automatically overwritten fo:font-weight-asian/complex with value of fo:font-weight")
-        end
-        attributes["fo:font-weight-asian"] = attributes["fo:font-weight-complex"] = fontWeight
+      font_weight = attributes["fo:font-weight"]
+      if font_weight
+        #if attributes.has_key?("fo:font-weight-asian") || attributes.has_key?("fo:font-weight-complex")
+          # tell "automatically overwritten fo:font-weight-asian/complex with value of fo:font-weight"
+        #end
+        attributes["fo:font-weight-asian"] = attributes["fo:font-weight-complex"] = font_weight
       end
-      #-----------------------------------------------------------------------
-      # Sind nur entweder fo:border fo:border-... enthalten ?
-      #-----------------------------------------------------------------------
-      if(attributes.has_key?("fo:border") \
+      if attributes.has_key?("fo:border") \
          && (attributes.has_key?("fo:border-bottom") \
              || attributes.has_key?("fo:border-top") \
              || attributes.has_key?("fo:border-left") \
-             || attributes.has_key?("fo:border-right")))
-        # tell("checkStyleAttributes: automatically deleted fo:border as one or more sides were specified'")
-        attributes.delete("fo:border")
+             || attributes.has_key?("fo:border-right"))
+        # tell "automatically deleted fo:border as one or more sides were specified'"
+        attributes.delete "fo:border"
       end
-      #-----------------------------------------------------------------------
-      # Sind fo:margin-left und fo:text-align kompatibel ?
-      # Rules of precedence (hier willkuerlich): Alignment schlaegt Einruecktiefe ;-)
-      #-----------------------------------------------------------------------
-      leftMargin = attributes["fo:margin-left"]
-      textAlign = attributes["fo:text-align"]
-      #----------------------------------------------------------------------
-      # Mittig oder rechtsbuendig impliziert aeusserst linken Rand
-      #----------------------------------------------------------------------
-      if(leftMargin && textAlign && (textAlign != "start") && (leftMargin != "0"))
-        # tell("checkStyleAttributes: automatically corrected: fo:text-align \'#{attributes['fo:text-align']}\' does not match fo:margin-left \'#{attributes['fo:margin-left']}\'")
+      left_margin = attributes["fo:margin-left"]
+      text_align = attributes["fo:text-align"]
+      if left_margin && text_align && text_align != "start" && left_margin != "0"
+        # tell "automatically corrected: fo:text-align \'#{attributes['fo:text-align']}\' does not match fo:margin-left \'#{attributes['fo:margin-left']}\'"
         attributes["fo:margin-left"] = "0" 
-      #----------------------------------------------------------------------
-      # Einrueckung bedingt Linksbuendigkeit
-      #----------------------------------------------------------------------
-      elsif(leftMargin && (leftMargin != "0") && !textAlign)
-        # tell("checkStyleAttributes: automatically corrected: fo:margin-left \'#{attributes['fo:margin-left']}\' needs fo:text-align \'start\' to work")
+      elsif left_margin &&  left_margin != "0" && !text_align
+        # tell "automatically corrected: fo:margin-left \'#{attributes['fo:margin-left']}\' needs fo:text-align \'start\' to work"
         attributes["fo:text-align"] = "start" 
       end 
     end
@@ -1175,7 +1144,7 @@ module Rods
       #--------------------------------------------------------------
       # Vorverarbeitung
       #--------------------------------------------------------------
-      checkStyleAttributes(attributes) 
+      check_style_attributes(attributes) 
       #--------------------------------------------------------------
       # Uebernahme der Werte in entsprechende (Sub-)Hashes
       #--------------------------------------------------------------
@@ -2637,7 +2606,7 @@ module Rods
             :get_table_width, :pad_tables, :time_to_time_val, :percent_to_percent_val, :date_to_date_val,
             :finalize, :init, :normalize_text, :norm_style_hash, :get_style, :get_index,
             :get_number_of_siblings, :get_index_and_or_number, :create_column,
-            :get_appropriate_style, :checkStyleAttributes, :insert_style_attributes, :clone_node,
+            :get_appropriate_style, :check_style_attributes, :insert_style_attributes, :clone_node,
             :writeStyle, :write_style_xml, :style_to_hash, :write_default_styles, :write_xml,
             :internalizeFormula, :getColorPalette, :open, :printStyles, :insertTableBeforeAfter,
             :insertColumnBeforeInHeader, :getElementIfExists, :getRowIfExists, :getCellFromRowIfExists
