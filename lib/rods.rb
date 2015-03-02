@@ -740,22 +740,22 @@ module Rods
       cell.attributes.each { |attribute,value| cell.attributes.delete attribute }
       if type == "string"
         cell.attributes["office:value-type"] = "string"
-        cell.attributes["table:style-name"] = @stringStyle
+        cell.attributes["table:style-name"] = @string_style
       elsif type == "float"
         cell.attributes["office:value-type"] = "float"
         cell.attributes["office:value"] = text
-        cell.attributes["table:style-name"] = @floatStyle
+        cell.attributes["table:style-name"] = @float_style
       elsif type.match /^formula/
         cell.attributes["table:formula"] = internalizeFormula text 
         case type
           when "formula","formula:float"
             cell.attributes["office:value-type"] = "float"
             cell.attributes["office:value"] = 0
-            cell.attributes["table:style-name"] = @floatStyle
+            cell.attributes["table:style-name"] = @float_style
           when "formula:time"
             cell.attributes["office:value-type"] = "time"
             cell.attributes["office:time-value"] = "PT00H00M00S"
-            cell.attributes["table:style-name"] = @timeStyle
+            cell.attributes["table:style-name"] = @time_style
           when "formula:date"
             cell.attributes["office:value-type"] = "date"
             cell.attributes["office:date-value"] = "0"
@@ -763,29 +763,29 @@ module Rods
           when "formula:currency"
             cell.attributes["office:value-type"] = "currency"
             cell.attributes["office:value"] = "0.0" # Recalculated when the file is opened
-            cell.attributes["office:currency"] = @currencySymbolInternal
-            cell.attributes["table:style-name"] = @currencyStyle
+            cell.attributes["office:currency"] = @currency_symbol_internal
+            cell.attributes["table:style-name"] = @currency_style
           else die("write_text: invalid type of formula #{type}")
         end
         text = "0"
       elsif type == "percent"
         cell.attributes["office:value-type"] = "percentage"
         cell.attributes["office:value"] = percent_to_percent_val text
-        cell.attributes["table:style-name"] = @percentStyle
+        cell.attributes["table:style-name"] = @percent_style
         text = text+" %"
       elsif type == "currency"
         cell.attributes["office:value-type"] = "currency"
         cell.attributes["office:value"] = text
-        text = "#{text} #{@currencySymbol}"
-        cell.attributes["office:currency"] = @currencySymbolInternal
-        cell.attributes["table:style-name"] = @currencyStyle
+        text = "#{text} #{@currency_symbol}"
+        cell.attributes["office:currency"] = @currency_symbol_internal
+        cell.attributes["table:style-name"] = @currency_style
       elsif type == "date"
         cell.attributes["office:value-type"] = "date"
         cell.attributes["table:style-name"] = @date_style
         cell.attributes["office:date-value"] = date_to_date_val text
       elsif type == "time"
         cell.attributes["office:value-type"] = "time"
-        cell.attributes["table:style-name"] = @timeStyle
+        cell.attributes["table:style-name"] = @time_style
         cell.attributes["office:time-value"] = time_to_time_val text
       else
         die "Wrong type #{type}"
@@ -1023,9 +1023,9 @@ module Rods
       # Neuen style-Namen generieren und in Attributliste einfuegen
       # (oben wurde bereits geprueft, dass selbige keinen style-Namen enthaelt)
       # Cave: Wird neuer style spaeter verworfen (da in Archiv vorhanden), wird
-      # @styleCounter wieder dekrementiert
+      # @style_counter wieder dekrementiert
       #------------------------------------------------------
-      newStyleName = "auto_style"+(@styleCounter += 1).to_s
+      newStyleName = "auto_style"+(@style_counter += 1).to_s
       attributes["style:name"] = newStyleName
       #------------------------------------------------------
       # Attributliste in neuen style einfuegen
@@ -1042,11 +1042,11 @@ module Rods
       if(@style_archive.has_key?(hashKey))
         #-------------------------------------------------------
         # Zelle style aus Archiv zuweisen
-        # @styleCounter dekrementieren und neuen style verwerfen
+        # @style_counter dekrementieren und neuen style verwerfen
         #-------------------------------------------------------
         archiveStyleName = @style_archive[hashKey]
         cell.attributes["table:style-name"] = archiveStyleName
-        @styleCounter -= 1
+        @style_counter -= 1
         newStyle = nil
       else
         #-------------------------------------------------------
@@ -1578,7 +1578,7 @@ module Rods
                      "child3" => {TAG => "number:currency-symbol",
                                   "number:language" => @language,
                                   "number:country" => @country,
-                                  TEXT => @currencySymbol}})
+                                  TEXT => @currency_symbol}})
       #--------------------------------------------------------
       # Currency-Style Teil 2 (Format mit Referenz zu Mapping)
       #--------------------------------------------------------
@@ -1597,7 +1597,7 @@ module Rods
                      "child5" => {TAG => "number:currency-symbol",
                                   "number:language" => @language,
                                   "number:country" => @country,
-                                  TEXT => @currencySymbol },
+                                  TEXT => @currency_symbol },
                      "child6" => {TAG => "style:map",
                                   "style:condition" => "value()> = 0",
                                   "style:apply-style-name" => "currency_format_positive_style" }})
@@ -2000,8 +2000,8 @@ module Rods
       @content_text
       @language = default[:language]
       @country = default[:country]
-      @currencySymbol = default[:external_currency]
-      @currencySymbolInternal = default[:internal_currency]
+      @currency_symbol = default[:external_currency]
+      @currency_symbol_internal = default[:internal_currency]
       @spread_sheet
       @styles_text
       @meta_text
@@ -2015,21 +2015,15 @@ module Rods
       @num_tables
       @office_styles
       @auto_styles
-      @floatStyle = "float_style"
+      @float_style = "float_style"
       @date_style = "date_style"  
-      @stringStyle = "string_style"
-      @currencyStyle = "currency_style"
-      @percentStyle = "percent_style"
-      @timeStyle = "time_style"
-      @styleCounter = 0
-      @file # (ggf. qualifizierter) Dateiname der eingelesenen Datei
-      #---------------------------------------------------------------
-      # Hash-Tabelle der geschriebenen Styles
-      #---------------------------------------------------------------
+      @string_style = "string_style"
+      @currency_style = "currency_style"
+      @percent_style = "percent_style"
+      @time_style = "time_style"
+      @style_counter = 0
+      @file
       @style_archive = Hash.new
-      #---------------------------------------------------------------
-      # Farbpalette
-      #---------------------------------------------------------------
       @rods_styles = [
         "table_style",
         "row_style",
