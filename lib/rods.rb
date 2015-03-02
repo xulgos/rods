@@ -1747,47 +1747,6 @@ module Rods
                     })
     end
     ##########################################################################
-    # internal: Helper-tool to extract a large amount of color-values and help
-    # build a color-lookup-table.
-    #-------------------------------------------------------------------------
-    def getColorPalette()
-      #------------------------------------------------
-      # Automatic-Styles aus content.xml
-      #------------------------------------------------
-      styles = @content_text.elements["/office:document-content/office:automatic-styles"]
-      currentTable = @tables[@current_table_name][NODE]
-      currentTable.elements.each("//table:table-cell"){ |cell|
-        textElement = cell.elements["text:p"]
-        #-----------------------------
-        # Zelle mit Text ?
-        #-----------------------------
-        if(textElement)
-          text = textElement.text
-          #-------------------------------
-          # Ist Zelle Style zugewiesen ?
-          #-------------------------------
-          styleName = cell.attributes['table:style-name']
-          if(styleName)
-            #-------------------------------------
-            # Style vorhanden ?
-            #-------------------------------------
-            style = styles.elements["style:style[@style:name = '#{styleName}']"]
-            die("Could not find style #{styleName}") unless (style)
-            #-------------------------------------
-            # Properties-Element ebenfalls vorhanden ?
-            #-------------------------------------
-            properties = style.elements["style:table-cell-properties"]
-            die("Could not find table-cell-properties for #{styleName}") unless (properties)
-            #-------------------------------------
-            # Nun noch Hintergrundfarbe extrahieren
-            #-------------------------------------
-            hexColor = properties.attributes["fo:background-color"]
-            puts("\"#{text}\" => \"#{hexColor}\",")
-          end
-        end
-      }
-    end
-    ##########################################################################
     # Saves the file associated with the current RODS-object.
     #   sheet.save()
     #-------------------------------------------------------------------------
@@ -2576,7 +2535,7 @@ module Rods
             :get_number_of_siblings, :get_index_and_or_number, :create_column,
             :get_appropriate_style, :check_style_attributes, :insert_style_attributes, :clone_node,
             :write_style, :write_style_xml, :style_to_hash, :write_default_styles, :write_xml,
-            :internalize_formula, :getColorPalette, :open, :printStyles, :insertTableBeforeAfter,
+            :internalize_formula, :open, :printStyles, :insertTableBeforeAfter,
             :insertColumnBeforeInHeader, :getElementIfExists, :getRowIfExists, :getCellFromRowIfExists
   end
 end
