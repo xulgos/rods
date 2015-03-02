@@ -513,44 +513,31 @@ module Rods
     # internal: Verifies the format of a given time-string and converts it into
     # a proper internal representation.
     #-------------------------------------------------------------------------
-    def time2TimeVal(text)
-      #----------------------------------------
-      # Format- und Range-Pruefung
-      #----------------------------------------
-      #------------------------
-      # Format
-      #------------------------
-      unless(text.match(/^\d{2}:\d{2}(:\d{2})?$/))
-        die("time2TimeVal: wrong time-format '#{text}' -> expected: 'hh:mm' or 'hh:mm:ss'")
+    def time_to_time_val text
+      unless text.match /^\d{2}:\d{2}(:\d{2})?$/
+        die "wrong time-format '#{text}' -> expected: 'hh:mm' or 'hh:mm:ss'"
       end
-      #------------------------
-      # Range
-      #------------------------
-      unless(text.match(/^[0-1][0-9]:[0-5][0-9](:[0-5][0-9])?$/) || text.match(/^[2][0-3]:[0-5][0-9](:[0-5][0-9])?$/))
-        die("time2TimeVal: time '#{text}' not in valid range")
+      unless text.match /^[0-1][0-9]:[0-5][0-9](:[0-5][0-9])?$|^[2][0-3]:[0-5][0-9](:[0-5][0-9])?$/
+        die "time '#{text}' not in valid range"
       end
-      time = text.match(/(\d{2}):(\d{2})(:(\d{2}))?/)
+      time = text.match /(\d{2}):(\d{2})(:(\d{2}))?/
       hour = time[1]
       minute = time[2]
       seconds = time[4]
-      seconds = "00" if seconds.nil?
-      "PT"+hour+"H"+minute+"M"+seconds+"S"
+      "PT#{hour}H#{minute}M#{seconds.nil? ? "00" : seconds}S"
     end
-
     ##########################################################################
-    # internal: Converts a given percentage-string to English-format ('.' instead
-    # of ',' as decimal separator, divides by 100 and returns a string with this
-    # format. For instance: 3,49 becomes 0.0349.
+    # internal: Divides by 100 and returns a string
     #----------------------------------------------------------------------
-    def percent2PercentVal(text)
-      return (text.sub(/,/,".").to_f/100.0).to_s
+    def percent_to_percent_val text
+      (text.to_f/100.0).to_s
     end
     ##########################################################################
     # internal: Converts a date-string of the form '01.01.2010' into the internal
     # representation '2010-01-01'.
     #----------------------------------------------------------------------
-    def date2DateVal(text)
-      return text if text =~ /(^\d{2})-(\d{2})-(\d{4})$/
+    def date_to_date_val text
+      return text if text =~ /(^\d{4})-(\d{2})-(\d{2})$/
       die "Date #{text} does not comply with format dd.mm.yyyy" unless text.match /^\d{2}\.\d{2}\.\d{4}$/
       text =~ /(^\d{2})\.(\d{2})\.(\d{4})$/
       $3+"-"+$2+"-"+$1 
@@ -823,32 +810,32 @@ module Rods
           else die("write_text: invalid type of formula #{type}")
         end
         text = "0"
-      elsif(type == "percent")
+      elsif type == "percent"
         cell.attributes["office:value-type"] = "percentage"
-        cell.attributes["office:value"] = percent2PercentVal(text)
+        cell.attributes["office:value"] = percent_to_percent_val text
         cell.attributes["table:style-name"] = @percentStyle
         text = text+" %"
-      elsif(type == "currency")
+      elsif type == "currency"
         cell.attributes["office:value-type"] = "currency"
         cell.attributes["office:value"] = text
         text = "#{text} #{@currencySymbol}"
         cell.attributes["office:currency"] = @currencySymbolInternal
         cell.attributes["table:style-name"] = @currencyStyle
-      elsif(type == "date")
+      elsif type == "date"
         cell.attributes["office:value-type"] = "date"
         cell.attributes["table:style-name"] = @date_style
-        cell.attributes["office:date-value"] = date2DateVal(text)
-      elsif(type == "time")
+        cell.attributes["office:date-value"] = date_to_date_val text
+      elsif type == "time"
         cell.attributes["office:value-type"] = "time"
         cell.attributes["table:style-name"] = @timeStyle
-        cell.attributes["office:time-value"] = time2TimeVal(text)
+        cell.attributes["office:time-value"] = time_to_time_val text
       else
         die "Wrong type #{type}"
       end
       if cell.elements["text:p"]
         cell.elements["text:p"].text = text
       else
-        newElement = cell.add_element("text:p")
+        newElement = cell.add_element "text:p"
         newElement.text = text
       end
     end
@@ -2824,7 +2811,7 @@ module Rods
            :deleteColumn, :deleteRow2, :deleteCell2
 
     private :die, :create_cell, :create_row, :get_child_by_index, :create_element, :set_repetition, :init_house_keeping,
-            :get_table_width, :pad_tables, :time2TimeVal, :percent2PercentVal, :date2DateVal,
+            :get_table_width, :pad_tables, :time_to_time_val, :percent_to_percent_val, :date_to_date_val,
             :finalize, :init, :normalizeText, :normStyleHash, :getStyle, :getIndex,
             :getNumberOfSiblings, :getIndexAndOrNumber, :create_column,
             :getAppropriateStyle, :checkStyleAttributes, :insertStyleAttributes, :cloneNode,
