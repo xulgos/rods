@@ -2093,15 +2093,13 @@ module Rods
     ##########################################################################
     # Delets the cell at the given indices
     #
-    #   sheet.deleteCell(7,9)
+    #   sheet.delete_cell 7, 9
     #-------------------------------------------------------------------------
-    def deleteCell(rowInd,colInd)
-      die("deleteCell: index #{rowInd} is not a Fixnum/Integer") unless (rowInd.class.to_s == "Fixnum")
-      die("deleteCell: invalid index #{rowInd}") unless (rowInd > 0)
-      die("deleteCell: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
-      die("deleteCell: invalid index #{colInd}") unless (colInd > 0)
-      row = get_row(rowInd)
-      deleteCellFromRow(row,colInd)
+    def delete_cell row_ind, col_ind
+      die "invalid index #{row_ind}" unless row_ind > 0
+      die "invalid index #{col_ind}" unless col_ind > 0
+      row = get_row row_ind
+      delete_cell_from_row row, col_ind
     end
     ##########################################################################
     # Delets the row above the given row
@@ -2349,7 +2347,7 @@ module Rods
            :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
            :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insertColumn,
            :insertRow, :insertCell, :insertCellFromRow, :deleteCellBefore, :deleteCellAfter,
-           :deleteCell, :deleteCellFromRow, :deleteRowAbove, :deleteRowBelow, :deleteRow,
+           :delete_cell, :deleteCellFromRow, :deleteRowAbove, :deleteRowBelow, :deleteRow,
            :deleteColumn, :deleteRow2, :deleteCell2
 
     private :die, :create_cell, :create_row, :get_child_by_index, :create_element, :set_repetition, :init_house_keeping,
@@ -2358,7 +2356,6 @@ module Rods
             :get_number_of_siblings, :get_index_and_or_number, :create_column,
             :get_appropriate_style, :check_style_attributes, :insert_style_attributes, :clone_node,
             :write_style, :write_style_xml, :style_to_hash, :write_default_styles, :write_xml,
-            :internalize_formula, :open, :insert_table_before_after,
-            :insert_column_before_in_header
+            :internalize_formula, :open, :insert_table_before_after, :insert_column_before_in_header
   end
 end
