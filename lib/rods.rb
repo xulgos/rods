@@ -737,7 +737,7 @@ module Rods
         cell.attributes["office:value"] = text
         cell.attributes["table:style-name"] = @float_style
       elsif type.match /^formula/
-        cell.attributes["table:formula"] = internalizeFormula text 
+        cell.attributes["table:formula"] = internalize_formula text 
         case type
           when "formula","formula:float"
             cell.attributes["office:value-type"] = "float"
@@ -1673,23 +1673,13 @@ module Rods
     # internal: Convert given formula to internal representation.
     # Example: " = E6-E5+0,27" => "of: = [.E6]+[.E5]+0.27"
     #------------------------------------------------------------------------
-    def internalizeFormula(formulaIn)
-      if !formulaIn.match /^ = /
-        die "internalizeFormula: Formula #{formulaIn} does not begin with \' = \'"
+    def internalize_formula formula_in
+      unless formula_in.match /^ = /
+        die "Formula #{formula_in} does not begin with \' = \'"
       end
-      formulaOut = String.new(formulaIn)
-      #---------------------------------------------
-      # Praefix setzen
-      #---------------------------------------------
-      formulaOut.sub!(/^ = /,"oooc: = ")
-      #---------------------------------------------
-      # Dezimaltrennzeichen ',' durch '.' in Zahlen ersetzen
-      #---------------------------------------------
-      formulaOut.gsub!(/(\d),(\d)/,"\\1.\\2") 
-      #---------------------------------------------
-      # Zellbezeichnerformat AABC3421 in [.AABC3421] wandeln
-      #---------------------------------------------
-      formulaOut.gsub!(/((\$?[A-Ta-z'.0-9][A-Ta-z' .0-9]*)\.)?(\$?[A-Za-z]+\$?\d+(:\$?[A-Za-z]+\$?\d+)?)/,"[\\2.\\3]")
+      formula_out = String.new formula_in
+      formula_out.sub! /^ = /,"oooc: = "
+      formula_out.gsub! /((\$?[A-Ta-z'.0-9][A-Ta-z' .0-9]*)\.)?(\$?[A-Za-z]+\$?\d+(:\$?[A-Za-z]+\$?\d+)?)/,"[\\2.\\3]"
     end
     ##########################################################################
     # convert column number to letters for usage in formulas
@@ -2586,7 +2576,7 @@ module Rods
             :get_number_of_siblings, :get_index_and_or_number, :create_column,
             :get_appropriate_style, :check_style_attributes, :insert_style_attributes, :clone_node,
             :write_style, :write_style_xml, :style_to_hash, :write_default_styles, :write_xml,
-            :internalizeFormula, :getColorPalette, :open, :printStyles, :insertTableBeforeAfter,
+            :internalize_formula, :getColorPalette, :open, :printStyles, :insertTableBeforeAfter,
             :insertColumnBeforeInHeader, :getElementIfExists, :getRowIfExists, :getCellFromRowIfExists
   end
 end
