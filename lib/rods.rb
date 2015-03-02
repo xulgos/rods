@@ -1,4 +1,4 @@
-# coding: utf-8UTF-8
+# coding: utf-8
 #
 # = RODS - Ruby Open Document Spreadsheet
 # This class provides a convenient interface for fast reading and writing 
@@ -188,9 +188,9 @@ module Rods
     #   row = sheet.get_row(17)
     #   cell = sheet.write_get_cell_from_row(row,4,"formula:currency"," = B5*1,19")
     #-------------------------------------------------------------------------
-    def write_get_cell_from_row(row,colInd,type,text)
-      cell = getCellFromRow(row,colInd)
-      write_text(cell,type,text)
+    def write_get_cell_from_row row,colInd,type,text
+      cell = get_cell_form_row row,colInd
+      write_text cell,type,text
       return cell
     end
     ##########################################################################
@@ -202,16 +202,16 @@ module Rods
     #   sheet.write_cell_from_row(row,1,"date","28.12.2010")
     #   sheet.write_cell_from_row(row,2,"formula:date"," = A1+3")
     #-------------------------------------------------------------------------
-    def write_cell_from_row(row,colInd,type,text)
-      cell = getCellFromRow(row,colInd)
-      write_text(cell,type,text)
+    def write_cell_from_row row,colInd,type,text
+      cell = get_cell_form_row(row,colInd)
+      write_text cell,type,text
     end
     ##########################################################################
     # Returns the cell at the given index in the given row.
     # Cell and row are REXML::Elements.
     # The cell is created if it does not exist.
     #   row = sheet.get_row(15)
-    #   cell = sheet.getCellFromRow(row,17) # 17th cell of 15th row
+    #   cell = sheet.get_cell_form_row(row,17) # 17th cell of 15th row
     # Looks a bit strange compared to
     #   cell = sheet.get_cell(15,17)
     # but is considerably faster if you are operating on several cells of the
@@ -219,7 +219,7 @@ module Rods
     # from the node of the already found row instead of having to locate the
     # row over and over again.
     #-------------------------------------------------------------------------
-    def getCellFromRow(row,colInd)
+    def get_cell_form_row(row,colInd)
       return get_child_by_index(row,CELL,colInd)
     end
     ##########################################################################
@@ -2583,7 +2583,7 @@ module Rods
       die("deleteCell: row #{row} is not a REXML::Element") unless (row.class.to_s == "REXML::Element")
       die("deleteCell: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("deleteCell: invalid index #{colInd}") unless (colInd > 0)
-      cell = getCellFromRow(row,colInd+1)
+      cell = get_cell_form_row(row,colInd+1)
       deleteCellBefore(cell)
     end
     ##########################################################################
@@ -2773,7 +2773,7 @@ module Rods
       die("insertCell: row #{row} is not a REXML::Element") unless (row.class.to_s == "REXML::Element")
       die("insertCell: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("insertCell: invalid index #{colInd}") unless (colInd > 0)
-      cell = getCellFromRow(row,colInd)
+      cell = get_cell_form_row(row,colInd)
       return insertCellBefore(cell)
     end
     ##########################################################################
@@ -2899,11 +2899,11 @@ module Rods
     # internal: returns cell at index if existent, nil otherwise
     #   row = getRowIfExists(4)
     #   if(row)
-    #     cell = getCellFromRowIfExists(row,7)
+    #     cell = get_cell_form_rowIfExists(row,7)
     #     unless(cell) .....
     #   end
     #-------------------------------------------------------------------------
-    def getCellFromRowIfExists(row,colInd)
+    def get_cell_form_rowIfExists(row,colInd)
       return getElementIfExists(row,CELL,colInd)
     end
     ##########################################################################
@@ -2979,7 +2979,7 @@ module Rods
     end
 
     public :set_date_format, :write_get_cell, :write_cell, :write_get_cell_from_row, :write_cell_from_row,
-           :getCellFromRow, :get_cell, :get_row, :rename_table, :set_current_table,
+           :get_cell_form_row, :get_cell, :get_row, :rename_table, :set_current_table,
            :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :writeStyleAbbr,
            :setStyle, :printOfficeStyles, :printAutoStyles, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insertTableAfter, :insertTableBefore,
@@ -2996,6 +2996,6 @@ module Rods
             :getAppropriateStyle, :checkStyleAttributes, :insertStyleAttributes, :cloneNode,
             :writeStyle, :write_style_xml, :style2Hash, :write_default_styles, :write_xml,
             :internalizeFormula, :getColorPalette, :open, :printStyles, :insertTableBeforeAfter,
-            :insertColumnBeforeInHeader, :getElementIfExists, :getRowIfExists, :getCellFromRowIfExists
+            :insertColumnBeforeInHeader, :getElementIfExists, :getRowIfExists, :get_cell_form_rowIfExists
   end
 end
