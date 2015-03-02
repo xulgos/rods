@@ -2063,26 +2063,23 @@ module Rods
       repetitions = row.attributes["table:number-rows-repeated"]
       if(repetitions && repetitions.to_i > 1)
         row.attributes["table:number-rows-repeated"] = (repetitions.to_i-1).to_s
-        # tell("deleteRow2: decrementing empty rows")
       else
         table = row.elements["ancestor::table:table"]
         unless (table)
-          die("deleteRow2: internal error: Could not extract parent-table of row #{row}") 
+          die("Could not extract parent-table of row #{row}") 
         end
         table.elements.delete(row)
-        # tell("deleteRow2: deleting non-empty row")
       end
     end
     ##########################################################################
     # Delets the row at the given index
     #
-    #   sheet.deleteRow(7)
+    #   sheet.delete_row 7
     #-------------------------------------------------------------------------
-    def deleteRow(rowInd)
-      die("deleteRow: index #{rowInd} is not a Fixnum/Integer") unless (rowInd.class.to_s == "Fixnum")
-      die("deleteRow: invalid index #{rowInd}") unless (rowInd > 0)
-      row = get_row(rowInd+1)
-      deleteRowAbove(row)
+    def delete_row row_ind
+      die "invalid index #{row_ind}" unless  row_ind > 0
+      row = get_row row_ind + 1
+      delete_row_above row
     end
     ##########################################################################
     # Delets the cell at the given indices
@@ -2098,26 +2095,21 @@ module Rods
     ##########################################################################
     # Delets the row above the given row
     #
-    #   row = sheet.get_row(5)
-    #   sheet.deleteRowAbove(row)
+    #   row = sheet.get_row 5
+    #   sheet.delete_row_above row
     #-------------------------------------------------------------------------
-    def deleteRowAbove(row)
-      die("deleteRowAbove: row #{row} is not a REXML::Element") unless (row.class.to_s == "REXML::Element")
-      #--------------------------------------------------------
-      # Entweder Wiederholungsattribut der vorherigen Zeile
-      # dekrementieren oder selbige loeschen
-      #--------------------------------------------------------
-      previousRow = row.previous_sibling
-      die("deleteRowAbove: row is already first row in row") unless (previousRow)
-      previousRepetitions = previousRow.attributes["table:number-rows-repeated"]
-      if(previousRepetitions && previousRepetitions.to_i > 1)
-        previousRow.attributes["table:number-rows-repeated"] = (previousRepetitions.to_i-1).to_s
+    def delete_row_above row
+      previous_row = row.previous_sibling
+      die "row is already first row in row" unless previous_row
+      previous_repetitions = previous_row.attributes["table:number-rows-repeated"]
+      if previousRepetitions && previousRepetitions.to_i > 1
+        previous_row.attributes["table:number-rows-repeated"] = (previous_repetitions.to_i-1).to_s
       else
         table = row.elements["ancestor::table:table"]
-        unless (table)
-          die("deleteRowAbove: internal error: Could not extract parent-table of row #{row}") 
+        unless table
+          die "Could not extract parent-table of row #{row}" 
         end
-        table.elements.delete(previousRow)
+        table.elements.delete previous_row
       end
     end
     ##########################################################################
@@ -2341,7 +2333,7 @@ module Rods
            :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
            :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insertColumn,
            :insertRow, :insertCell, :insertCellFromRow, :deleteCellBefore, :deleteCellAfter,
-           :delete_cell, :deleteCellFromRow, :deleteRowAbove, :deleteRowBelow, :deleteRow,
+           :delete_cell, :deleteCellFromRow, :delete_row_above, :deleteRowBelow, :delete_row,
            :deleteColumn, :deleteRow2, :delete_cell_element
 
     private :die, :create_cell, :create_row, :get_child_by_index, :create_element, :set_repetition, :init_house_keeping,
