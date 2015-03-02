@@ -1559,89 +1559,6 @@ module Rods
                                "fo:padding-bottom" => "0.1cm"}})
     end
     ##########################################################################
-    # Helper-Tool: Prints all styles of styles.xml in indented ASCII-notation
-    #   sheet.printOfficeStyles()
-    # * Lines starting with 'E' are Element-Tags
-    # * Lines starting with 'A' are Attributes
-    # * Lines starting with 'T' are Element-Text
-    # Sample output:
-    #   E: style:style
-    #     A: style:name => "comment_graphics_style"
-    #     A: style:family => "graphic"
-    #     E: style:graphic-properties
-    #       A: fo:padding-right => "0.1cm"
-    #       A: draw:marker-start-width => "0.2cm"
-    #       A: draw:auto-grow-width => "false"
-    #       A: draw:marker-start-center => "false"
-    #       A: draw:shadow => "hidden"
-    #       A: draw:shadow-offset-x => "0.1cm"
-    #       A: draw:shadow-offset-y => "0.1cm"
-    #       A: draw:marker-start => "Linienende_20_1"
-    #       A: fo:padding-top => "0.1cm"
-    #       A: draw:fill => "solid"
-    #       A: draw:caption-escape-direction => "auto"
-    #       A: fo:padding-left => "0.1cm"
-    #       A: draw:fill-color => "#ffffcc"
-    #       A: draw:auto-grow-height => "true"
-    #       A: fo:padding-bottom => "0.1cm"
-    #-------------------------------------------------------------------------
-    def printOfficeStyles()
-      printStyles(@office_styles,"  ")
-    end
-    ##########################################################################
-    # Helper-Tool: Prints all styles of content.xml in indented ASCII-notation
-    #   sheet.printAutoStyles()
-    # * Lines starting with 'E' are Element-Tags
-    # * Lines starting with 'A' are Attributes
-    # * Lines starting with 'T' are Element-Text
-    # Sample output:
-    #   E: number:date-style
-    #     A: style:name => "date_format_style"
-    #     A: number:automatic-order => "true"
-    #     A: number:format-source => "language"
-    #     E: number:day
-    #     E: number:text
-    #       T: "."
-    #     E: number:month
-    #     E: number:text
-    #       T: "."
-    #     E: number:year
-    #-------------------------------------------------------------------------
-    def printAutoStyles()
-      printStyles(@auto_styles,"  ")
-    end
-    ##########################################################################
-    # internal: Helper-Tool: Prints out all styles of given node in an indented ASCII-notation
-    #------------------------------------------------------------------------
-    def printStyles(startNode,indent)
-      startNode.elements.each("*"){ |element|
-        #------------------------------------------
-        # Tag extrahieren (Standard-Tag-Zeichen nach '<')
-        #------------------------------------------
-        # puts("Element: #{element}")
-        element.to_s.match(/<\s*([A-Za-z:-]+)/)
-        puts("#{indent}E: #{$1}")
-        #------------------------------------------
-        # Attribute ausgeben
-        #------------------------------------------
-        element.attributes.each{ |attribute, value|
-          puts("  #{indent}A: #{attribute} => \"#{value}\"")
-        }
-        #------------------------------------------
-        # Text
-        #------------------------------------------
-        if(element.has_text?())
-          puts("  #{indent}T: \"#{element.text}\"")
-        end
-        #------------------------------------------
-        # Rekursion
-        #------------------------------------------
-        if(element.has_elements?())
-          printStyles(element,indent+"  ")
-        end
-      }
-    end
-    ##########################################################################
     # internal: Recursively writes an XML-tree out of the given hash and returns
     # the written node. The returned node is irrelevant for the recursion but
     # valid for saving the node in a hash-pool for later style-comparisons.
@@ -2521,7 +2438,7 @@ module Rods
     public :set_date_format, :write_get_cell, :write_cell, :writeGetCellFromRow, :writeCellFromRow,
            :getCellFromRow, :get_cell, :get_row, :rename_table, :set_current_table,
            :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :write_style_abbr,
-           :setStyle, :printOfficeStyles, :printAutoStyles, :getNextExistentRow, :getPreviousExistentRow,
+           :setStyle, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insertTableAfter, :insertTableBefore,
            :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
            :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insertColumn,
@@ -2535,7 +2452,7 @@ module Rods
             :get_number_of_siblings, :get_index_and_or_number, :create_column,
             :get_appropriate_style, :check_style_attributes, :insert_style_attributes, :clone_node,
             :write_style, :write_style_xml, :style_to_hash, :write_default_styles, :write_xml,
-            :internalize_formula, :open, :printStyles, :insertTableBeforeAfter,
+            :internalize_formula, :open, :insertTableBeforeAfter,
             :insertColumnBeforeInHeader, :getElementIfExists, :getRowIfExists, :getCellFromRowIfExists
   end
 end
