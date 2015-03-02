@@ -119,30 +119,15 @@ module Rods
     ##########################################################################
     # internal: Sets repeption-attribute of REXML::Element of type 'row' or 'cell' 
     #------------------------------------------------------------------------
-    def setRepetition(element,type,repetition)
-      #----------------------------------------------------------------------
-      if((type != ROW) && (type != CELL))
-        die("setRepetition: wrong type #{type}")
-      end
-      if(repetition < 1)
-        die("setRepetition: invalid value for repetition #{repetition}")
-      end
-      if(! element)
-        die("setRepetition: element is nil")
-      end
-      #----------------------------------------------------------------------
-      if(type == ROW)
-        kindOfRepetition = "table:number-rows-repeated"
-      elsif(type == CELL)
-        kindOfRepetition = "table:number-columns-repeated"
+    def set_repetition element,type,repetition
+      die "wrong type #{type}" if type != ROW && type != CELL
+      die "invalid value for repetition #{repetition}" if repetition < 1
+      die "element is nil" unless element
+      kind_of_repetition = type == ROW ?  "table:number-rows-repeated" : "table:number-columns-repeated"
+      if repetition.to_i == 1
+        element.attributes.delete kind_of_repetition
       else
-        die("setRepetition: wrong type #{type}")
-      end
-      #----------------------------------------------------------------------
-      if(repetition.to_i == 1)
-        element.attributes.delete(kindOfRepetition)
-      else
-        element.attributes[kindOfRepetition] = repetition.to_s
+        element.attributes[kind_of_repetition] = repetition.to_s
       end
     end
     ##########################################################################
@@ -280,7 +265,7 @@ module Rods
             if num_empty_elements_after < 1
               die "new repetition < 1"
             end
-            setRepetition element, type, 1
+            set_repetition element, type, 1
             element.next_sibling = create_element type, num_empty_elements_after
           end
           return element 
@@ -292,7 +277,7 @@ module Rods
             else
               num_empty_elements_before = index - i
               num_empty_elements_after = index_of_last_empty_element - index
-              setRepetition element, type, num_empty_elements_before
+              set_repetition element, type, num_empty_elements_before
               element.next_sibling = create_element type, 1
               if num_empty_elements_after > 0
                 element.next_sibling.next_sibling = create_element type, num_empty_elements_after
@@ -582,7 +567,7 @@ module Rods
             else
               newRepetition = numPaddings
             end
-            setRepetition(cell,CELL,newRepetition)
+            set_repetition(cell,CELL,newRepetition)
           #-------------------------------
           # keine Leerzelle -> Leerzelle(n) anhaengen
           #-------------------------------
@@ -2916,7 +2901,7 @@ module Rods
            :deleteCell, :deleteCellFromRow, :deleteRowAbove, :deleteRowBelow, :deleteRow,
            :deleteColumn, :deleteRow2, :deleteCell2
 
-    private :die, :create_cell, :create_row, :get_child_by_index, :create_element, :setRepetition, :init_house_keeping,
+    private :die, :create_cell, :create_row, :get_child_by_index, :create_element, :set_repetition, :init_house_keeping,
             :get_table_width, :padTables, :padRow, :time2TimeVal, :percent2PercentVal, :date2DateVal,
             :finalize, :init, :normalizeText, :normStyleHash, :getStyle, :getIndex,
             :getNumberOfSiblings, :getIndexAndOrNumber, :create_column,
