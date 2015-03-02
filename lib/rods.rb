@@ -372,64 +372,48 @@ module Rods
     ##########################################################################
     # Inserts a table of the given name before the given spreadsheet and updates
     # the internal table-administration.
-    #   sheet.insertTableBefore("table2","table1") 
+    #   sheet.insert_table_before("table2","table1") 
     #-------------------------------------------------------------------------
-    def insertTableBefore(relativeTableName,tableName)
-      insertTableBeforeAfter(relativeTableName,tableName,BEFORE)
+    def insert_table_before relative_table_name, table_name
+      insert_table_before_after relative_table_name, table_name, BEFORE
     end
     ##########################################################################
     # Inserts a table of the given name after the given spreadsheet and updates
     # the internal table-administration.
-    #   sheet.insertTableAfter("table1","table2") 
+    #   sheet.insert_table_after("table1","table2") 
     #-------------------------------------------------------------------------
-    def insertTableAfter(relativeTableName,tableName)
-      insertTableBeforeAfter(relativeTableName,tableName,AFTER)
+    def insert_table_after relative_table_name, table_name
+      insert_table_before_after relative_table_name, table_name, AFTER
     end
     ##########################################################################
     # internal: Inserts a table of the given name before or after the given spreadsheet and updates
     # the internal table-administration. The default position is 'after'.
-    #   sheet.insertTableBeforeAfter("table1","table2",BEFORE) 
+    #   sheet.insert_table_before_after("table1","table2",BEFORE) 
     #-------------------------------------------------------------------------
-    def insertTableBeforeAfter(relativeTableName,tableName,position = AFTER)
-      die("insertTableAfter: table '#{relativeTableName}' does not exist") unless (@tables.has_key?(relativeTableName))
-      die("insertTableAfter: table '#{tableName}' already exists") if (@tables.has_key?(tableName))
-      #-----------------------------------------
-      # alte Tabelle ermitteln
-      #-----------------------------------------
-      @spread_sheet.elements["table:table"].each{ |element|
-        puts("Name: #{element.attributes['table:name']}")
-      }
-      relativeTable = @spread_sheet.elements["*[@table:name = '#{relativeTableName}']"]
-      die("insertTableAfter: internal error: Could not locate existing table #{relativeTableName}") unless (relativeTable) 
-      #-----------------------------------------
-      # Neues Tabellenelement zunaecht per se (i.e. unverankert)  erschaffen
-      #-----------------------------------------
-      newTable = REXML::Element.new("table:table")
-      newTable.add_attributes({"table:name" =>  tableName,
+    def insert_table_before_after relative_table_name, table_name, position = AFTER
+      die "table '#{relative_table_name}' does not exist" unless @tables.has_key? relative_table_name
+      die "table '#{table_name}' already exists" if @tables.has_key? table_name
+      relative_table = @spread_sheet.elements["*[@table:name = '#{relative_table_name}']"]
+      die "insert_table_after: internal error: Could not locate existing table #{relative_table_name}" unless relative_table 
+      new_table = REXML::Element.new "table:table"
+      new_table.add_attributes({"table:name" =>  table_name,
                                "table:print" => "false",
                                "table:style-name" => "table_style"})
-      #-----------------------------------------
-      # Unterelemente anlegen und neue Tabelle
-      # hinter vorherige einfuegen
-      #-----------------------------------------
-      write_xml(newTable,{TAG => "table:table-column",
+      write_xml new_table, {TAG => "table:table-column",
                          "table:style" => "column_style",
-                         "table:default-cell-style-name" => "Default"})
-      write_xml(newTable,{TAG => "table:table-row",
+                         "table:default-cell-style-name" => "Default"}
+      write_xml newTable, {TAG => "table:table-row",
                          "table:style-name" => "row_style",
-                         CHILD => {TAG => "table:table-cell"}})
+                         CHILD => {TAG => "table:table-cell"}}
       case position
-        when BEFORE then @spread_sheet.insert_before(relativeTable,newTable)
-        when AFTER then @spread_sheet.insert_after(relativeTable,newTable)
-        else die("insertTableBeforeAfter: invalid parameter #{position}")
+        when BEFORE then @spread_sheet.insert_before relativeTable, newTable
+        when AFTER then @spread_sheet.insert_after relativeTable, newTable
+        else die "invalid parameter #{position}"
       end
-      #---------------------------------------------------------------------------
-      # Tabellen-Hash aktualisieren
-      #---------------------------------------------------------------------------
-      @tables[tableName] = Hash.new()
-      @tables[tableName][NODE] = newTable
-      @tables[tableName][WIDTH] = get_table_width(newTable)
-      @tables[tableName][WIDTHEXCEEDED] = false
+      @tables[table_name] = Hash.new
+      @tables[table_name][NODE] = new_table
+      @tables[table_name][WIDTH] = get_table_width new_table
+      @tables[table_name][WIDTHEXCEEDED] = false
       @num_tables += 1
     end
     ##########################################################################
@@ -2439,7 +2423,7 @@ module Rods
            :getCellFromRow, :get_cell, :get_row, :rename_table, :set_current_table,
            :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :write_style_abbr,
            :setStyle, :getNextExistentRow, :getPreviousExistentRow,
-           :getNextExistentCell, :getPreviousExistentCell, :insertTableAfter, :insertTableBefore,
+           :getNextExistentCell, :getPreviousExistentCell, :insert_table_after, :insert_table_before,
            :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
            :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insertColumn,
            :insertRow, :insertCell, :insertCellFromRow, :deleteCellBefore, :deleteCellAfter,
@@ -2452,7 +2436,7 @@ module Rods
             :get_number_of_siblings, :get_index_and_or_number, :create_column,
             :get_appropriate_style, :check_style_attributes, :insert_style_attributes, :clone_node,
             :write_style, :write_style_xml, :style_to_hash, :write_default_styles, :write_xml,
-            :internalize_formula, :open, :insertTableBeforeAfter,
+            :internalize_formula, :open, :insert_table_before_after,
             :insertColumnBeforeInHeader, :getElementIfExists, :getRowIfExists, :getCellFromRowIfExists
   end
 end
