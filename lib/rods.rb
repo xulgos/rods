@@ -657,66 +657,24 @@ module Rods
     # the resulting *.ods zip-file upon call of 'save' or 'saveAs'.
     # Saves and zips all contents.
     #---------------------------------------
-    def finalize(zipfile)
-      #------------------------
-      # meta.xml
-      #------------------------
-      #-------------------------------------
-      # Autor (ich :-)
-      #-------------------------------------
-      initialCreator = @office_meta.elements["meta:initial-creator"]
-      initialCreator = @office_meta.add_element(REXML::Element.new("meta:initial-creator"))
-      die("finalize: Could not extract meta:initial-creator") unless (initialCreator)
-      #-------------------------------------
-      # Datum/Zeit
-      #-------------------------------------
-      metaCreationDate = @office_meta.elements["meta:creation-date"]
-      die("finalize: could not extract meta:creation-date") unless (metaCreationDate)
-      now = Time.new()
-      time = now.year.to_s+"-"+now.month.to_s+"-"+now.day.to_s+"T"+now.hour.to_s+":"+now.min.to_s+":"+now.sec.to_s
-      metaCreationDate.text = time
-      #-------------------------------------
-      # Anzahl der Tabellen
-      #-------------------------------------
-      metaDocumentStatistic = @office_meta.elements["meta:document-statistic"]
-      die("finalize: Could not extract meta:document-statistic") unless (metaDocumentStatistic)
-      metaDocumentStatistic.attributes["meta:table-count"] = @num_tables.to_s
-      #-------------------------------------
-      zipfile.file.open("meta.xml","w") { |outfile|
-        outfile.puts @meta_text.to_s
-      }
-      #------------------------
-      # manifest.xml
-      #------------------------
-      zipfile.file.open("META-INF/manifest.xml","w") { |outfile|
-        outfile.puts @manifest_text.to_s
-      }
-      #------------------------
-      # mimetype
-      # Cave: Darf KEIN Newline am Ende beinhalten -> print anstelle puts
-      #------------------------
-      zipfile.file.open("mimetype","w") { |outfile|
-        outfile.print("application/vnd.oasis.opendocument.spreadsheet")
-      }
-      #------------------------
-      # settings.xml
-      #------------------------
-      zipfile.file.open("settings.xml","w") { |outfile|
-        outfile.puts @settings_text.to_s
-      }
-      #------------------------
-      # styles.xml
-      #------------------------
-      zipfile.file.open("styles.xml","w") { |outfile|
-        outfile.puts @styles_text.to_s
-      }
-      #------------------------
-      # content.xml
-      #------------------------
+    def finalize zipfile
+      initial_creator = @office_meta.elements["meta:initial-creator"]
+      initial_creator = @office_meta.add_element REXML::Element.new "meta:initial-creator"
+      die "Could not extract meta:initial-creator" unless initial_creator
+      meta_creation_date = @office_meta.elements["meta:creation-date"]
+      die "could not extract meta:creation-date" unless meta_creation_date
+      time = "#{Time.now.year}-#{Time.now.month}-#{Time.now.day}T#{Time.now.hour}:#{Time.now.min}:#{Time.now.sec}"
+      meta_creation_date.text = time
+      meta_document_statistic = @office_meta.elements["meta:document-statistic"]
+      die "Could not extract meta:document-statistic" unless meta_document_statistic
+      meta_document_statistic.attributes["meta:table-count"] = @num_tables.to_s
+      zipfile.file.open("meta.xml","w") { |outfile| outfile.puts @meta_text.to_s }
+      zipfile.file.open("META-INF/manifest.xml","w") { |outfile| outfile.puts @manifest_text.to_s }
+      zipfile.file.open("mimetype","w") { |outfile| outfile.print "application/vnd.oasis.opendocument.spreadsheet" }
+      zipfile.file.open("settings.xml","w") { |outfile| outfile.puts @settings_text.to_s }
+      zipfile.file.open("styles.xml","w") { |outfile| outfile.puts @styles_text.to_s }
       pad_tables
-      zipfile.file.open("content.xml","w") { |outfile|
-        outfile.puts @content_text.to_s
-      }
+      zipfile.file.open("content.xml","w") { |outfile| outfile.puts @content_text.to_s }
     end
     ##########################################################################
     # internal: Called by constructor upon creation of Open Document-object.
