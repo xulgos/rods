@@ -1029,7 +1029,7 @@ module Rods
         #if attributes.has_key?("fo:font-style-asian") || attributes.has_key?("fo:font-style-complex")
           # tell("automatically overwritten fo:font-style-asian/complex with value of fo:font-style")
         #end
-        attributes["fo:font-style-asian"] = attributes["fo:font-style-complex"] = fontStyle
+        attributes["fo:font-style-asian"] = attributes["fo:font-style-complex"] = font_style
       end
       font_weight = attributes["fo:font-weight"]
       if font_weight
@@ -1051,7 +1051,7 @@ module Rods
       if left_margin && text_align && text_align != "start" && left_margin != "0"
         # tell "automatically corrected: fo:text-align \'#{attributes['fo:text-align']}\' does not match fo:margin-left \'#{attributes['fo:margin-left']}\'"
         attributes["fo:margin-left"] = "0" 
-      elsif left_margin &&  left_margin != "0" && !text_align
+      elsif left_margin && left_margin != "0" && !text_align
         # tell "automatically corrected: fo:margin-left \'#{attributes['fo:margin-left']}\' needs fo:text-align \'start\' to work"
         attributes["fo:text-align"] = "start" 
       end 
@@ -1101,64 +1101,48 @@ module Rods
     # internal: Clones a given node recursively and returns the top-node as REXML::Element
     #-------------------------------------------------------------------------
     def clone_node node
-      newNode = node.clone
+      new_node = node.clone
       node.elements.each do |child|
-        newNode.elements << cloneNode(child)
+        new_node.elements << clone_node(child)
       end
-      newNode
+      new_node
     end
     ##########################################################################
     # Creates a new style out of the given attribute-hash with abbreviated and simplified syntax.
-    #   sheet.writeStyleAbbr({"name" => "new_percent_style",        # <- style-name to be applied to a cell
+    #   sheet.write_style_abbr {"name" => "new_percent_style",        # <- style-name to be applied to a cell
     #                           "margin-left" => "0.3cm",
     #                           "text-align" => "start",
     #                           "color" => "blue",
     #                           "border" => "0.01cm solid black",
     #                           "font-style" => "italic",
     #                           "data-style-name" => "percent_format_style", # <- predefined RODS data-style
-    #                           "font-weight" => "bold"})
+    #                           "font-weight" => "bold"}
     #-------------------------------------------------------------------------
-    def writeStyleAbbr(attributes)
-      writeStyle(norm_style_hash(attributes))
+    def write_style_abbr attributes
+      write_style norm_style_hash attributes
     end
     ##########################################################################
     # internal: creates a style in content.xml out of the given attribute-hash, which has to be
     # supplied in fully qualified (normed) form. Missing attributes are replaced by default-values.
     #-------------------------------------------------------------------------
-    def writeStyle(attributes)
-      die("writeStyle: Style-Hash #{attributes} is not a Hash") unless (attributes.class.to_s == "Hash")
-      die("writeStyle: Missing attribute style:name") unless (attributes.has_key?("style:name"))
-      #-----------------------------------------------------------------------
-      # Hashes potentieller Kind-Elemente und Tag-Vorbefuellung
-      #-----------------------------------------------------------------------
-      tableCellProperties = Hash.new(); tableCellProperties[TAG] = "style:table-cell-properties"
-      textProperties = Hash.new(); textProperties[TAG] = "style:text-properties"
-      paragraphProperties = Hash.new(); paragraphProperties[TAG] = "style:paragraph-properties"
-      #----------------------------------------------------------------------
-      # Nur wenige Default-Werte
-      #----------------------------------------------------------------------
+    def write_style attributes
+      die "Missing attribute style:name" unless attributes.has_key? "style:name"
+      tableCellProperties = Hash.new
+      tableCellProperties[TAG] = "style:table-cell-properties"
+      textProperties = Hash.new
+      textProperties[TAG] = "style:text-properties"
+      paragraphProperties = Hash.new
+      paragraphProperties[TAG] = "style:paragraph-properties"
       styleAttributes = {TAG => "style:style",
-                       "style:name" => "noName", # eigentlich unnoetig, da Attribut zwingend und oben geprueft
                        "style:family" => "table-cell",
                        "style:parent-style-name" => "Default"}
-      #--------------------------------------------------------------
-      # Vorverarbeitung
-      #--------------------------------------------------------------
-      check_style_attributes(attributes) 
-      #--------------------------------------------------------------
-      # Uebernahme der Werte in entsprechende (Sub-)Hashes
-      #--------------------------------------------------------------
-      attributes.each{ |key,value|
-        die("writeStyle: value for key #{key} is not a String") unless (value.class.to_s == "String")
-        #--------------------------------------------------------
-        # Werte den Hashes zuordnen
-        #--------------------------------------------------------
+      check_style_attributes attributes 
+      attributes.each do |key,value|
         case key
           when "style:name" then styleAttributes["style:name"] = value
           when "style:family" then styleAttributes["style:family"] = value
           when "style:parent-style-name" then styleAttributes["style:parent-style-name"] = value
           when "style:data-style-name" then styleAttributes["style:data-style-name"] = value
-          #---------------------------------------------------------------------------------
           when "fo:background-color" then tableCellProperties["fo:background-color"] = value
           when "style:text-align-source" then tableCellProperties["style:text-align-source"] = value
           when "fo:border-bottom" then tableCellProperties["fo:border-bottom"] = value
@@ -1166,7 +1150,6 @@ module Rods
           when "fo:border-left" then tableCellProperties["fo:border-left"] = value
           when "fo:border-right" then tableCellProperties["fo:border-right"] = value
           when "fo:border" then tableCellProperties["fo:border"] = value
-          #---------------------------------------------------------------------------------
           when "fo:color" then textProperties["fo:color"] = value
           when "fo:font-style" then textProperties["fo:font-style"] = value
           when "fo:font-style-asian" then textProperties["fo:font-style-asian"] = value
@@ -1174,21 +1157,16 @@ module Rods
           when "fo:font-weight" then textProperties["fo:font-weight"] = value
           when "fo:font-weight-asian" then textProperties["fo:font-weight-asian"] = value
           when "fo:font-weight-complex" then textProperties["fo:font-weight-complex"] = value
-          #---------------------------------------------------------------------------------
           when "fo:margin-left" then paragraphProperties["fo:margin-left"] = value
           when "fo:text-align" then paragraphProperties["fo:text-align"] = value
         else
-          die("writeStyle: invalid or not implemented attribute #{key}")
+          die "invalid or not implemented attribute #{key}"
         end
-      }
-      #------------------------------------------------------------
-      # Belegte Kind-Hashes hinzufuegen
-      # (Laenge > 1, da vordem bereits TAG in Kind-Hashes eingefuegt)
-      #------------------------------------------------------------
-      if (tableCellProperties.length > 1) then styleAttributes["child1"] = tableCellProperties end
-      if (textProperties.length > 1) then styleAttributes["child2"] = textProperties end
-      if (paragraphProperties.length > 1) then styleAttributes["child3"] = paragraphProperties end
-      write_style_xml(CONTENT,styleAttributes)
+      end
+      style_attributes["child1"] = table_cell_properties if table_cell_properties.length > 1
+      style_attributes["child2"] = text_properties if text_properties.length > 1
+      style_attributes["child3"] = paragraph_properties if paragraph_properties.length > 1
+      write_style_xml CONTENT, style_attributes
     end
     ##########################################################################
     # internal: write a style-XML-tree to content.xml or styles.xml. The given hash
@@ -1732,11 +1710,11 @@ module Rods
     ##########################################################################
     # Applies style of given name to given cell and overwrites all previous style-settings
     # of the latter including the former data-style
-    #   sheet.writeStyleAbbr({"name" => "strange_style",
+    #   sheet.write_style_abbr {"name" => "strange_style",
     #                           "text-align" => "right",
     #                           "data-style-name" => "currency_format_style" <- don't forget data-style
-    #                           "border-left" => "0.01cm solid grey4"})
-    #   sheet.setStyle(cell,"strange_style") # <- style-name has to exist
+    #                           "border-left" => "0.01cm solid grey4"}
+    #   sheet.set_style cell, "strange_style" # <- style-name has to exist
     #-------------------------------------------------------------------------
     def setStyle(cell,styleName)
       #-----------------------------------------------------------------------
@@ -2593,7 +2571,7 @@ module Rods
 
     public :set_date_format, :write_get_cell, :write_cell, :writeGetCellFromRow, :writeCellFromRow,
            :getCellFromRow, :get_cell, :get_row, :rename_table, :set_current_table,
-           :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :writeStyleAbbr,
+           :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :write_style_abbr,
            :setStyle, :printOfficeStyles, :printAutoStyles, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insertTableAfter, :insertTableBefore,
            :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
@@ -2607,7 +2585,7 @@ module Rods
             :finalize, :init, :normalize_text, :norm_style_hash, :get_style, :get_index,
             :get_number_of_siblings, :get_index_and_or_number, :create_column,
             :get_appropriate_style, :check_style_attributes, :insert_style_attributes, :clone_node,
-            :writeStyle, :write_style_xml, :style_to_hash, :write_default_styles, :write_xml,
+            :write_style, :write_style_xml, :style_to_hash, :write_default_styles, :write_xml,
             :internalizeFormula, :getColorPalette, :open, :printStyles, :insertTableBeforeAfter,
             :insertColumnBeforeInHeader, :getElementIfExists, :getRowIfExists, :getCellFromRowIfExists
   end
