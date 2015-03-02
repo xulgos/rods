@@ -2046,29 +2046,25 @@ module Rods
       end
     end
     ##########################################################################
-    # Delets the given row.
+    # Deletes the given row.
     #
-    # 'row' is a REXML::Element as returned by get_row(rowInd).
+    # 'row' is a REXML::Element as returned by get_row row_ind.
     #
-    # startRow = sheet.get_row(12)
-    # while(row = sheet.getNextExistentRow(startRow))
-    #   sheet.deleteRow2(row)
+    # start_row = sheet.get_row 12
+    # while row = sheet.get_next_existent_row start_row
+    #   sheet.delete_row_element row
     # end
     #-------------------------------------------------------------------------
-    def deleteRow2(row)
-      die("deleteRow2: row #{row} is not a REXML::Element") unless (row.class.to_s == "REXML::Element")
-      #-------------------------------------------------------------------
-      # Entweder Wiederholungszahl dekrementieren oder Zeile loeschen
-      #-------------------------------------------------------------------
+    def delete_row_element row
       repetitions = row.attributes["table:number-rows-repeated"]
-      if(repetitions && repetitions.to_i > 1)
-        row.attributes["table:number-rows-repeated"] = (repetitions.to_i-1).to_s
+      if repetitions && repetitions.to_i > 1
+        row.attributes["table:number-rows-repeated"] = repetitions.to_i-1.to_s
       else
         table = row.elements["ancestor::table:table"]
-        unless (table)
-          die("Could not extract parent-table of row #{row}") 
+        unless table
+          die "Could not extract parent-table of row #{row}" 
         end
-        table.elements.delete(row)
+        table.elements.delete row
       end
     end
     ##########################################################################
@@ -2334,7 +2330,7 @@ module Rods
            :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insertColumn,
            :insertRow, :insertCell, :insertCellFromRow, :deleteCellBefore, :deleteCellAfter,
            :delete_cell, :deleteCellFromRow, :delete_row_above, :deleteRowBelow, :delete_row,
-           :deleteColumn, :deleteRow2, :delete_cell_element
+           :deleteColumn, :delete_row_element, :delete_cell_element
 
     private :die, :create_cell, :create_row, :get_child_by_index, :create_element, :set_repetition, :init_house_keeping,
             :get_table_width, :pad_tables, :time_to_time_val, :percent_to_percent_val, :date_to_date_val,
