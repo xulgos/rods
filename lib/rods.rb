@@ -61,7 +61,7 @@ module Rods
       end
     end
     ##########################################################################
-    # internal: Error-routine for displaying fatal error-message
+    # internal: Error-method for displaying fatal error-message
     #-------------------------------------------------------------------------
     def die message
       raise RodsError, message
@@ -119,7 +119,7 @@ module Rods
     ##########################################################################
     # internal: Sets repeption-attribute of REXML::Element of type 'row' or 'cell' 
     #------------------------------------------------------------------------
-    def set_repetition element,type,repetition
+    def set_repetition element, type, repetition
       die "wrong type #{type}" if type != ROW && type != CELL
       die "invalid value for repetition #{repetition}" if repetition < 1
       die "element is nil" unless element
@@ -136,7 +136,7 @@ module Rods
     # Formats the cell according to type and returns the cell.
     #   cell = sheet.write_get_cell 3,3,"formula:time"," = C2-C1"
     # This is useful for a subsequent call to 
-    #   sheet.setAttributes(cell,{ "background-color" => "yellow3"})
+    #   sheet.set_attributes cell, { "background-color" => "yellow3"}
     #-------------------------------------------------------------------------
     def write_get_cell row_ind, col_ind, type, text
       cell = get_cell rowInd, colInd
@@ -331,8 +331,8 @@ module Rods
       if @num_tables == 0
         insert_table "Table 1"
       end
-      firstTable = @spread_sheet.elements["table:table[1]"]
-      @current_table_name = firstTable.attributes["table:name"]
+      first_table = @spread_sheet.elements["table:table[1]"]
+      @current_table_name = first_table.attributes["table:name"]
     end
     ##########################################################################
     # returns the list of table names
@@ -472,7 +472,7 @@ module Rods
     ##########################################################################
     # internal: Calculates the current width of the current table.
     #-------------------------------------------------------------------------
-    def get_table_width(table)
+    def get_table_width table
       die "current table does not contain table:table-column" unless table.elements["table:table-column"]
       table_name = table.attributes["table:name"]
       die "Could not extract table_name" if table_name.empty?
@@ -480,111 +480,33 @@ module Rods
       table.elements.each "table:table-column" do |table_column|
         num_columns_of_table += 1
         num_repetitions = table_column.attributes["table:number-columns-repeated"]
-        if(num_repetitions)
-          num_columns_of_table += num_repetitions.to_i-1
+        if num_repetitions
+          num_columns_of_table += num_repetitions.to_i - 1
         end
       end
       num_columns_of_table
     end
     ##########################################################################
     # internal: Adapts the number of columns in the headers of all tables 
-    # according to the right-most valid column. This routine is called when
+    # according to the right-most valid column. This method is called when
     # the spreadsheet is saved.
     #------------------------------------------------------------------------
-    def padTables
-      #---------------------------------------------------------------
-      # Ggf. geaenderte Tabellenbreite setzen und
-      # alle Zeilen auf neue Tabellenbreite auffuellen
-      #---------------------------------------------------------------
-      @tables.each{ |tableName,tableHash|
-        table = tableHash[NODE]
-        width = tableHash[WIDTH]
-        numColumnsOfTable = get_table_width(table)
-        if(tableHash[WIDTHEXCEEDED])
-          die("padTables: current table does not contain table:table-column") unless(table.elements["table:table-column"])
-          #--------------------------------------------------------------
-          # Differenz zu Sollbreite ermitteln und Wiederholungszahl des
-          # letzten Spalteneintrages aktualisieren/setzen
-          #--------------------------------------------------------------
-          lastTableColumn = table.elements["table:table-column[last()]"]
-          if(lastTableColumn.attributes["table:number-columns-repeated"])
-            numRepetitions = (lastTableColumn.attributes["table:number-columns-repeated"]).to_i+width-numColumnsOfTable
+    def pad_tables
+      @tables.each do |tableName, tableHash|
+        table = table_hash[NODE]
+        width = table_hash[WIDTH]
+        num_columns_of_table = get_table_width table
+        if table_hash[WIDTHEXCEEDED]
+          die "current table does not contain table:table-column" unless table.elements["table:table-column"]
+          last_table_column = table.elements["table:table-column[last ]"]
+          if last_table_column.attributes["table:number-columns-repeated"]
+            num_repetitions = last_table_column.attributes["table:number-columns-repeated"].to_i + width - num_columns_of_table
           else
-            numRepetitions = width-numColumnsOfTable+1 # '+1' da Spalte selbst als Wiederholung zaehlt
+            num_repetitions = width - num_columns_of_table + 1 # +1 as column itself count as repeat
           end
-          lastTableColumn.attributes["table:number-columns-repeated"] = numRepetitions.to_s
-          tableHash[WIDTHEXCEEDED] = false
+          last_table_column.attributes["table:number-columns-repeated"] = num_repetitions.to_s
+          table_hash[WIDTHEXCEEDED] = false
         end
-      }
-    end
-    ##########################################################################
-    # internal: This routine pads the given row with newly created cells and/or
-    # adapts their repetition-attributes. It was formerly called by 'padTables' and is obsolete.
-    #----------------------------------------------------------------------
-    def padRow(row,width)
-      j = 0
-      #-----------------------------------------------------
-      # Falls ueberhaupt Spaltenobjekte vorhanden sind
-      #-----------------------------------------------------
-      if(row.has_elements?())
-        #--------------------------
-        # Spalten zaehlen
-        #--------------------------
-        row.elements.each("table:table-cell"){ |cell|
-          j = j+1
-          #-------------------------------------------
-          # Spaltenwiederholungen addieren
-          #-------------------------------------------
-          repetition = cell.attributes["table:number-columns-repeated"]
-          if(repetition)
-            j = j+(repetition.to_i-1)
-          end
-        }
-        #-------------------------------
-        # Fuellmenge bestimmen
-        #-------------------------------
-        numPaddings = width-j
-        #------------------------------
-        # Fuellbedarf ?
-        #------------------------------
-        if(numPaddings > 0)
-          #-------------------------------
-          # Letztes Element der Zeile holen
-          #-------------------------------
-          cell = row.elements["table:table-cell[last()]"]
-          #-------------------------------
-          # Leerzelle ?
-          #-------------------------------
-          if(! cell.elements["text:p"])
-            #-----------------------------
-            # Leerzelle mit Wiederholung ?
-            #-----------------------------
-            if(repetition = cell.attributes["table:number-columns-repeated"])
-              newRepetition = (repetition.to_i+numPaddings)
-            #----------------------------
-            # nein, einzelne Leerzelle -> Wiederholungszahl setzen
-            #----------------------------
-            else
-              newRepetition = numPaddings
-            end
-            set_repetition(cell,CELL,newRepetition)
-          #-------------------------------
-          # keine Leerzelle -> Leerzelle(n) anhaengen
-          #-------------------------------
-          else
-            cell.next_sibling = create_element(CELL,numPaddings)
-          end
-        #------------------------------------------------------
-        # bei negativem Wert -> Fehler
-        #------------------------------------------------------
-        elsif(numPaddings < 0)
-          die("padRow: cellWidth #{j} exceeds width of table #{width}")
-        end
-      #--------------------------------------------------------
-      # Falls keine Spaltenobjekte vorhanden sind
-      #--------------------------------------------------------
-      else
-        row.add_element(create_element(CELL,width))
       end
     end
     ##########################################################################
@@ -804,7 +726,7 @@ module Rods
       #------------------------
       # content.xml
       #------------------------
-      padTables() 
+      pad_tables
       zipfile.file.open("content.xml","w") { |outfile|
         outfile.puts @content_text.to_s
       }
@@ -2902,7 +2824,7 @@ module Rods
            :deleteColumn, :deleteRow2, :deleteCell2
 
     private :die, :create_cell, :create_row, :get_child_by_index, :create_element, :set_repetition, :init_house_keeping,
-            :get_table_width, :padTables, :padRow, :time2TimeVal, :percent2PercentVal, :date2DateVal,
+            :get_table_width, :pad_tables, :time2TimeVal, :percent2PercentVal, :date2DateVal,
             :finalize, :init, :normalizeText, :normStyleHash, :getStyle, :getIndex,
             :getNumberOfSiblings, :getIndexAndOrNumber, :create_column,
             :getAppropriateStyle, :checkStyleAttributes, :insertStyleAttributes, :cloneNode,
