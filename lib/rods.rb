@@ -2247,39 +2247,29 @@ module Rods
     ##########################################################################
     # Deletes the column at the given index
     #
-    #   sheet.deleteColumn(8)
+    #   sheet.delete_column 8
     #-------------------------------------------------------------------------
-    def deleteColumn(colInd)
-      die("deleteColumn: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
-      die("deleteColumn: invalid index #{colInd}") unless (colInd > 0)
-      currentWidth = @tables[@current_table_name][WIDTH]
-      die("deleteColumn: column-index #{colInd} is outside valid range/current table width") if (colInd > currentWidth)
-      #-------------------------------------------------------------------
-      # Entweder Wiederholungsattribut der fraglichen Spalte dekrementieren
-      # oder selbige loeschen
-      #-------------------------------------------------------------------
-      currentTable = @tables[@current_table_name][NODE]
-      column = get_child_by_index(currentTable,COLUMN,colInd)
+    def delete_column col_ind
+      die "invalid index #{col_ind}" unless  col_ind > 0
+      current_width = @tables[@current_table_name][WIDTH]
+      die "column-index #{col_ind} is outside valid range/current table width" if col_ind > current_width
+      current_table = @tables[@current_table_name][NODE]
+      column = get_child_by_index current_table, COLUMN, col_ind
       repetitions = column.attributes["table:number-columns-repeated"]
-      if(repetitions && repetitions.to_i > 1)
+      if repetitions && repetitions.to_i > 1
         column.attributes["table:number-columns-repeated"] = (repetitions.to_i-1).to_s
       else
         table = column.elements["ancestor::table:table"]
-        unless (table)
-          die("deleteColumn: internal error: Could not extract parent-table of column #{column}") 
+        unless table
+          die "Could not extract parent-table of column #{column}" 
         end
-        table.elements.delete(column)
+        table.elements.delete column
       end
-      #-----------------------------------------------
-      # Fuer alle existierenden Zeilen neue Zelle an
-      # Spaltenposition einfuegen und dabei implizit
-      # Tabellenbreite aktualisieren
-      #-----------------------------------------------
-      row = get_row(1)
-      deleteCellFromRow(row,colInd)
+      row = get_row 1
+      delete_cell_from_row row, col_ind
       i = 1
-      while(row = getNextExistentRow(row)) # fuer alle Zeilen ab der zweiten
-        deleteCellFromRow(row,colInd)
+      while row = get_next_existent_row(row)
+        delete_cell_from_row row, col_ind
         i += 1
       end 
     end
@@ -2330,7 +2320,7 @@ module Rods
            :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insertColumn,
            :insertRow, :insertCell, :insertCellFromRow, :deleteCellBefore, :deleteCellAfter,
            :delete_cell, :deleteCellFromRow, :delete_row_above, :deleteRowBelow, :delete_row,
-           :deleteColumn, :delete_row_element, :delete_cell_element
+           :delete_column, :delete_row_element, :delete_cell_element
 
     private :die, :create_cell, :create_row, :get_child_by_index, :create_element, :set_repetition, :init_house_keeping,
             :get_table_width, :pad_tables, :time_to_time_val, :percent_to_percent_val, :date_to_date_val,
