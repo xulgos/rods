@@ -245,146 +245,82 @@ module Rods
     # The child is created if it does not exist.
     #------------------------------------------------------------------------
     def get_child_by_index parent, type, index
-      die("'parent' #{parent} is not a node") unless (parent.class.to_s == "REXML::Element")
-      die("'index' #{index} is not a Fixnum") unless (index.class.to_s == "Fixnum")
       i = 0
-      lastElement = nil
-      #----------------------------------------------------------------------
-      # Validierung
-      #----------------------------------------------------------------------
-      if((type != ROW) && (type != CELL) && (type != COLUMN))
-        die("wrong type #{type}")
+      last_element = nil
+      if type != ROW && type != CELL && type != COLUMN
+        die "wrong type #{type}"
       end
-      if(index < 1)
-        die("invalid index #{index}")
+      if index < 1
+        die "invalid index #{index}"
       end
-      if(! parent)
-        die("parent-element does not exist")
-      end
-      #----------------------------------------------------------------------
-      # Typabhaengige Vorbelegungen
-      #----------------------------------------------------------------------
-      if(type == ROW)
-        kindOfElement = "table:table-row"
-        kindOfRepetition = "table:number-rows-repeated"
-      #---------------------------------------------------------------------
-      # in der "Horizontalen" (Zelle oder Spalte) ggf. Breitenwerte anpassen
-      # und typabhaengig vorbelegen
-      #---------------------------------------------------------------------
-      elsif((type == CELL) || (type == COLUMN))
-        if(index > @tables[@current_table_name][WIDTH])
+      die "parent-element does not exist" unless parent
+      if type == ROW
+        kind_of_element = "table:table-row"
+        kind_of_repetition = "table:number-rows-repeated"
+      elsif type == CELL || type == COLUMN
+        if index > @tables[@current_table_name][WIDTH]
           @tables[@current_table_name][WIDTH] = index
           @tables[@current_table_name][WIDTHEXCEEDED] = true
         end
-        kindOfRepetition = "table:number-columns-repeated"
+        kind_of_repetition = "table:number-columns-repeated"
         case type
-          when CELL then kindOfElement = "table:table-cell"
-          when COLUMN then kindOfElement = "table:table-column"
-          else die("internal error: when-clause-failure for type #{type}")
+          when CELL then kind_of_element = "table:table-cell"
+          when COLUMN then kind_of_element = "table:table-column"
+          else die "internal error: when-clause-failure for type #{type}"
         end
       else
-        die("wrong type #{type}")
+        die "wrong type #{type}"
       end
-      #----------------------------------------------------------------------
-      # Durchlauf
-      # 'i' hat stets den zum aktuellen Element inkl. Wiederholungen gehoerigen
-      # Index
-      #----------------------------------------------------------------------
-      parent.elements.each(kindOfElement){ |element|
+      parent.elements.each(kind_of_element) do |element|
         i += 1
-        lastElement = element
-        #--------------------------------------------------------------------
-        # Suchindex erreicht ?
-        #--------------------------------------------------------------------
-        if(i == index)
-          #------------------------------------------------------------------
-          # Element mit Wiederholungen ?
-          # => Wiederholungsattribut loeschen, Element mit verbleibenden Leerelementen
-          # anhaengen, Rueckgabe
-          #------------------------------------------------------------------
-          if(repetition = element.attributes[kindOfRepetition])
-            numEmptyElementsAfter = repetition.to_i-1
-            if(numEmptyElementsAfter < 1)
-              die("new repetition < 1")
+        last_element = element
+        if i == index
+          if repetition = element.attributes[kind_of_repetition]
+            num_empty_elements_after = repetition.to_i - 1
+            if num_empty_elements_after < 1
+              die "new repetition < 1"
             end
-            setRepetition(element,type,1)
-            element.next_sibling = create_element(type,numEmptyElementsAfter)
+            setRepetition element, type, 1
+            element.next_sibling = create_element type, num_empty_elements_after
           end
           return element 
-        #--------------------------------------------------------------------
-        # Suchindex noch nicht erreicht ?
-        #--------------------------------------------------------------------
-        elsif(i < index)
-          #------------------------------------------------------------------
-          # Wiederholungsattribut ?
-          #------------------------------------------------------------------
-          if(repetition = element.attributes[kindOfRepetition])
-            indexOfLastEmptyElement = i+repetition.to_i-1
-            #----------------------------------------------------------------
-            # Liegt letzte Wiederholung noch vor dem Suchindex ?
-            #----------------------------------------------------------------
-            if(indexOfLastEmptyElement < index)
-              i = indexOfLastEmptyElement
-            #----------------------------------------------------------------
-            # ... nein => Aufteilung des wiederholten Bereiches
-            #----------------------------------------------------------------
+        elsif i < index
+          if repetition = element.attributes[kind_of_repetition]
+            index_of_last_empty_element = i + repetition.to_i - 1
+            if index_of_last_empty_element < index
+              i = index_of_last_empty_element
             else
-              numEmptyElementsBefore = index-i
-              numEmptyElementsAfter = indexOfLastEmptyElement-index
-              #-------------------------------------------------
-              # Wiederholungszahl des aktuellen Elementes reduzieren
-              #-------------------------------------------------
-              setRepetition(element,type,numEmptyElementsBefore)
-              #-------------------------------------------------
-              # Neues, zurueckzugebendes Element einfuegen
-              #-------------------------------------------------
-              element.next_sibling = create_element(type,1)
-              #-------------------------------------------------
-              # ggf. weitere Leerelemente anhaengen
-              #-------------------------------------------------
-              if(numEmptyElementsAfter > 0)
-                element.next_sibling.next_sibling = create_element(type,numEmptyElementsAfter)
+              num_empty_elements_before = index - i
+              num_empty_elements_after = index_of_last_empty_element - index
+              setRepetition element, type, num_empty_elements_before
+              element.next_sibling = create_element type, 1
+              if num_empty_elements_after > 0
+                element.next_sibling.next_sibling = create_element type, num_empty_elements_after
               end
-              #-------------------------------------------------
-              # => Rueckgabe des Elementes mit Suchindex
-              #-------------------------------------------------
               return element.next_sibling
-            end # letzte Leerzelle < Index
-          end # falls Wiederholung
-        end # i =|< index
-      }
-      #-----------------------------------------------------------------------
-      # Index ausserhalb bisheriger Elemente inkl. wiederholter Leerelemente
-      #-----------------------------------------------------------------------
-      numEmptyElementsBefore = index-i-1
-      #----------------------------------------------------------------------
-      # Hatte Vater bereits vor dem gesuchten Kind liegende Kinder ?
-      #----------------------------------------------------------------------
-      if(i > 0) # => lastElement != nil
-        if(numEmptyElementsBefore > 0)
-          lastElement.next_sibling = create_element(type,numEmptyElementsBefore)
-          return (lastElement.next_sibling.next_sibling = create_element(type,1))
-        else
-          return(lastElement.next_sibling = create_element(type,1))
+            end
+          end
         end
-      #----------------------------------------------------------------------
-      # Nein, neues Kind ist erstes Kind
-      #----------------------------------------------------------------------
-      else
-        #-----------------------------------------------
-        # Hat das neue Kind Index 1 ?
-        #-----------------------------------------------
-        if(index == 1)
-          newElement = create_element(type,1)
-          parent.add(newElement)
-          return newElement
-        #-----------------------------------------------
-        # Nein, Kind benoetigt "Leergeschwister" vorneweg
-        #-----------------------------------------------
+      end
+      num_empty_elements_before = index - i - 1
+      if i > 0
+        element = create_element type, 1
+        if num_empty_elements_before > 0
+          last_element.next_sibling = create_element type, num_empty_elements_before
+          last_element.next_sibling.next_sibling = element
         else
-          newElement = create_element(type,numEmptyElementsBefore)
-          parent.add(newElement)
-          newElement.next_sibling = create_element(type,1)
+          last_element.next_sibling = element
+        end
+        return element
+      else
+        if index == 1
+          newElement = create_element type, 1
+          parent.add newElement
+          return newElement
+        else
+          newElement = create_element type, num_empty_elements_before
+          parent.add newElement
+          newElement.next_sibling = create_element type, 1
           return newElement.next_sibling
         end
       end
