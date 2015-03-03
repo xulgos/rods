@@ -1742,18 +1742,13 @@ module Rods
     # to start from top-node of document to find row
     # Returns previous row as a REXML::Element or nil if no element exists.
     # Cf. explanation in README
-    #
     #------------------------------------------------------------------------
-    def getPreviousExistentRow(row)
-      #----------------------------------------------------------------------
-      # table:table-row und table:table-column sind Siblings
-      # Letztere duerfen jedoch NICHT zurueckgegeben werden
-      #----------------------------------------------------------------------
-      previousSibling = row.previous_sibling
-      if(previousSibling && previousSibling.elements["self::table:table-row"])
-        return previousSibling
+    def get_previous_existent_row row
+      previous_sibling = row.previous_sibling
+      if previous_sibling && previous_sibling.elements["self::table:table-row"]
+        previous_sibling
       else
-        return nil
+        nil
       end
     end
     ##########################################################################
@@ -2239,7 +2234,7 @@ module Rods
     public :set_date_format, :write_get_cell, :write_cell, :writeGetCellFromRow, :writeCellFromRow,
            :get_cell_from_row, :get_cell, :get_row, :rename_table, :set_current_table,
            :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :write_style_abbr,
-           :setStyle, :getNextExistentRow, :getPreviousExistentRow,
+           :setStyle, :getNextExistentRow, :get_previous_existent_row,
            :get_next_existent_cell, :get_previous_existent_cell, :insert_table_after, :insert_table_before,
            :write_comment, :save, :save_as, :initialize, :write_text, :get_cells_and_indices_for,
            :insert_row_below, :insert_row_above, :insert_cell_before, :insert_cell_after, :insert_column,
