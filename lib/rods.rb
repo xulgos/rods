@@ -372,7 +372,7 @@ module Rods
     ##########################################################################
     # Inserts a table of the given name before the given spreadsheet and updates
     # the internal table-administration.
-    #   sheet.insert_table_before("table2","table1")
+    #   sheet.insert_table_before "table2", "table1"
     #-------------------------------------------------------------------------
     def insert_table_before relative_table_name, table_name
       insert_table_before_after relative_table_name, table_name, BEFORE
@@ -380,7 +380,7 @@ module Rods
     ##########################################################################
     # Inserts a table of the given name after the given spreadsheet and updates
     # the internal table-administration.
-    #   sheet.insert_table_after("table1","table2")
+    #   sheet.insert_table_after "table1", "table2"
     #-------------------------------------------------------------------------
     def insert_table_after relative_table_name, table_name
       insert_table_before_after relative_table_name, table_name, AFTER
@@ -394,7 +394,7 @@ module Rods
       die "table '#{relative_table_name}' does not exist" unless @tables.has_key? relative_table_name
       die "table '#{table_name}' already exists" if @tables.has_key? table_name
       relative_table = @spread_sheet.elements["*[@table:name = '#{relative_table_name}']"]
-      die "insert_table_after: internal error: Could not locate existing table #{relative_table_name}" unless relative_table
+      die "Could not locate existing table #{relative_table_name}" unless relative_table
       new_table = REXML::Element.new "table:table"
       new_table.add_attributes({"table:name" =>  table_name,
                                "table:print" => "false",
@@ -1620,16 +1620,11 @@ module Rods
     # OpenOffice.org-session, the annotation will always be displayed in the upper
     # left corner of the sheet. The temporary display of the annotation is not
     # affected however.
-    #   sheet.writeComment(cell,"by Dr. Heinz Breinlinger (who else)")
+    #   sheet.write_comment cell, "this is a comment"
     #------------------------------------------------------------------------
-    def writeComment(cell,comment)
-      die("writeComment: cell #{cell} is not a REXML::Element") unless (cell.class.to_s == "REXML::Element")
-      die("writeComment: comment #{comment} is not a string") unless (comment.class.to_s == "String")
-      #--------------------------------------------
-      # Ggf. alten Kommentar loeschen
-      #--------------------------------------------
-      cell.elements.delete("office:annotation")
-      write_xml(cell,{TAG => "office:annotation",
+    def write_comment cell, comment
+      cell.elements.delete "office:annotation"
+      write_xml cell, {TAG => "office:annotation",
                      "svg:x" => "4.119cm",
                      "draw:caption-point-x" => "-0.61cm",
                      "svg:y" => "0cm",
@@ -1645,7 +1640,7 @@ module Rods
                                   "text:style-name" => "comment_paragraph_style",
                                   TEXT => comment
                                  }
-                    })
+                    }
     end
     ##########################################################################
     # Saves the file associated with the current RODS-object.
@@ -2246,7 +2241,7 @@ module Rods
            :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :write_style_abbr,
            :setStyle, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insert_table_after, :insert_table_before,
-           :writeComment, :save, :save_as, :initialize, :write_text, :get_cells_and_indices_for,
+           :write_comment, :save, :save_as, :initialize, :write_text, :get_cells_and_indices_for,
            :insert_row_below, :insert_row_above, :insert_cell_before, :insert_cell_after, :insert_column,
            :insert_row, :insert_cell, :insert_cell_from_row, :delete_cell_before, :delete_cell_after,
            :delete_cell, :delete_cell_from_row, :delete_row_above, :delete_row_below, :delete_row,
