@@ -2193,21 +2193,18 @@ module Rods
     end
     ##########################################################################
     # Inserts a new row below the given row thereby shifting existing rows
-    #   row = sheet.get_row(8)
-    #   sheet.insertRowBelow(row)
+    #   row = sheet.get_row 8
+    #   sheet.insert_row_below row
     #-------------------------------------------------------------------------
-    def insertRowBelow(row)
-      newRow = create_row(1)
-      row.next_sibling = newRow
-      #-----------------------------------------------------------------------
-      # etwaige Wiederholungen uebertragen
-      #-----------------------------------------------------------------------
+    def insert_row_below row
+      new_row = create_row 1
+      row.next_sibling = new_row
       repetitions = row.attributes["table:number-rows-repeated"]
-      if(repetitions)
-        row.attributes.delete("table:number-rows-repeated")
-        newRow.next_sibling = create_row(repetitions.to_i)
+      if repetitions
+        row.attributes.delete "table:number-rows-repeated"
+        new_row.next_sibling = create_row repetitions.to_i
       end
-      return newRow
+      new_row
     end
     ##########################################################################
     # Deletes the column at the given index
@@ -2272,7 +2269,7 @@ module Rods
            :setStyle, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insert_table_after, :insert_table_before,
            :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
-           :insertRowBelow, :insert_row_above, :insert_cell_before, :insert_cell_after, :insert_column,
+           :insert_row_below, :insert_row_above, :insert_cell_before, :insert_cell_after, :insert_column,
            :insert_row, :insert_cell, :insert_cell_from_row, :delete_cell_before, :delete_cell_after,
            :delete_cell, :delete_cell_from_row, :delete_row_above, :delete_row_below, :delete_row,
            :delete_column, :delete_row_element, :delete_cell_element
