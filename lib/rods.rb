@@ -1812,7 +1812,7 @@ module Rods
     # The following finds all occurences of a comma- or dot-separated number,
     # consisting of 1 digit before and 2 digits behind the decimal-separator.
     #
-    # array = sheet.getCellsAndIndicesFor('\d{1}[.,]\d{2}')
+    # array = sheet.get_cells_and_indices_for '\d{1}[.,]\d{2}'
     #
     # Keep in mind that the content of a call with a formula is not the formula, but the
     # current value of the computed result.
@@ -1822,51 +1822,35 @@ module Rods
     # For instance, when looking for a currency value of 1525 (that is shown as
     # '1.525 EUR'), you'll have to code
     #
-    #   result = sheet.getCellsAndIndicesFor('1[.,]525')
-    #   result.each{ |cellHash|
-    #     puts("Found #{cellHash[:cell] on #{cellHash[:row] - #{cellHash[:col]")
-    #   }
+    #   result = sheet.get_cells_and_indices_for '1[.,]525'
+    #   result.each do |cellHash|
+    #     puts "Found #{cellHash[:cell] on #{cellHash[:row] - #{cellHash[:col]"
+    #   end
     #-------------------------------------------------------------------------
-    def getCellsAndIndicesFor(content)
-      die("getCellsAndIndicesFor: 'content' is not of typ String") unless (content.class.to_s == "String")
-      result = Array.new()
+    def get_cells_and_indices_for content
+      result = Array.new
       i = 0
-      #----------------------------------------------------------------
-      # Alle Text-Nodes suchen
-      #----------------------------------------------------------------
-      @spread_sheet.elements.each("//table:table-cell/text:p"){ |textNode|
-        text = textNode.text
-        #---------------------------------------------------------
-        # Zelle gefunden ?
-        #
-        # 'content' darf regulaerer Ausdruck sein, muss dann jedoch
-        # in einfachen Hochkommata uebergeben werden
-        #---------------------------------------------------------
-        if(text && (text.match(/#{content}/)))
-          result[i] = Hash.new() 
-          #-----------------------------------------------------
-          # Zelle und Zellenindex ermitteln
-          #-----------------------------------------------------
-          cell = textNode.elements["ancestor::table:table-cell"]
-          unless (cell)
-            die("getCellsAndIndicesFor: internal error: Could not extract parent-cell of textNode with #{content}") 
+      @spread_sheet.elements.each("//table:table-cell/text:p") do |text_node|
+        text = text_node.text
+        if text && text.match(content)
+          result[i] = Hash.new
+          cell = text_node.elements["ancestor::table:table-cell"]
+          unless cell
+            die "Could not extract parent-cell of text_node with #{content}"
           end
-          colIndex = get_index(cell)
-          #-----------------------------------------------------
-          # Zeile und Zeilenindex ermitteln
-          #-----------------------------------------------------
-          row = textNode.elements["ancestor::table:table-row"]
-          unless (row)
-            die("getCellsAndIndicesFor: internal error: Could not extract parent-row of textNode with #{content}") 
+          col_index = get_index cell
+          row = text_node.elements["ancestor::table:table-row"]
+          unless row
+            die "Could not extract parent-row of text_node with #{content}"
           end
-          rowIndex = get_index(row)
+          row_index = get_index row
           result[i][:cell] = cell
-          result[i][:row] = rowIndex
-          result[i][:col] = colIndex
+          result[i][:row] = row_index
+          result[i][:col] = col_index
           i += 1
         end
-      }
-      return result
+      end
+      result
     end
 
     def get_number_of_siblings node
@@ -2268,7 +2252,7 @@ module Rods
            :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :write_style_abbr,
            :setStyle, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insert_table_after, :insert_table_before,
-           :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
+           :writeComment, :save, :saveAs, :initialize, :write_text, :get_cells_and_indices_for,
            :insert_row_below, :insert_row_above, :insert_cell_before, :insert_cell_after, :insert_column,
            :insert_row, :insert_cell, :insert_cell_from_row, :delete_cell_before, :delete_cell_after,
            :delete_cell, :delete_cell_from_row, :delete_row_above, :delete_row_below, :delete_row,
