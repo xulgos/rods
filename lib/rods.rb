@@ -1649,14 +1649,12 @@ module Rods
     end
     ##########################################################################
     # Saves the file associated with the current RODS-object.
-    #   sheet.save()
+    #   sheet.save
     #-------------------------------------------------------------------------
-    def save()
-      die("save: internal error: @file is not set -> cannot save file") unless (@file && (! @file.empty?))
-      die("save: this should not happen: file #{@file} is missing") unless (File.exists?(@file))
-      Zip::ZipFile.open(@file){ |zipfile|
-        finalize(zipfile) 
-      } 
+    def save
+      die "@file is not set -> cannot save file" if @file.nil? && @file.empty?
+      die "file #{@file} is missing" unless File.exists? @file
+      Zip::ZipFile.open(@file) { |zipfile| finalize zipfile }
     end
     ##########################################################################
     # Saves the current content to a new destination/file.
