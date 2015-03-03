@@ -2183,13 +2183,13 @@ module Rods
     end
     ##########################################################################
     # Inserts a new row above the given row thereby shifting existing rows
-    #   row = sheet.get_row(1)
-    #   sheet.insertRowAbove(row)
+    #   row = sheet.get_row 1
+    #   sheet.insert_row_above row
     #-------------------------------------------------------------------------
-    def insertRowAbove(row)
-      newRow = create_row(1)
-      row.previous_sibling = newRow
-      return newRow
+    def insert_row_above row
+      newRow = create_row 1
+      row.previous_sibling = new_row
+      newRow
     end
     ##########################################################################
     # Inserts a new row below the given row thereby shifting existing rows
