@@ -1607,12 +1607,9 @@ module Rods
     #                           "border-left" => "0.01cm solid grey4"}
     #   sheet.set_style cell, "strange_style" # <- style-name has to exist
     #-------------------------------------------------------------------------
-    def setStyle(cell,styleName)
-      #-----------------------------------------------------------------------
-      # Ist Style gueltig, d.h. in content.xml vorhanden ?
-      #-----------------------------------------------------------------------
-      die("setStyle: style \'#{styleName}\' does not exist") unless (@auto_styles.elements["*[@style:name = '#{styleName}']"])
-      cell.attributes['table:style-name'] = styleName
+    def set_style cell, style_name
+      die "set_style: style \'#{style_name}\' does not exist" unless @auto_styles.elements["*[@style:name = '#{style_name}']"]
+      cell.attributes['table:style-name'] = style_name
     end
     ##########################################################################
     # Inserts an annotation field for the given cell.
@@ -2234,7 +2231,7 @@ module Rods
     public :set_date_format, :write_get_cell, :write_cell, :writeGetCellFromRow, :writeCellFromRow,
            :get_cell_from_row, :get_cell, :get_row, :rename_table, :set_current_table,
            :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :write_style_abbr,
-           :setStyle, :get_next_existent_row, :get_previous_existent_row,
+           :set_style, :get_next_existent_row, :get_previous_existent_row,
            :get_next_existent_cell, :get_previous_existent_cell, :insert_table_after, :insert_table_before,
            :write_comment, :save, :save_as, :initialize, :write_text, :get_cells_and_indices_for,
            :insert_row_below, :insert_row_above, :insert_cell_before, :insert_cell_after, :insert_column,
