@@ -1951,31 +1951,25 @@ module Rods
     ##########################################################################
     # Delets the cell to the right of the given cell
     #
-    #   cell = sheet.write_get_cell 4,7,"date","16.01.2011"
-    #   sheet.deleteCellAfter(cell)
+    #   cell = sheet.write_get_cell 4, 7, "date", "16.01.2011"
+    #   sheet.delete_cell_after cell
     #-------------------------------------------------------------------------
-    def deleteCellAfter(cell)
-      die("deleteCellAfter: cell #{cell} is not a REXML::Element") unless (cell.class.to_s == "REXML::Element")
-      #--------------------------------------------------------
-      # Entweder Wiederholungsattribut der aktuellen Zelle
-      # dekrementieren oder ggf. Wiederholungsattribut der
-      # Folgezelle dekrementieren oder selbige loeschen
-      #--------------------------------------------------------
+    def delete_cell_after cell
       repetitions = cell.attributes["table:number-columns-repeated"]
-      if(repetitions && repetitions.to_i > 1)
+      if repetitions && repetitions.to_i > 1
         cell.attributes["table:number-columns-repeated"] = (repetitions.to_i-1).to_s
       else
-        nextCell = cell.next_sibling
-        die("deleteCellAfter: cell is already last cell in row") unless (nextCell)
-        nextRepetitions = nextCell.attributes["table:number-columns-repeated"]
-        if(nextRepetitions && nextRepetitions.to_i > 1)
-          nextCell.attributes["table:number-columns-repeated"] = (nextRepetitions.to_i-1).to_s
+        next_cell = cell.next_sibling
+        die "cell is already last cell in row" unless next_cell
+        next_repetitions = next_cell.attributes["table:number-columns-repeated"]
+        if next_repetitions && next_repetitions.to_i > 1
+          next_cell.attributes["table:number-columns-repeated"] = (next_repetitions.to_i-1).to_s
         else
           row = cell.elements["ancestor::table:table-row"]
-          unless (row)
-            die("deleteCellAfter: internal error: Could not extract parent-row of cell #{cell}") 
+          unless row
+            die "Could not extract parent-row of cell #{cell}" 
           end
-          row.elements.delete(nextCell)
+          row.elements.delete next_cell
         end
       end
     end
@@ -2310,7 +2304,7 @@ module Rods
            :getNextExistentCell, :getPreviousExistentCell, :insert_table_after, :insert_table_before,
            :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
            :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insertColumn,
-           :insertRow, :insertCell, :insertCellFromRow, :deleteCellBefore, :deleteCellAfter,
+           :insertRow, :insertCell, :insertCellFromRow, :deleteCellBefore, :delete_cell_after,
            :delete_cell, :delete_cell_from_row, :delete_row_above, :delete_row_below, :delete_row,
            :delete_column, :delete_row_element, :delete_cell_element
 
