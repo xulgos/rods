@@ -2135,30 +2135,23 @@ module Rods
     end
     ##########################################################################
     # Inserts a new cell after the given cell thereby shifting existing cells
-    #   cell = sheet.get_cell(4,7)
-    #   sheet.insertCellAfter(cell)
+    #   cell = sheet.get_cell 4, 7
+    #   sheet.insert_cell_after cell
     #-------------------------------------------------------------------------
-    def insertCellAfter(cell)
-      die("insertCellAfter: cell #{cell} is not a REXML::Element") unless (cell.class.to_s == "REXML::Element")
-      newCell = create_cell(1)
-      cell.next_sibling = newCell
-      #-----------------------------------------------------------------------
-      # etwaige Wiederholungen uebertragen
-      #-----------------------------------------------------------------------
+    def insert_cell_after cell
+      new_cell = create_cell 1
+      cell.next_sibling = new_cell
       repetitions = cell.attributes["table:number-columns-repeated"]
-      if(repetitions)
-        cell.attributes.delete("table:number-columns-repeated")
-        newCell.next_sibling = create_cell(repetitions.to_i)
+      if repetitions
+        cell.attributes.delete "table:number-columns-repeated"
+        new_cell.next_sibling = create_cell repetitions.to_i
       end
-      #-----------------------------------------
-      # bisherige Tabellenbreite ueberschritten ?
-      #-----------------------------------------
-      lengthOfRow = get_number_of_siblings(cell)
-      if(lengthOfRow > @tables[@current_table_name][WIDTH])
-        @tables[@current_table_name][WIDTH] = lengthOfRow
+      length_of_row = get_number_of_siblings cell
+      if length_of_row > @tables[@current_table_name][WIDTH]
+        @tables[@current_table_name][WIDTH] = length_of_row
         @tables[@current_table_name][WIDTHEXCEEDED] = true
       end
-      return newCell
+      new_cell
     end
     ##########################################################################
     # Inserts and returns a cell at the given index in the given row, 
@@ -2283,7 +2276,7 @@ module Rods
            :setStyle, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insert_table_after, :insert_table_before,
            :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
-           :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insert_column,
+           :insertRowBelow, :insertRowAbove, :insertCellBefore, :insert_cell_after, :insert_column,
            :insert_row, :insert_cell, :insert_cell_from_row, :delete_cell_before, :delete_cell_after,
            :delete_cell, :delete_cell_from_row, :delete_row_above, :delete_row_below, :delete_row,
            :delete_column, :delete_row_element, :delete_cell_element
