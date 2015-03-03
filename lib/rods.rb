@@ -2097,26 +2097,21 @@ module Rods
     ##########################################################################
     # Delets the cell to the left of the given cell
     #
-    #   cell = sheet.write_get_cell 4,7,"formula:currency"," = A1+B2"
-    #   sheet.deleteCellBefore(cell)
+    #   cell = sheet.write_get_cell 4, 7, "formula:currency", " = A1+B2"
+    #   sheet.delete_cell_before cell
     #-------------------------------------------------------------------------
-    def deleteCellBefore(cell)
-      die("deleteCellBefore: cell #{cell} is not a REXML::Element") unless (cell.class.to_s == "REXML::Element")
-      #--------------------------------------------------------
-      # Entweder Wiederholungsattribut der vorherigen Zelle
-      # dekrementieren oder selbige loeschen
-      #--------------------------------------------------------
-      previousCell = cell.previous_sibling
-      die("deleteCellBefore: cell is already first cell in row") unless (previousCell)
-      previousRepetitions = previousCell.attributes["table:number-columns-repeated"]
-      if(previousRepetitions && previousRepetitions.to_i > 1)
-        previousCell.attributes["table:number-columns-repeated"] = (previousRepetitions.to_i-1).to_s
+    def delete_cell_before cell
+      previous_cell = cell.previous_sibling
+      die "cell is already first cell in row" unless previous_cell
+      previous_repetitions = previous_cell.attributes["table:number-columns-repeated"]
+      if previous_repetitions && previous_repetitions.to_i > 1
+        previous_cell.attributes["table:number-columns-repeated"] = (previous_repetitions.to_i-1).to_s
       else
         row = cell.elements["ancestor::table:table-row"]
-        unless (row)
-          die("deleteCellBefore: internal error: Could not extract parent-row of cell #{cell}") 
+        unless  row
+          die "Could not extract parent-row of cell #{cell}" 
         end
-        row.elements.delete(previousCell)
+        row.elements.delete previous_cell
       end
     end
     ##########################################################################
@@ -2304,7 +2299,7 @@ module Rods
            :getNextExistentCell, :getPreviousExistentCell, :insert_table_after, :insert_table_before,
            :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
            :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insertColumn,
-           :insertRow, :insertCell, :insertCellFromRow, :deleteCellBefore, :delete_cell_after,
+           :insertRow, :insertCell, :insertCellFromRow, :delete_cell_before, :delete_cell_after,
            :delete_cell, :delete_cell_from_row, :delete_row_above, :delete_row_below, :delete_row,
            :delete_column, :delete_row_element, :delete_cell_element
 
