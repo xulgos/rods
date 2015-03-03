@@ -537,59 +537,45 @@ module Rods
     # converted to a valid (English) float representation (but remains a string)
     # in case of type "currency" or "float".
     #   amount = 0.0
-    #   5.upto(8){ |i|
-    #     row = sheet.get_row(i)
-    #     text,type = sheet.readCellFromRow(row,i)
-    #     sheet.writeCellFromRow(row,9,type,(-1.0*text.to_f).to_s)
-    #     if(type == "currency")
+    #   5.upto(8) do |i|
+    #     row = sheet.get_row i
+    #     text, type = sheet.read_cell_from_row row, i
+    #     sheet.write_cell_from_row row, 9, type, (-1.0*text.to_f).to_s
+    #     if type == "currency"
     #       amount += text.to_f
     #     end
-    #   }
-    #   puts("Earned #{amount} bucks")
+    #   end
     #---------------------------------------------------------------
-    def readCellFromRow(row,column_index)
+    def read_cell_from_row row, column_index
       j = 0
-      #------------------------------------------------------------------
-      # Fuer alle Spalten
-      #------------------------------------------------------------------
-      row.elements.each("table:table-cell"){ |cell|
+      row.elements.each("table:table-cell") do |cell|
         j = j+1
-        #-------------------------------------------
-        # Spaltenwiederholungen addieren
-        #-------------------------------------------
         repetition = cell.attributes["table:number-columns-repeated"]
-        if(repetition)
-          j = j+(repetition.to_i-1)
+        if repetition
+          j = j + repetition.to_i - 1
         end
-        #-------------------------------------------
-        # Falls Spaltenindex uebersprungen oder erreicht
-        #-------------------------------------------
-        if(j >= column_index)
-          #-------------------------------------------
-          # Zelltext und Datentyp zurueckgeben
-          # ggf. Waehrungssymbol abschneiden
-          #-------------------------------------------
-          textElement = cell.elements["text:p"]
-          if(! textElement)
-            return nil,nil
+        if j >= column_index
+          text_element = cell.elements["text:p"]
+          if text_element.nil?
+            return nil, nil
           else
-            text = textElement.text
-            if(! text)
+            text = text_element.text
+            if text.nil?
               text = ""
             end
             type = cell.attributes["office:value-type"]
-            if(! type)
+            if type.nil?
               type = "string"
             end
-            text = normalize_text text,type
-            return text,type
+            text = normalize_text text, type
+            return text, type
           end
         end
-      }
+      end
       #----------------------------------------------
       # ausserhalb bisheriger Spalten
       #----------------------------------------------
-      return nil,nil
+      return nil, nil
     end
     ##########################################################################
     # Returns the content and type of the cell at the given indices
@@ -598,7 +584,7 @@ module Rods
     # Type is one of the following office:value-types
     # * string, float, currency, time, date, percent, formula
     # The content of a formula is it's last calculated result or 0 in case of a
-    # newly created cell. See annotations at 'readCellFromRow'.
+    # newly created cell. See annotations at 'read_cell_from_row'.
     #   1.upto(10) do |i|
     #      text, type = read_cell i, i
     #      write_cell i, 10-i, type, text
@@ -2147,7 +2133,7 @@ module Rods
 
     public :set_date_format, :write_get_cell, :write_cell, :writeGetCellFromRow, :writeCellFromRow,
            :get_cell_from_row, :get_cell, :get_row, :rename_table, :set_current_table,
-           :insert_table, :delete_table, :readCellFromRow, :read_cell, :set_attributes, :write_style_abbr,
+           :insert_table, :delete_table, :read_cell_from_row, :read_cell, :set_attributes, :write_style_abbr,
            :set_style, :get_next_existent_row, :get_previous_existent_row,
            :get_next_existent_cell, :get_previous_existent_cell, :insert_table_after, :insert_table_before,
            :write_comment, :save, :save_as, :initialize, :write_text, :get_cells_and_indices_for,
