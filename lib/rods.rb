@@ -836,135 +836,67 @@ module Rods
     # of given cell. Checks, whether the resulting style already exists in the
     # archive of created styles or creates and archives a new style. Applies the
     # found or created style to cell. Cell is a REXML::Element.
-    #   sheet.setAttributes(cell,{ "border-right" => "0.05cm solid magenta4",
+    #   sheet.set_attributes cell, { "border-right" => "0.05cm solid magenta4",
     #                                "border-bottom" => "0.03cm solid lightgreen",
     #                                "border-top" => "0.08cm solid salmon",
     #                                "font-style" => "italic",
     #                                "font-weight" => "bold"})
-    #   sheet.setAttributes(cell,{ "border" => "0.01cm solid turquoise", # turquoise frame
+    #   sheet.set_attributes cell, { "border" => "0.01cm solid turquoise", # turquoise frame
     #                                "text-align" => "center",             # center alignment
     #                                "background-color" => "yellow2",      # background-color
     #                                "color" => "blue"})                   # font-color
-    #   1.upto(7){ |row|
-    #     cell = sheet.get_cell(row,5)
-    #     sheet.setAttributes(cell,{ "border-right" => "0.07cm solid green6" })
-    #   }
+    #   1.upto(7) do |row|
+    #     cell = sheet.get_cell row, 5
+    #     sheet.set_attributes cell, { "border-right" => "0.07cm solid green6" }
+    #   end
     #-------------------------------------------------------------------------
-    def setAttributes(cell,attributes)
-      die("setAttributes: cell #{cell} is not a REXML::Element") unless (cell.class.to_s == "REXML::Element")
-      die("setAttributes: hash #{attributes} is not a hash") unless (attributes.class.to_s == "Hash")
-      #----------------------------------------------------------------------
-      # Flag, ob neue Attribute und deren Auspraegungen bereits im aktuellen
-      # style vorhanden sind
-      #----------------------------------------------------------------------
-      containsMatchingAttributes = TRUE
-      #-----------------------------------------------------------------------
-      # Attribut-Hash, welcher "convenience"-Werte enthalten kann (und wird ;-)
-      # zunaechst normieren
-      #-----------------------------------------------------------------------
-      attributes = norm_style_hash(attributes)
-      die("setAttributes: attribute style:name not allowed in attribute-list as automatically generated") if (attributes.has_key?("style:name"))
-      #------------------------------------------------------------------
-      # Falls Zelle bereits style zugewiesen hat
-      #------------------------------------------------------------------
-      currentStyleName = cell.attributes["table:style-name"]
-      if(currentStyleName)
-        #---------------------------------------------------------------
-        # style suchen (lassen)
-        #---------------------------------------------------------------
-        file,currentStyle = get_style(currentStyleName)
-        #-----------------------------------------------------------------------
-        # Pruefung, ob oben gefundener style die neuen Attribute und deren Werte
-        # bereits enthaelt.
-        # Falls auch nur ein Attribut nicht oder nicht mit dem richtigen Wert
-        # vorhanden ist, muss ein neuer style erstellt werden.
-        # Grundannahme: Ein Open-Document-Style-Attribut kann per se immer nur in einem bestimmten Typ
-        # Knoten vorkommen und muss daher nicht naeher qualifiziert werden
-        #-----------------------------------------------------------------------
-        attributes.each{ |attribute,value|
-          currentValue = currentStyle.attributes[attribute]
-          #-------------------------------------------------
-          # Attribut in Context-Node nicht gefunden ?
-          #-------------------------------------------------
-          if(! currentValue)  # nilClass
-            # tell("setAttributes: #{currentStyleName}: #{attribute} not in Top-Node")
-            #-----------------------------------------------------------
-            # Attribut mit passendem Wert dann in Kind-Element vorhanden ?
-            #-----------------------------------------------------------
-            if(currentStyle.elements["*[@#{attribute} = '#{value}']"])
-              # tell("setAttributes: #{currentStyleName}: #{attribute}/#{value} matching in Sub-Node")
-            #-----------------------------------------------------------
-            # andernfalls Komplettabbruch der Pruefschleife aller Attribute und Flag setzen
-            # => neuer style muss erzeugt werden
-            #-----------------------------------------------------------
-            else
-              # tell("setAttributes: #{currentStyleName}: #{attribute}/#{value} not matching in Sub-Node")
-              containsMatchingAttributes = FALSE
+    def set_attributes cell, attributes
+      contains_matching_attributes = true
+      attributes = norm_style_hash attributes
+      if attributes.has_key? "style:name"
+        die "attribute style:name not allowed in attribute-list as automatically generated"
+      end
+      current_style_name = cell.attributes["table:style-name"]
+      if current_style_name
+        file, current_style = get_style current_style_name
+        attributes.each do |attribute, value|
+          current_value = current_style.attributes[attribute]
+          if ! current_value
+            unless current_style.elements["*[@#{attribute} = '#{value}']"]
+              contains_matching_attributes = true
               break
             end
-          #--------------------------------------------------
-          # Attribut in Context-Node gefunden
-          #--------------------------------------------------
           else
-            #--------------------------------------------------
-            # Passt der Wert des gefundenen Attributes bereits ?
-            #--------------------------------------------------
-            if (currentValue == value)
-              # tell("setAttributes: #{currentStyleName}: #{attribute}/#{value} matching in Top-Node")
-            #-------------------------------------------------
-            # bei unpassendem Wert Flag setzen
-            #-------------------------------------------------
-            else
-              # tell("setAttributes: #{currentStyleName}: #{attribute}/#{value} not matching with #{currentValue} in Top-Node")
-              containsMatchingAttributes = FALSE
+            unless current_value == value
+              contains_matching_attributes = false
             end
           end
-        }
-        #--------------------------------------------------------
-        # Wurden alle Attribut-Wertepaare gefunden, d.h. kann
-        # bisheriger style weiterverwendet werden ?
-        #--------------------------------------------------------
-        if(containsMatchingAttributes)
-        #-------------------------------------------------------
-        # nein => passenden Style in Archiv suchen oder klonen und anpassen
-        #-------------------------------------------------------
-        else
-          get_appropriate_style(cell,currentStyle,attributes)
         end
-      #------------------------------------------------------------------------
-      # Zelle hatte noch gar keinen style zugewiesen
-      #------------------------------------------------------------------------
+        unless contains_matching_attributes
+          get_appropriate_style cell, current_style, attributes
+        end
       else
-        #----------------------------------------------------------------------
-        # Da style fehlt, ggf. aus office:value-type bestmoeglichen style ermitteln
-        #----------------------------------------------------------------------
-        valueType = cell.attributes["office:value-type"]
-        if(valueType)
-          case valueType
-            when "string" then currentStyleName = "string_style"
-            when "percentage" then currentStyleName = "percent_styleage"
-            when "currency" then currentStyleName = "currency_style"
-            when "float" then currentStyleName = "float_style"
-            when "date" then currentStyleName = "date_style"
-            when "time" then currentStyleName = "time_style"
+        value_type = cell.attributes["office:value-type"]
+        if value_type
+          case value_type
+            when "string" then current_style_name = "string_style"
+            when "percentage" then current_style_name = "percent_style"
+            when "currency" then current_style_name = "currency_style"
+            when "float" then current_style_name = "float_style"
+            when "date" then current_style_name = "date_style"
+            when "time" then current_style_name = "time_style"
           else
-            die("setAttributes: unknown office:value-type #{valueType} found in #{cell}")
+            die "unknown office:value-type #{value_type} found in #{cell}"
           end
         else
-          #-----------------------------------------
-          # 'string_style' als Default
-          #-----------------------------------------
-          currentStyleName = "string_style"
+          current_style_name = "string_style"
         end
-        #-------------------------------------------------------
-        # passenden Style in Archiv suchen oder klonen und anpassen
-        #-------------------------------------------------------
-        file,currentStyle = get_style(currentStyleName)
-        get_appropriate_style(cell,currentStyle,attributes)
+        file, current_style = get_style current_style_name
+        get_appropriate_style cell, current_style, attributes
       end
     end
     ##########################################################################
-    # internal: Function is called, when 'setAttributes' detected, that the current style
+    # internal: Function is called, when 'set_attributes' detected, that the current style
     # of a cell and a given attribute-list don't match. The function clones the current
     # style of the cell, generates a virtual new style, merges it with the attribute-list,
     # calculates a hash-value of the resulting style, checks whether the latter is already
@@ -2230,7 +2162,7 @@ module Rods
 
     public :set_date_format, :write_get_cell, :write_cell, :writeGetCellFromRow, :writeCellFromRow,
            :get_cell_from_row, :get_cell, :get_row, :rename_table, :set_current_table,
-           :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :write_style_abbr,
+           :insert_table, :delete_table, :readCellFromRow, :readCell, :set_attributes, :write_style_abbr,
            :set_style, :get_next_existent_row, :get_previous_existent_row,
            :get_next_existent_cell, :get_previous_existent_cell, :insert_table_after, :insert_table_before,
            :write_comment, :save, :save_as, :initialize, :write_text, :get_cells_and_indices_for,
