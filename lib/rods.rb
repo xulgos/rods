@@ -2187,9 +2187,9 @@ module Rods
     #   sheet.insert_row_above row
     #-------------------------------------------------------------------------
     def insert_row_above row
-      newRow = create_row 1
+      new_row = create_row 1
       row.previous_sibling = new_row
-      newRow
+      new_row
     end
     ##########################################################################
     # Inserts a new row below the given row thereby shifting existing rows
@@ -2272,7 +2272,7 @@ module Rods
            :setStyle, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insert_table_after, :insert_table_before,
            :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
-           :insertRowBelow, :insertRowAbove, :insert_cell_before, :insert_cell_after, :insert_column,
+           :insertRowBelow, :insert_row_above, :insert_cell_before, :insert_cell_after, :insert_column,
            :insert_row, :insert_cell, :insert_cell_from_row, :delete_cell_before, :delete_cell_after,
            :delete_cell, :delete_cell_from_row, :delete_row_above, :delete_row_below, :delete_row,
            :delete_column, :delete_row_element, :delete_cell_element
