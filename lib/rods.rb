@@ -161,13 +161,13 @@ module Rods
     # Row is a REXML::Element.
     # Creates the cell if not existing.
     # Formats the cell according to type and returns the cell.
-    #   row = sheet.get_row(17)
-    #   cell = sheet.writeGetCellFromRow(row,4,"formula:currency"," = B5*1,19")
+    #   row = sheet.get_row 17
+    #   cell = sheet.write_get_cell_from_row row, 4, "formula:currency", " = B5*1, 19"
     #-------------------------------------------------------------------------
-    def writeGetCellFromRow(row,column_index,type,text)
+    def write_get_cell_from_row row, column_index, type, text
       cell = get_cell_from_row row, column_index
-      write_text(cell,type,text)
-      return cell
+      write_text cell, type, text
+      cell
     end
     ##########################################################################
     # Writes the given text to the cell with the given index in the given row.
@@ -2131,7 +2131,7 @@ module Rods
       @file = file
     end
 
-    public :set_date_format, :write_get_cell, :write_cell, :writeGetCellFromRow, :write_cell_from_row,
+    public :set_date_format, :write_get_cell, :write_cell, :write_get_cell_from_row, :write_cell_from_row,
            :get_cell_from_row, :get_cell, :get_row, :rename_table, :set_current_table,
            :insert_table, :delete_table, :read_cell_from_row, :read_cell, :set_attributes, :write_style_abbr,
            :set_style, :get_next_existent_row, :get_previous_existent_row,
