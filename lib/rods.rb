@@ -2116,22 +2116,18 @@ module Rods
     end
     ##########################################################################
     # Inserts a new cell before the given cell thereby shifting existing cells
-    #   cell = sheet.get_cell(5,1)
-    #   sheet.insertCellBefore(cell) # adds cell at beginning of row 5
+    #   cell = sheet.get_cell 5, 1
+    #   sheet.insert_cell_before cell # adds cell at beginning of row 5
     #-------------------------------------------------------------------------
-    def insertCellBefore(cell)
-      die("insertCellBefore: cell #{cell} is not a REXML::Element") unless (cell.class.to_s == "REXML::Element")
-      newCell = create_cell(1)
-      cell.previous_sibling = newCell
-      #-----------------------------------------
-      # bisherige Tabellenbreite überschritten ?
-      #-----------------------------------------
-      lengthOfRow = get_number_of_siblings(cell)
-      if(lengthOfRow > @tables[@current_table_name][WIDTH])
-        @tables[@current_table_name][WIDTH] = lengthOfRow
+    def insert_cell_before cell
+      new_cell = create_cell 1
+      cell.previous_sibling = new_cell
+      length_of_row = get_number_of_siblings cell
+      if length_of_row > @tables[@current_table_name][WIDTH]
+        @tables[@current_table_name][WIDTH] = length_of_row
         @tables[@current_table_name][WIDTHEXCEEDED] = true
       end
-      return newCell
+      new_cell
     end
     ##########################################################################
     # Inserts a new cell after the given cell thereby shifting existing cells
@@ -2276,7 +2272,7 @@ module Rods
            :setStyle, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insert_table_after, :insert_table_before,
            :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
-           :insertRowBelow, :insertRowAbove, :insertCellBefore, :insert_cell_after, :insert_column,
+           :insertRowBelow, :insertRowAbove, :insert_cell_before, :insert_cell_after, :insert_column,
            :insert_row, :insert_cell, :insert_cell_from_row, :delete_cell_before, :delete_cell_after,
            :delete_cell, :delete_cell_from_row, :delete_row_above, :delete_row_below, :delete_row,
            :delete_column, :delete_row_element, :delete_cell_element
