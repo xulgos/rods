@@ -1771,8 +1771,8 @@ module Rods
     # Returns previous cell as a REXML::Element or nil if no element exists.
     # Cf. explanation in README
     #------------------------------------------------------------------------
-    def getPreviousExistentCell(cell)
-      return cell.previous_sibling
+    def get_previous_existent_cell cell
+      cell.previous_sibling
     end
     ##########################################################################
     # Fast Routine to get the next row, because XML-Parser does not have
@@ -2240,7 +2240,7 @@ module Rods
            :get_cell_from_row, :get_cell, :get_row, :rename_table, :set_current_table,
            :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :write_style_abbr,
            :setStyle, :getNextExistentRow, :getPreviousExistentRow,
-           :getNextExistentCell, :getPreviousExistentCell, :insert_table_after, :insert_table_before,
+           :getNextExistentCell, :get_previous_existent_cell, :insert_table_after, :insert_table_before,
            :write_comment, :save, :save_as, :initialize, :write_text, :get_cells_and_indices_for,
            :insert_row_below, :insert_row_above, :insert_cell_before, :insert_cell_after, :insert_column,
            :insert_row, :insert_cell, :insert_cell_from_row, :delete_cell_before, :delete_cell_after,
