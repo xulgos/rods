@@ -599,42 +599,27 @@ module Rods
     # * string, float, currency, time, date, percent, formula
     # The content of a formula is it's last calculated result or 0 in case of a
     # newly created cell. See annotations at 'readCellFromRow'.
-    #   1.upto(10){ |i|
-    #      text,type = readCell(i,i)
-    #      write_cell(i,10-i,type,text)
-    #   }
+    #   1.upto(10) do |i|
+    #      text, type = read_cell i, i
+    #      write_cell i, 10-i, type, text
+    #   end
     #-------------------------------------------------------------------------
-    def readCell(row_index,column_index)
-      #------------------------------------------------------------------
-      # Fuer alle Zeilen
-      #------------------------------------------------------------------
+    def read_cell row_index, column_index
       i = 0
       j = 0
-      #------------------------------------------------------------------
-      # Zelle mit Indizes suchen
-      #------------------------------------------------------------------
-      currentTable = @tables[@current_table_name][NODE]
-      currentTable.elements.each("table:table-row"){ |row|
+      current_table = @tables[@current_table_name][NODE]
+      current_table.elements.each("table:table-row") do |row|
         i = i+1
         j = 0
         repetition = row.attributes["table:number-rows-repeated"]
-        #-------------------------------------------
-        # Zeilenwiederholungen addieren
-        #-------------------------------------------
-        if(repetition)
-          i = i+(repetition.to_i-1)
+        if repetition
+          i = i + repetition.to_i - 1
         end
-        #-------------------------------------------
-        # Falls Zeilenindex uebersprungen oder erreicht
-        #-------------------------------------------
-        if(i >= row_index)
-          return readCellFromRow(row,column_index)
+        if i >= row_index
+          return read_cell_from_row row, column_index
         end
-      }
-      #--------------------------------------------
-      # ausserhalb bisheriger Zeilen
-      #--------------------------------------------
-      return nil,nil
+      end
+      return nil, nil
     end
     ##########################################################################
     # internal: Composes everything necessary for writing all the contents of
@@ -2162,7 +2147,7 @@ module Rods
 
     public :set_date_format, :write_get_cell, :write_cell, :writeGetCellFromRow, :writeCellFromRow,
            :get_cell_from_row, :get_cell, :get_row, :rename_table, :set_current_table,
-           :insert_table, :delete_table, :readCellFromRow, :readCell, :set_attributes, :write_style_abbr,
+           :insert_table, :delete_table, :readCellFromRow, :read_cell, :set_attributes, :write_style_abbr,
            :set_style, :get_next_existent_row, :get_previous_existent_row,
            :get_next_existent_cell, :get_previous_existent_cell, :insert_table_after, :insert_table_before,
            :write_comment, :save, :save_as, :initialize, :write_text, :get_cells_and_indices_for,
