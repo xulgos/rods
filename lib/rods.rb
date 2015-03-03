@@ -2251,30 +2251,20 @@ module Rods
     end
     ##########################################################################
     # Inserts a column at the given index, thereby shifting existing columns
-    #   sheet.insertColumn(1) # inserts column before former column 1
+    #   sheet.insert_column 1 # inserts column before former column 1
     #-------------------------------------------------------------------------
-    def insertColumn(column_index)
-      die("insertColumn: index #{column_index} is not a Fixnum/Integer") unless (column_index.class.to_s == "Fixnum")
-      die("insertColumn: invalid index #{column_index}") unless (column_index > 0)
-      currentTable = @tables[@current_table_name][NODE]
-      #-----------------------------------------------
-      # Neuer Spalteneintrag im Header mit impliziter
-      # Aktualisierung der Tabellenbreite
-      #-----------------------------------------------
-      column = get_child_by_index(currentTable,COLUMN,column_index)
-      insert_column_before_in_header(column)
-      #-----------------------------------------------
-      # Fuer alle existierenden Zeilen neue Zelle an
-      # Spaltenposition einfuegen und dabei implizit
-      # Tabellenbreite aktualisieren
-      #-----------------------------------------------
-      row = get_row(1)
-      cell = get_child_by_index(row,CELL,column_index)
-      insertCellBefore(cell)
+    def insert_column column_index
+      die "invalid index #{column_index}" unless column_index > 0
+      current_table = @tables[@current_table_name][NODE]
+      column = get_child_by_index current_table, COLUMN, column_index
+      insert_column_before_in_header column
+      row = get_row 1
+      cell = get_child_by_index row, CELL, column_index
+      insert_cell_before cell
       i = 1
-      while(row = getNextExistentRow(row)) # fuer alle Zeilen ab der zweiten
-        cell = get_child_by_index(row,CELL,column_index)
-        insertCellBefore(cell)
+      while row = get_next_existent_row(row)
+        cell = get_child_by_index row, CELL, column_index
+        insert_cell_before cell
         i += 1
       end 
     end
@@ -2293,7 +2283,7 @@ module Rods
            :setStyle, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insert_table_after, :insert_table_before,
            :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
-           :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insertColumn,
+           :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insert_column,
            :insert_row, :insert_cell, :insert_cell_from_row, :delete_cell_before, :delete_cell_after,
            :delete_cell, :delete_cell_from_row, :delete_row_above, :delete_row_below, :delete_row,
            :delete_column, :delete_row_element, :delete_cell_element
