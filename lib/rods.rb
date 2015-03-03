@@ -165,7 +165,7 @@ module Rods
     #   cell = sheet.writeGetCellFromRow(row,4,"formula:currency"," = B5*1,19")
     #-------------------------------------------------------------------------
     def writeGetCellFromRow(row,colInd,type,text)
-      cell = getCellFromRow(row,colInd)
+      cell = get_cell_from_row row, colInd
       write_text(cell,type,text)
       return cell
     end
@@ -179,7 +179,7 @@ module Rods
     #   sheet.writeCellFromRow(row,2,"formula:date"," = A1+3")
     #-------------------------------------------------------------------------
     def writeCellFromRow(row,colInd,type,text)
-      cell = getCellFromRow(row,colInd)
+      cell = get_cell_from_row row, colInd
       write_text(cell,type,text)
     end
     ##########################################################################
@@ -187,7 +187,7 @@ module Rods
     # Cell and row are REXML::Elements.
     # The cell is created if it does not exist.
     #   row = sheet.get_row(15)
-    #   cell = sheet.getCellFromRow(row,17) # 17th cell of 15th row
+    #   cell = sheet.get_cell_from_row row, 17 # 17th cell of 15th row
     # Looks a bit strange compared to
     #   cell = sheet.get_cell(15,17)
     # but is considerably faster if you are operating on several cells of the
@@ -195,8 +195,8 @@ module Rods
     # from the node of the already found row instead of having to locate the
     # row over and over again.
     #-------------------------------------------------------------------------
-    def getCellFromRow(row,colInd)
-      return get_child_by_index(row,CELL,colInd)
+    def get_cell_from_row row, col_ind
+      get_child_by_index row, CELL, col_ind
     end
     ##########################################################################
     # Returns the cell at the given indices.
@@ -2007,15 +2007,13 @@ module Rods
     ##########################################################################
     # Delets the cell at the given index in the given row
     #
-    #   row = sheet.get_row(8)
-    #   sheet.deleteCell(row,9)
+    #   row = sheet.get_row 8
+    #   sheet.delete_cell row, 9
     #-------------------------------------------------------------------------
-    def deleteCellFromRow(row,colInd)
-      die("deleteCell: row #{row} is not a REXML::Element") unless (row.class.to_s == "REXML::Element")
-      die("deleteCell: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
-      die("deleteCell: invalid index #{colInd}") unless (colInd > 0)
-      cell = getCellFromRow(row,colInd+1)
-      deleteCellBefore(cell)
+    def delete_cell_from_row row, col_ind
+      die "invalid index #{col_ind}" unless  col_ind > 0
+      cell = get_cell_from_row row, col_ind+1
+      delete_cell_before cell
     end
     ##########################################################################
     # Delets the given cell.
@@ -2184,7 +2182,7 @@ module Rods
       die("insertCell: row #{row} is not a REXML::Element") unless (row.class.to_s == "REXML::Element")
       die("insertCell: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
       die("insertCell: invalid index #{colInd}") unless (colInd > 0)
-      cell = getCellFromRow(row,colInd)
+      cell = get_cell_from_row row, col_ind
       return insertCellBefore(cell)
     end
     ##########################################################################
@@ -2306,14 +2304,14 @@ module Rods
     end
 
     public :set_date_format, :write_get_cell, :write_cell, :writeGetCellFromRow, :writeCellFromRow,
-           :getCellFromRow, :get_cell, :get_row, :rename_table, :set_current_table,
+           :get_cell_from_row, :get_cell, :get_row, :rename_table, :set_current_table,
            :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :write_style_abbr,
            :setStyle, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insert_table_after, :insert_table_before,
            :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
            :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insertColumn,
            :insertRow, :insertCell, :insertCellFromRow, :deleteCellBefore, :deleteCellAfter,
-           :delete_cell, :deleteCellFromRow, :delete_row_above, :delete_row_below, :delete_row,
+           :delete_cell, :delete_cell_from_row, :delete_row_above, :delete_row_below, :delete_row,
            :delete_column, :delete_row_element, :delete_cell_element
 
     private :die, :create_cell, :create_row, :get_child_by_index, :create_element, :set_repetition, :init_house_keeping,
