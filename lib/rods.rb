@@ -1,10 +1,10 @@
 # coding: UTF-8
 #
 # = RODS - Ruby Open Document Spreadsheet
-# This class provides a convenient interface for fast reading and writing 
+# This class provides a convenient interface for fast reading and writing
 # spreadsheets conforming to Open Document Format v1.1..
-# Installiation of an office-application (LibreOffice, OpenOffice.org) is not required as the code directly 
-# manipulates the XML-files in the zipped *.ods-container. 
+# Installiation of an office-application (LibreOffice, OpenOffice.org) is not required as the code directly
+# manipulates the XML-files in the zipped *.ods-container.
 #
 # = Copyright
 # Copyright (c) <em>Dr. Heinz Breinlinger</em> (2011).
@@ -12,7 +12,7 @@
 #
 # = Tutorial
 # Please refer to README for how to use the interface with many annotated examples.
-# 
+#
 require 'rubygems'
 require 'zip/zipfilesystem'
 require 'rexml/document'
@@ -42,12 +42,12 @@ module Rods
   class Document
     ##########################################################################
     # Convenience-function to switch the default-style for the display of
-    # date-values. The switch is valid for all subsequently created cells with 
-    # date-values.  
+    # date-values. The switch is valid for all subsequently created cells with
+    # date-values.
     # Builtin valid values are
     # * 'date_style'
     #   * -> "02.01.2011" (German formatting)
-    # * 'date_day_style' 
+    # * 'date_day_style'
     #   * -> "Su"
     # Example
     #   sheet.set_date_format "date_day_style"  # RODS' default format for display of weekday
@@ -117,7 +117,7 @@ module Rods
       end
     end
     ##########################################################################
-    # internal: Sets repeption-attribute of REXML::Element of type 'row' or 'cell' 
+    # internal: Sets repeption-attribute of REXML::Element of type 'row' or 'cell'
     #------------------------------------------------------------------------
     def set_repetition element, type, repetition
       die "wrong type #{type}" if type != ROW && type != CELL
@@ -135,7 +135,7 @@ module Rods
     # Creates the cell if not existing.
     # Formats the cell according to type and returns the cell.
     #   cell = sheet.write_get_cell 3,3,"formula:time"," = C2-C1"
-    # This is useful for a subsequent call to 
+    # This is useful for a subsequent call to
     #   sheet.set_attributes cell, { "background-color" => "yellow3"}
     #-------------------------------------------------------------------------
     def write_get_cell row_index, column_index, type, text
@@ -191,7 +191,7 @@ module Rods
     # Looks a bit strange compared to
     #   cell = sheet.get_cell(15,17)
     # but is considerably faster if you are operating on several cells of the
-    # same row as after locating the first cell of the row the XML-Parser can start 
+    # same row as after locating the first cell of the row the XML-Parser can start
     # from the node of the already found row instead of having to locate the
     # row over and over again.
     #-------------------------------------------------------------------------
@@ -214,8 +214,8 @@ module Rods
     # The row is created if it does not exist.
     #      row = get_row 1
     #      1.upto 500 do |i|
-    #        row = get_row i 
-    #        text1,type1 = read_cell_from_row row,3  
+    #        row = get_row i
+    #        text1,type1 = read_cell_from_row row,3
     #        text2,type2 = read_cell_from_row row,4 # XML-Parser can start from row-node instead of root-node
     #        puts "Read #{text1} of #{type1} and #{text2} of #{type2}
     #      end
@@ -225,7 +225,7 @@ module Rods
       get_child_by_index current_table, ROW, row_index
     end
     ##########################################################################
-    # internal: returns the child REXML::Element of the given type 
+    # internal: returns the child REXML::Element of the given type
     # ('row', 'cell' or 'column') and index within the parent-element.
     # The child is created if it does not exist.
     #------------------------------------------------------------------------
@@ -268,7 +268,7 @@ module Rods
             set_repetition element, type, 1
             element.next_sibling = create_element type, num_empty_elements_after
           end
-          return element 
+          return element
         elsif i < index
           if repetition = element.attributes[kind_of_repetition]
             index_of_last_empty_element = i + repetition.to_i - 1
@@ -372,7 +372,7 @@ module Rods
     ##########################################################################
     # Inserts a table of the given name before the given spreadsheet and updates
     # the internal table-administration.
-    #   sheet.insert_table_before("table2","table1") 
+    #   sheet.insert_table_before("table2","table1")
     #-------------------------------------------------------------------------
     def insert_table_before relative_table_name, table_name
       insert_table_before_after relative_table_name, table_name, BEFORE
@@ -380,7 +380,7 @@ module Rods
     ##########################################################################
     # Inserts a table of the given name after the given spreadsheet and updates
     # the internal table-administration.
-    #   sheet.insert_table_after("table1","table2") 
+    #   sheet.insert_table_after("table1","table2")
     #-------------------------------------------------------------------------
     def insert_table_after relative_table_name, table_name
       insert_table_before_after relative_table_name, table_name, AFTER
@@ -388,13 +388,13 @@ module Rods
     ##########################################################################
     # internal: Inserts a table of the given name before or after the given spreadsheet and updates
     # the internal table-administration. The default position is 'after'.
-    #   sheet.insert_table_before_after("table1","table2",BEFORE) 
+    #   sheet.insert_table_before_after("table1","table2",BEFORE)
     #-------------------------------------------------------------------------
     def insert_table_before_after relative_table_name, table_name, position = AFTER
       die "table '#{relative_table_name}' does not exist" unless @tables.has_key? relative_table_name
       die "table '#{table_name}' already exists" if @tables.has_key? table_name
       relative_table = @spread_sheet.elements["*[@table:name = '#{relative_table_name}']"]
-      die "insert_table_after: internal error: Could not locate existing table #{relative_table_name}" unless relative_table 
+      die "insert_table_after: internal error: Could not locate existing table #{relative_table_name}" unless relative_table
       new_table = REXML::Element.new "table:table"
       new_table.add_attributes({"table:name" =>  table_name,
                                "table:print" => "false",
@@ -441,7 +441,7 @@ module Rods
       @num_tables += 1
     end
     ##########################################################################
-    # Deletes the table of the given name and updates the internal 
+    # Deletes the table of the given name and updates the internal
     # table-administration.
     #   sheet.delete_table "Table2"
     #-------------------------------------------------------------------------
@@ -471,7 +471,7 @@ module Rods
       num_columns_of_table
     end
     ##########################################################################
-    # internal: Adapts the number of columns in the headers of all tables 
+    # internal: Adapts the number of columns in the headers of all tables
     # according to the right-most valid column. This method is called when
     # the spreadsheet is saved.
     #------------------------------------------------------------------------
@@ -524,7 +524,7 @@ module Rods
       return text if text =~ /(^\d{4})-(\d{2})-(\d{2})$/
       die "Date #{text} does not comply with format dd.mm.yyyy" unless text.match /^\d{2}\.\d{2}\.\d{4}$/
       text =~ /(^\d{2})\.(\d{2})\.(\d{4})$/
-      $3+"-"+$2+"-"+$1 
+      $3+"-"+$2+"-"+$1
     end
     ##########################################################################
     # Returns the content and type of the cell at the index in the given row
@@ -593,7 +593,7 @@ module Rods
     end
     ##########################################################################
     # Returns the content and type of the cell at the given indices
-    # as strings. 
+    # as strings.
     # If the cell does not exist, nil is returned for text and type.
     # Type is one of the following office:value-types
     # * string, float, currency, time, date, percent, formula
@@ -615,7 +615,7 @@ module Rods
       #------------------------------------------------------------------
       currentTable = @tables[@current_table_name][NODE]
       currentTable.elements.each("table:table-row"){ |row|
-        i = i+1  
+        i = i+1
         j = 0
         repetition = row.attributes["table:number-rows-repeated"]
         #-------------------------------------------
@@ -662,7 +662,7 @@ module Rods
     end
     ##########################################################################
     # internal: Called by constructor upon creation of Open Document-object.
-    # Reads given zip-archive. Parses XML-files in archive. Initializes 
+    # Reads given zip-archive. Parses XML-files in archive. Initializes
     # internal variables according to XML-trees. Calculates initial width of
     # all tables and creates default-styles and default-data-styles for all
     # data-types.
@@ -688,7 +688,7 @@ module Rods
     end
     ##########################################################################
     # internal: Converts the given string (of type 'float' or 'currency') to
-    # the internal arithmetic represenation. 
+    # the internal arithmetic represenation.
     # This changes the thousands-separator, the decimal-separator and prunes
     # the currency-symbol
     #----------------------------------------------------------
@@ -721,7 +721,7 @@ module Rods
         cell.attributes["office:value"] = text
         cell.attributes["table:style-name"] = @float_style
       elsif type.match /^formula/
-        cell.attributes["table:formula"] = internalize_formula text 
+        cell.attributes["table:formula"] = internalize_formula text
         case type
           when "formula","formula:float"
             cell.attributes["office:value-type"] = "float"
@@ -847,7 +847,7 @@ module Rods
     #                                "color" => "blue"})                   # font-color
     #   1.upto(7){ |row|
     #     cell = sheet.get_cell(row,5)
-    #     sheet.setAttributes(cell,{ "border-right" => "0.07cm solid green6" }) 
+    #     sheet.setAttributes(cell,{ "border-right" => "0.07cm solid green6" })
     #   }
     #-------------------------------------------------------------------------
     def setAttributes(cell,attributes)
@@ -859,7 +859,7 @@ module Rods
       #----------------------------------------------------------------------
       containsMatchingAttributes = TRUE
       #-----------------------------------------------------------------------
-      # Attribut-Hash, welcher "convenience"-Werte enthalten kann (und wird ;-) 
+      # Attribut-Hash, welcher "convenience"-Werte enthalten kann (und wird ;-)
       # zunaechst normieren
       #-----------------------------------------------------------------------
       attributes = norm_style_hash(attributes)
@@ -921,7 +921,7 @@ module Rods
           end
         }
         #--------------------------------------------------------
-        # Wurden alle Attribut-Wertepaare gefunden, d.h. kann 
+        # Wurden alle Attribut-Wertepaare gefunden, d.h. kann
         # bisheriger style weiterverwendet werden ?
         #--------------------------------------------------------
         if(containsMatchingAttributes)
@@ -954,7 +954,7 @@ module Rods
           #-----------------------------------------
           # 'string_style' als Default
           #-----------------------------------------
-          currentStyleName = "string_style" 
+          currentStyleName = "string_style"
         end
         #-------------------------------------------------------
         # passenden Style in Archiv suchen oder klonen und anpassen
@@ -965,9 +965,9 @@ module Rods
     end
     ##########################################################################
     # internal: Function is called, when 'setAttributes' detected, that the current style
-    # of a cell and a given attribute-list don't match. The function clones the current 
+    # of a cell and a given attribute-list don't match. The function clones the current
     # style of the cell, generates a virtual new style, merges it with the attribute-list,
-    # calculates a hash-value of the resulting style, checks whether the latter is already 
+    # calculates a hash-value of the resulting style, checks whether the latter is already
     # in the pool of archived styles, retrieves an archived style or
     # writes the resulting new style, archives the latter and applies the effective style to cell.
     #-------------------------------------------------------------------------
@@ -1034,11 +1034,11 @@ module Rods
       text_align = attributes["fo:text-align"]
       if left_margin && text_align && text_align != "start" && left_margin != "0"
         # tell "automatically corrected: fo:text-align \'#{attributes['fo:text-align']}\' does not match fo:margin-left \'#{attributes['fo:margin-left']}\'"
-        attributes["fo:margin-left"] = "0" 
+        attributes["fo:margin-left"] = "0"
       elsif left_margin && left_margin != "0" && !text_align
         # tell "automatically corrected: fo:margin-left \'#{attributes['fo:margin-left']}\' needs fo:text-align \'start\' to work"
-        attributes["fo:text-align"] = "start" 
-      end 
+        attributes["fo:text-align"] = "start"
+      end
     end
     ##########################################################################
     # internal: Merges a hash of given style-attributes with those of
@@ -1050,7 +1050,7 @@ module Rods
       table_cell_properties = style.elements["style:table-cell-properties"]
       text_properties = style.elements["style:text-properties"]
       paragraph_properties = style.elements["style:paragraph-properties"]
-      check_style_attributes attributes 
+      check_style_attributes attributes
       attributes.each do |key,value|
         if key.match /^fo:border/ ||  key == "style:text-align-source" || key ==  "fo:background-color"
           table_cell_properties = style.add_element "style:table-cell-properties" unless table_cell_properties
@@ -1120,7 +1120,7 @@ module Rods
       style_attributes = {TAG => "style:style",
                        "style:family" => "table-cell",
                        "style:parent-style-name" => "Default"}
-      check_style_attributes attributes 
+      check_style_attributes attributes
       attributes.each do |key,value|
         case key
           when "style:name" then style_attributes["style:name"] = value
@@ -1155,11 +1155,11 @@ module Rods
     ##########################################################################
     # internal: write a style-XML-tree to content.xml or styles.xml. The given hash
     # has to be provided in qualified form. The new
-    # style is archived in a hash-pool of styles. Prior to that the 'style:name' 
+    # style is archived in a hash-pool of styles. Prior to that the 'style:name'
     # is replaced by a dummy-value to ensure comparability.
-    # 
+    #
     # Caveat: RODS' default-styles cannot be overwritten
-    # 
+    #
     # Example (internal setting of default date-style upon object creation)
     #    #------------------------------------------------------------------------
     #    # date
@@ -1245,7 +1245,7 @@ module Rods
                                        "style:writing-mode" => "lr-tb",
                                        "table:display" => "true"}})
       #------------------------------------------------------------------------
-      # Zeilenformat 
+      # Zeilenformat
       #------------------------------------------------------------------------
       write_style_xml(CONTENT,{TAG => "style:style",
                              "style:name" => "row_style",
@@ -1255,7 +1255,7 @@ module Rods
                                        "style:row-height" => "0.452cm",
                                        "fo:break-before" => "auto"}})
       #------------------------------------------------------------------------
-      # Spaltenformat 
+      # Spaltenformat
       #------------------------------------------------------------------------
       write_style_xml(CONTENT,{TAG => "style:style",
                              "style:name" => "column_style",
@@ -1556,7 +1556,7 @@ module Rods
         case key
           when TAG then tag = value
           when TEXT then text = value
-          else  
+          else
             if(key.match(/child/))
               grand_children[key] = value
             else
@@ -1615,10 +1615,10 @@ module Rods
       cell.attributes['table:style-name'] = styleName
     end
     ##########################################################################
-    # Inserts an annotation field for the given cell. 
+    # Inserts an annotation field for the given cell.
     # Caveat: When you make the annotation permanently visible in a subsequent
     # OpenOffice.org-session, the annotation will always be displayed in the upper
-    # left corner of the sheet. The temporary display of the annotation is not 
+    # left corner of the sheet. The temporary display of the annotation is not
     # affected however.
     #   sheet.writeComment(cell,"by Dr. Heinz Breinlinger (who else)")
     #------------------------------------------------------------------------
@@ -1640,7 +1640,7 @@ module Rods
                      "svg:width" => "2.899cm",
                      "child1" => {TAG => "dc:date",
                                   TEXT => "2010-01-01T00:00:00"
-                                 },                    
+                                 },
                      "child2" => {TAG => "text:p",
                                   "text:style-name" => "comment_paragraph_style",
                                   TEXT => comment
@@ -1674,14 +1674,14 @@ module Rods
           zipfile.mkdir "Configurations2/#{dir}"
           zipfile.file.chmod 0755, "Configurations2/#{dir}"
         end
-        finalize zipfile 
+        finalize zipfile
       end
     end
     ##########################################################################
     #
-    #   sheet = Rods.new("/home/heinz/Work/Template.ods") 
-    #   sheet = Rods.new("/home/heinz/Work/Template.ods",["de,"DE","€","EUR"]) 
-    #   sheet = Rods.new("/home/heinz/Work/Another.ods",["us","US","$","DOLLAR"]) 
+    #   sheet = Rods.new("/home/heinz/Work/Template.ods")
+    #   sheet = Rods.new("/home/heinz/Work/Template.ods",["de,"DE","€","EUR"])
+    #   sheet = Rods.new("/home/heinz/Work/Another.ods",["us","US","$","DOLLAR"])
     #
     # "de","DE","€","EUR" are the default-settings for the language, country,
     # external and internal currency-symbol. All these values merely affect
@@ -1709,7 +1709,7 @@ module Rods
       @office_styles
       @auto_styles
       @float_style = "float_style"
-      @date_style = "date_style"  
+      @date_style = "date_style"
       @string_style = "string_style"
       @currency_style = "currency_style"
       @percent_style = "percent_style"
@@ -1723,21 +1723,21 @@ module Rods
         "column_style",
         "float_format_style",
         "float_style",
-        "time_format_style", 
+        "time_format_style",
         "time_style",
         "time_seconds_style",
         "percent_format_style",
         "percent_style",
         "string_style",
-        "date_format_style", 
+        "date_format_style",
         "date_style",
         "date_format_day_style",
         "date_day_style",
-        "currency_format_positive_style", 
+        "currency_format_positive_style",
         "currency_format_style",
         "currency_style",
         "comment_paragraph_style",
-        "comment_text_style", 
+        "comment_text_style",
         "comment_graphics_style"
       ]
       open default[:file] if default.has_key? :file
@@ -1797,12 +1797,12 @@ module Rods
     #    {:cell => cell,
     #     :row  => rowIndex,
     #     :col  => colIndex}]
-    #  
-    # Regular expressions for 'content' are allowed but must be enclosed in 
+    #
+    # Regular expressions for 'content' are allowed but must be enclosed in
     # single (not double) quotes
     #
     # In case of no matches at all, an empty array is returned.
-    # 
+    #
     # The following finds all occurences of a comma- or dot-separated number,
     # consisting of 1 digit before and 2 digits behind the decimal-separator.
     #
@@ -1860,7 +1860,7 @@ module Rods
     end
     ##########################################################################
     # internal: Calculates index (in the sense of spreadsheet, NOT XML) of
-    # given element (row, cell or column as REXML::Element) within the 
+    # given element (row, cell or column as REXML::Element) within the
     # corresponding parent-element (table or row) or the number of siblings
     # of the same kind or both - depending on the flag given.
     #
@@ -1889,7 +1889,7 @@ module Rods
       end
       parent = node.elements["ancestor::#{kind_of_parent}"]
       unless parent
-        die "Could not extract parent of #{node}" 
+        die "Could not extract parent of #{node}"
       end
       index = number = 0
       parent.elements.each kind_of_self do |child|
@@ -1907,13 +1907,13 @@ module Rods
       if flag == INDEX
         die "Could not calculate number of element #{node}"
       elsif flag == NUMBER
-        return number 
+        return number
       else
         return index, number
       end
     end
     ##########################################################################
-    # internal: Inserts a new header-column before the given header-column thereby 
+    # internal: Inserts a new header-column before the given header-column thereby
     # shifting existing header-columns
     #-------------------------------------------------------------------------
     def insert_column_before_in_header column
@@ -1945,7 +1945,7 @@ module Rods
         else
           row = cell.elements["ancestor::table:table-row"]
           unless row
-            die "Could not extract parent-row of cell #{cell}" 
+            die "Could not extract parent-row of cell #{cell}"
           end
           row.elements.delete next_cell
         end
@@ -1970,7 +1970,7 @@ module Rods
         else
           table = row.elements["ancestor::table:table"]
           unless table
-            die "Could not extract parent-table of row #{row}" 
+            die "Could not extract parent-table of row #{row}"
           end
           table.elements.delete next_row
         end
@@ -2026,7 +2026,7 @@ module Rods
       else
         table = row.elements["ancestor::table:table"]
         unless table
-          die "Could not extract parent-table of row #{row}" 
+          die "Could not extract parent-table of row #{row}"
         end
         table.elements.delete row
       end
@@ -2067,7 +2067,7 @@ module Rods
       else
         table = row.elements["ancestor::table:table"]
         unless table
-          die "Could not extract parent-table of row #{row}" 
+          die "Could not extract parent-table of row #{row}"
         end
         table.elements.delete previous_row
       end
@@ -2087,7 +2087,7 @@ module Rods
       else
         row = cell.elements["ancestor::table:table-row"]
         unless row
-          die "Could not extract parent-row of cell #{cell}" 
+          die "Could not extract parent-row of cell #{cell}"
         end
         row.elements.delete previous_cell
       end
@@ -2128,11 +2128,11 @@ module Rods
       new_cell
     end
     ##########################################################################
-    # Inserts and returns a cell at the given index in the given row, 
+    # Inserts and returns a cell at the given index in the given row,
     # thereby shifting existing cells.
     #
     #   row = sheet.get_row 5
-    #   cell = sheet.insert_cell_from_row row, 17 
+    #   cell = sheet.insert_cell_from_row row, 17
     #-------------------------------------------------------------------------
     def insert_cell_from_row row, column_index
       die "insert_cell: invalid index #{column_index}" unless  column_index > 0
@@ -2142,7 +2142,7 @@ module Rods
     ##########################################################################
     # Inserts and returns a cell at the given index, thereby shifting existing cells.
     #
-    #   cell = sheet.insert_cell 4, 17 
+    #   cell = sheet.insert_cell 4, 17
     #-------------------------------------------------------------------------
     def insert_cell row_index, column_index
       die "invalid index #{row_index}" unless row_index > 0
@@ -2201,7 +2201,7 @@ module Rods
       else
         table = column.elements["ancestor::table:table"]
         unless table
-          die "Could not extract parent-table of column #{column}" 
+          die "Could not extract parent-table of column #{column}"
         end
         table.elements.delete column
       end
@@ -2211,7 +2211,7 @@ module Rods
       while row = get_next_existent_row(row)
         delete_cell_from_row row, column_index
         i += 1
-      end 
+      end
     end
     ##########################################################################
     # Inserts a column at the given index, thereby shifting existing columns
@@ -2230,7 +2230,7 @@ module Rods
         cell = get_child_by_index row, CELL, column_index
         insert_cell_before cell
         i += 1
-      end 
+      end
     end
     ##########################################################################
     # internal: Opens zip-file
