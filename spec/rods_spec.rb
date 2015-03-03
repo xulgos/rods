@@ -1,19 +1,17 @@
 describe Rods::Document do
 
   def create_document_from_empty_sheet
-    Rods::Document.new file: "#{File.dirname __FILE__}/empty.ods"
+    Rods::Document.new
   end
 
   describe 'when intialized with no arguments' do
 
     it 'should not throw an error' do
-      Rods::Document.new
+      create_document_from_empty_sheet
     end
 
     it 'should create an empty sheet to work with' do
-      skip
-      doc = Rods::Document.new 
-      doc.current_table.wont_be_nil
+      create_document_from_empty_sheet.current_table.wont_be_nil
     end
 
   end
@@ -21,7 +19,7 @@ describe Rods::Document do
   describe 'when initialized with a filename' do
 
     it 'should set up the first sheet to work with' do
-      create_document_from_empty_sheet.current_table.wont_be_nil
+      Rods::Document.new(file: "#{File.dirname __FILE__}/empty.ods").current_table.wont_be_nil
     end
 
   end
@@ -37,7 +35,7 @@ describe Rods::Document do
   end
 
   describe 'insert_table' do
-    
+
     it 'should create a new table at the end of the list' do
       doc = create_document_from_empty_sheet
       doc.table_count.must_equal 1

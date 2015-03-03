@@ -638,20 +638,15 @@ module Rods
     # all tables and creates default-styles and default-data-styles for all
     # data-types.
     #-------------------------------------------------------------------
-    def init zipfile
-      @meta_text = REXML::Document.new zipfile.file.read "meta.xml"
+    def init
       @office_meta = @meta_text.elements["/office:document-meta/office:meta"]
       die"Could not extract office:document-meta" unless @office_meta
-      @manifest_text = REXML::Document.new zipfile.file.read "META-INF/manifest.xml"
       @manifest_root = @manifest_text.elements["/manifest:manifest"]
       die "Could not extract manifest:manifest" unless @manifest_root
-      @settings_text = REXML::Document.new zipfile.file.read "settings.xml"
       @office_settings = @settings_text.elements["/office:document-settings/office:settings"]
       die "Could not extract office:-settings" unless @office_settings
-      @styles_text = REXML::Document.new zipfile.file.read "styles.xml"
       @office_styles = @styles_text.elements["/office:document-styles/office:styles"]
       die "Could not extract office:document-styles" unless @office_styles
-      @content_text = REXML::Document.new zipfile.file.read "content.xml"
       @auto_styles = @content_text.elements["/office:document-content/office:automatic-styles"]
       die "Could not extract office:automatic-styles" unless @auto_styles
       init_house_keeping
@@ -1560,7 +1555,7 @@ module Rods
       if File.exists? new_file
         File.delete new_file
       end
-      Zip::ZipFile.open(newFile, true) do |zipfile|
+      Zip::ZipFile.open(new_file, true) do |zipfile|
         ["Configurations2","META-INF","Thumbnails"].each do |dir|
           zipfile.mkdir dir
           zipfile.file.chmod 0755, dir
@@ -1635,7 +1630,12 @@ module Rods
         "comment_text_style",
         "comment_graphics_style"
       ]
-      open default[:file] if default.has_key? :file
+      if default.has_key? :file
+        open default[:file]
+      else
+        create_minimal_document
+      end
+      init
     end
     ##########################################################################
     # Fast Routine to get the previous row, because XML-Parser does not have
@@ -2127,8 +2127,28 @@ module Rods
     #-------------------------------------------------------------------------
     def open file
       die "file #{file} does not exist" unless File.exists? file
-      Zip::ZipFile.open(file) { |zipfile| init zipfile }
+      Zip::ZipFile.open(file) { |zipfile| open_from_zip_file zipfile }
       @file = file
+    end
+
+    def open_from_zip_file zipfile
+      @meta_text = REXML::Document.new zipfile.file.read "meta.xml"
+      @manifest_text = REXML::Document.new zipfile.file.read "META-INF/manifest.xml"
+      @settings_text = REXML::Document.new zipfile.file.read "settings.xml"
+      @styles_text = REXML::Document.new zipfile.file.read "styles.xml"
+      @content_text = REXML::Document.new zipfile.file.read "content.xml"
+    end
+
+    def create_minimal_document
+      @meta_text = REXML::Document.new File.read get_path_to_unziped_spreadsheet_file "meta.xml"
+      @manifest_text = REXML::Document.new File.read get_path_to_unziped_spreadsheet_file "META-INF/manifest.xml"
+      @settings_text = REXML::Document.new File.read get_path_to_unziped_spreadsheet_file "settings.xml"
+      @styles_text = REXML::Document.new File.read get_path_to_unziped_spreadsheet_file "styles.xml"
+      @content_text = REXML::Document.new File.read get_path_to_unziped_spreadsheet_file "content.xml"
+    end
+
+    def get_path_to_unziped_spreadsheet_file file
+      File.expand_path "../../assets/empty_sheet/#{file}", __FILE__
     end
 
     public :set_date_format, :write_get_cell, :write_cell, :write_get_cell_from_row, :write_cell_from_row,
@@ -2148,6 +2168,7 @@ module Rods
             :get_number_of_siblings, :get_index_and_or_number, :create_column,
             :get_appropriate_style, :check_style_attributes, :insert_style_attributes, :clone_node,
             :write_style, :write_style_xml, :style_to_hash, :write_default_styles, :write_xml,
-            :internalize_formula, :open, :insert_table_before_after, :insert_column_before_in_header
+            :internalize_formula, :open, :insert_table_before_after, :insert_column_before_in_header,
+            :create_minimal_document, :open_from_zip_file
   end
 end
