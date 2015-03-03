@@ -2108,7 +2108,7 @@ module Rods
         previous_cell.attributes["table:number-columns-repeated"] = (previous_repetitions.to_i-1).to_s
       else
         row = cell.elements["ancestor::table:table-row"]
-        unless  row
+        unless row
           die "Could not extract parent-row of cell #{cell}" 
         end
         row.elements.delete previous_cell
@@ -2164,15 +2164,13 @@ module Rods
     # Inserts and returns a cell at the given index in the given row, 
     # thereby shifting existing cells.
     #
-    #   row = sheet.get_row(5)
-    #   cell = sheet.insertCellFromRow(row,17) 
+    #   row = sheet.get_row 5
+    #   cell = sheet.insert_cell_from_row row, 17 
     #-------------------------------------------------------------------------
-    def insertCellFromRow(row,colInd)
-      die("insertCell: row #{row} is not a REXML::Element") unless (row.class.to_s == "REXML::Element")
-      die("insertCell: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
-      die("insertCell: invalid index #{colInd}") unless (colInd > 0)
+    def insert_cell_from_row row, col_ind
+      die "insert_cell: invalid index #{col_ind}" unless  col_ind > 0
       cell = get_cell_from_row row, col_ind
-      return insertCellBefore(cell)
+      insert_cell_before cell
     end
     ##########################################################################
     # Inserts and returns a cell at the given index, thereby shifting existing cells.
@@ -2299,7 +2297,7 @@ module Rods
            :getNextExistentCell, :getPreviousExistentCell, :insert_table_after, :insert_table_before,
            :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
            :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insertColumn,
-           :insertRow, :insertCell, :insertCellFromRow, :delete_cell_before, :delete_cell_after,
+           :insertRow, :insertCell, :insert_cell_from_row, :delete_cell_before, :delete_cell_after,
            :delete_cell, :delete_cell_from_row, :delete_row_above, :delete_row_below, :delete_row,
            :delete_column, :delete_row_element, :delete_cell_element
 
