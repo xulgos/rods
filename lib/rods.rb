@@ -138,8 +138,8 @@ module Rods
     # This is useful for a subsequent call to 
     #   sheet.set_attributes cell, { "background-color" => "yellow3"}
     #-------------------------------------------------------------------------
-    def write_get_cell row_ind, col_ind, type, text
-      cell = get_cell rowInd, colInd
+    def write_get_cell row_index, column_index, type, text
+      cell = get_cell row_index, column_index
       write_text cell, type, text
       return cell
     end
@@ -164,8 +164,8 @@ module Rods
     #   row = sheet.get_row(17)
     #   cell = sheet.writeGetCellFromRow(row,4,"formula:currency"," = B5*1,19")
     #-------------------------------------------------------------------------
-    def writeGetCellFromRow(row,colInd,type,text)
-      cell = get_cell_from_row row, colInd
+    def writeGetCellFromRow(row,column_index,type,text)
+      cell = get_cell_from_row row, column_index
       write_text(cell,type,text)
       return cell
     end
@@ -178,8 +178,8 @@ module Rods
     #   sheet.writeCellFromRow(row,1,"date","28.12.2010")
     #   sheet.writeCellFromRow(row,2,"formula:date"," = A1+3")
     #-------------------------------------------------------------------------
-    def writeCellFromRow(row,colInd,type,text)
-      cell = get_cell_from_row row, colInd
+    def writeCellFromRow(row,column_index,type,text)
+      cell = get_cell_from_row row, column_index
       write_text(cell,type,text)
     end
     ##########################################################################
@@ -195,8 +195,8 @@ module Rods
     # from the node of the already found row instead of having to locate the
     # row over and over again.
     #-------------------------------------------------------------------------
-    def get_cell_from_row row, col_ind
-      get_child_by_index row, CELL, col_ind
+    def get_cell_from_row row, column_index
+      get_child_by_index row, CELL, column_index
     end
     ##########################################################################
     # Returns the cell at the given indices.
@@ -547,7 +547,7 @@ module Rods
     #   }
     #   puts("Earned #{amount} bucks")
     #---------------------------------------------------------------
-    def readCellFromRow(row,colInd)
+    def readCellFromRow(row,column_index)
       j = 0
       #------------------------------------------------------------------
       # Fuer alle Spalten
@@ -564,7 +564,7 @@ module Rods
         #-------------------------------------------
         # Falls Spaltenindex uebersprungen oder erreicht
         #-------------------------------------------
-        if(j >= colInd)
+        if(j >= column_index)
           #-------------------------------------------
           # Zelltext und Datentyp zurueckgeben
           # ggf. Waehrungssymbol abschneiden
@@ -604,7 +604,7 @@ module Rods
     #      write_cell(i,10-i,type,text)
     #   }
     #-------------------------------------------------------------------------
-    def readCell(rowInd,colInd)
+    def readCell(row_index,column_index)
       #------------------------------------------------------------------
       # Fuer alle Zeilen
       #------------------------------------------------------------------
@@ -627,8 +627,8 @@ module Rods
         #-------------------------------------------
         # Falls Zeilenindex uebersprungen oder erreicht
         #-------------------------------------------
-        if(i >= rowInd)
-          return readCellFromRow(row,colInd)
+        if(i >= row_index)
+          return readCellFromRow(row,column_index)
         end
       }
       #--------------------------------------------
@@ -2004,9 +2004,9 @@ module Rods
     #   row = sheet.get_row 8
     #   sheet.delete_cell row, 9
     #-------------------------------------------------------------------------
-    def delete_cell_from_row row, col_ind
-      die "invalid index #{col_ind}" unless  col_ind > 0
-      cell = get_cell_from_row row, col_ind+1
+    def delete_cell_from_row row, column_index
+      die "invalid index #{column_index}" unless  column_index > 0
+      cell = get_cell_from_row row, column_index+1
       delete_cell_before cell
     end
     ##########################################################################
@@ -2034,7 +2034,7 @@ module Rods
     ##########################################################################
     # Deletes the given row.
     #
-    # 'row' is a REXML::Element as returned by get_row row_ind.
+    # 'row' is a REXML::Element as returned by get_row row_index.
     #
     # start_row = sheet.get_row 12
     # while row = sheet.get_next_existent_row start_row
@@ -2058,9 +2058,9 @@ module Rods
     #
     #   sheet.delete_row 7
     #-------------------------------------------------------------------------
-    def delete_row row_ind
-      die "invalid index #{row_ind}" unless  row_ind > 0
-      row = get_row row_ind + 1
+    def delete_row row_index
+      die "invalid index #{row_index}" unless  row_index > 0
+      row = get_row row_index + 1
       delete_row_above row
     end
     ##########################################################################
@@ -2068,11 +2068,11 @@ module Rods
     #
     #   sheet.delete_cell 7, 9
     #-------------------------------------------------------------------------
-    def delete_cell row_ind, col_ind
-      die "invalid index #{row_ind}" unless row_ind > 0
-      die "invalid index #{col_ind}" unless col_ind > 0
-      row = get_row row_ind
-      delete_cell_from_row row, col_ind
+    def delete_cell row_index, column_index
+      die "invalid index #{row_index}" unless row_index > 0
+      die "invalid index #{column_index}" unless column_index > 0
+      row = get_row row_index
+      delete_cell_from_row row, column_index
     end
     ##########################################################################
     # Delets the row above the given row
@@ -2167,33 +2167,30 @@ module Rods
     #   row = sheet.get_row 5
     #   cell = sheet.insert_cell_from_row row, 17 
     #-------------------------------------------------------------------------
-    def insert_cell_from_row row, col_ind
-      die "insert_cell: invalid index #{col_ind}" unless  col_ind > 0
-      cell = get_cell_from_row row, col_ind
+    def insert_cell_from_row row, column_index
+      die "insert_cell: invalid index #{column_index}" unless  column_index > 0
+      cell = get_cell_from_row row, column_index
       insert_cell_before cell
     end
     ##########################################################################
     # Inserts and returns a cell at the given index, thereby shifting existing cells.
     #
-    #   cell = sheet.insertCell(4,17) 
+    #   cell = sheet.insert_cell 4, 17 
     #-------------------------------------------------------------------------
-    def insertCell(rowInd,colInd)
-      die("insertCell: index #{rowInd} is not a Fixnum/Integer") unless (rowInd.class.to_s == "Fixnum")
-      die("insertCell: invalid index #{rowInd}") unless (rowInd > 0)
-      die("insertCell: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
-      die("insertCell: invalid index #{colInd}") unless (colInd > 0)
-      cell = get_cell(rowInd,colInd)
-      return insertCellBefore(cell)
+    def insert_cell row_index, column_index
+      die "invalid index #{row_index}" unless row_index > 0
+      die "invalid index #{column_index}" unless column_index > 0
+      cell = get_cell row_index, column_index
+      insert_cell_before cell
     end
     ##########################################################################
     # Inserts and returns a row at the given index, thereby shifting existing rows
-    #   row = sheet.insertRow(1) # inserts row above former row 1
+    #   row = sheet.insert_row 1 # inserts row above former row 1
     #-------------------------------------------------------------------------
-    def insertRow(rowInd)
-      die("insertRow: invalid rowInd #{rowInd}") unless (rowInd > 0)
-      die("insertRow: rowInd #{rowInd} is not a Fixnum/Integer") unless (rowInd.class.to_s == "Fixnum")
-      row = get_row(rowInd)
-      return insertRowAbove(row)
+    def insert_row row_index
+      die "invalid row_index #{row_index}" unless row_index > 0
+      row = get_row row_index
+      insert_row_above row
     end
     ##########################################################################
     # Inserts a new row above the given row thereby shifting existing rows
@@ -2228,12 +2225,12 @@ module Rods
     #
     #   sheet.delete_column 8
     #-------------------------------------------------------------------------
-    def delete_column col_ind
-      die "invalid index #{col_ind}" unless  col_ind > 0
+    def delete_column column_index
+      die "invalid index #{column_index}" unless  column_index > 0
       current_width = @tables[@current_table_name][WIDTH]
-      die "column-index #{col_ind} is outside valid range/current table width" if col_ind > current_width
+      die "column-index #{column_index} is outside valid range/current table width" if column_index > current_width
       current_table = @tables[@current_table_name][NODE]
-      column = get_child_by_index current_table, COLUMN, col_ind
+      column = get_child_by_index current_table, COLUMN, column_index
       repetitions = column.attributes["table:number-columns-repeated"]
       if repetitions && repetitions.to_i > 1
         column.attributes["table:number-columns-repeated"] = (repetitions.to_i-1).to_s
@@ -2245,10 +2242,10 @@ module Rods
         table.elements.delete column
       end
       row = get_row 1
-      delete_cell_from_row row, col_ind
+      delete_cell_from_row row, column_index
       i = 1
       while row = get_next_existent_row(row)
-        delete_cell_from_row row, col_ind
+        delete_cell_from_row row, column_index
         i += 1
       end 
     end
@@ -2256,15 +2253,15 @@ module Rods
     # Inserts a column at the given index, thereby shifting existing columns
     #   sheet.insertColumn(1) # inserts column before former column 1
     #-------------------------------------------------------------------------
-    def insertColumn(colInd)
-      die("insertColumn: index #{colInd} is not a Fixnum/Integer") unless (colInd.class.to_s == "Fixnum")
-      die("insertColumn: invalid index #{colInd}") unless (colInd > 0)
+    def insertColumn(column_index)
+      die("insertColumn: index #{column_index} is not a Fixnum/Integer") unless (column_index.class.to_s == "Fixnum")
+      die("insertColumn: invalid index #{column_index}") unless (column_index > 0)
       currentTable = @tables[@current_table_name][NODE]
       #-----------------------------------------------
       # Neuer Spalteneintrag im Header mit impliziter
       # Aktualisierung der Tabellenbreite
       #-----------------------------------------------
-      column = get_child_by_index(currentTable,COLUMN,colInd)
+      column = get_child_by_index(currentTable,COLUMN,column_index)
       insert_column_before_in_header(column)
       #-----------------------------------------------
       # Fuer alle existierenden Zeilen neue Zelle an
@@ -2272,11 +2269,11 @@ module Rods
       # Tabellenbreite aktualisieren
       #-----------------------------------------------
       row = get_row(1)
-      cell = get_child_by_index(row,CELL,colInd)
+      cell = get_child_by_index(row,CELL,column_index)
       insertCellBefore(cell)
       i = 1
       while(row = getNextExistentRow(row)) # fuer alle Zeilen ab der zweiten
-        cell = get_child_by_index(row,CELL,colInd)
+        cell = get_child_by_index(row,CELL,column_index)
         insertCellBefore(cell)
         i += 1
       end 
@@ -2297,7 +2294,7 @@ module Rods
            :getNextExistentCell, :getPreviousExistentCell, :insert_table_after, :insert_table_before,
            :writeComment, :save, :saveAs, :initialize, :write_text, :getCellsAndIndicesFor,
            :insertRowBelow, :insertRowAbove, :insertCellBefore, :insertCellAfter, :insertColumn,
-           :insertRow, :insertCell, :insert_cell_from_row, :delete_cell_before, :delete_cell_after,
+           :insert_row, :insert_cell, :insert_cell_from_row, :delete_cell_before, :delete_cell_after,
            :delete_cell, :delete_cell_from_row, :delete_row_above, :delete_row_below, :delete_row,
            :delete_column, :delete_row_element, :delete_cell_element
 
