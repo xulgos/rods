@@ -638,7 +638,7 @@ module Rods
     end
     ##########################################################################
     # internal: Composes everything necessary for writing all the contents of
-    # the resulting *.ods zip-file upon call of 'save' or 'saveAs'.
+    # the resulting *.ods zip-file upon call of 'save' or 'save_as'.
     # Saves and zips all contents.
     #---------------------------------------
     def finalize zipfile
@@ -1661,27 +1661,23 @@ module Rods
     ##########################################################################
     # Saves the current content to a new destination/file.
     # Caveat: Thumbnails are not created (these are normally part of the *.ods-zip-file).
-    #   sheet.saveAs("/home/heinz/Work/Example.ods")
+    #   sheet.save_as "/home/heinz/Work/Example.ods"
     #-------------------------------------------------------------------------
-    def saveAs(newFile)
-      if(File.exists?(newFile))
-        File.delete(newFile)
+    def save_as new_file
+      if File.exists? new_file
+        File.delete new_file
       end
-      #--------------------------------------------------------
-      # Datei anlegen
-      #--------------------------------------------------------
-      Zip::ZipFile.open(newFile,true){ |zipfile|
-        ["Configurations2","META-INF","Thumbnails"].each{ |dir|
-          zipfile.mkdir(dir)
-          zipfile.file.chmod(0755,dir)
-        }
-        ["accelerator","floater","images","menubar","popupmenu","progressbar","statusbar","toolbar"].each{ |dir|
-          subDir = "Configurations2/"+dir
-          zipfile.mkdir(subDir)
-          zipfile.file.chmod(0755,subDir)
-        }
-        finalize(zipfile) 
-      }
+      Zip::ZipFile.open(newFile, true) do |zipfile|
+        ["Configurations2","META-INF","Thumbnails"].each do |dir|
+          zipfile.mkdir dir
+          zipfile.file.chmod 0755, dir
+        end
+        ["accelerator","floater","images","menubar","popupmenu","progressbar","statusbar","toolbar"].each do |dir|
+          zipfile.mkdir "Configurations2/#{dir}"
+          zipfile.file.chmod 0755, "Configurations2/#{dir}"
+        end
+        finalize zipfile 
+      end
     end
     ##########################################################################
     #
@@ -2252,7 +2248,7 @@ module Rods
            :insert_table, :delete_table, :readCellFromRow, :readCell, :setAttributes, :write_style_abbr,
            :setStyle, :getNextExistentRow, :getPreviousExistentRow,
            :getNextExistentCell, :getPreviousExistentCell, :insert_table_after, :insert_table_before,
-           :writeComment, :save, :saveAs, :initialize, :write_text, :get_cells_and_indices_for,
+           :writeComment, :save, :save_as, :initialize, :write_text, :get_cells_and_indices_for,
            :insert_row_below, :insert_row_above, :insert_cell_before, :insert_cell_after, :insert_column,
            :insert_row, :insert_cell, :insert_cell_from_row, :delete_cell_before, :delete_cell_after,
            :delete_cell, :delete_cell_from_row, :delete_row_above, :delete_row_below, :delete_row,
